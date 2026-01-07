@@ -122,8 +122,9 @@ class AdminController extends Controller
     // Monitoring
     public function users()
     {
-        $users = User::with('patient')->where('role', 'user')->latest()->paginate(10);
-        return view('dashboard.admin.users.index', compact('users'));
+        $users = User::with(['patient.vaccinePatients.vaccine'])->where('role', 'user')->latest()->paginate(10);
+        $totalVaccines = Vaccine::count();
+        return view('dashboard.admin.users.index', compact('users', 'totalVaccines'));
     }
 
     public function logs()

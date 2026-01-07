@@ -56,7 +56,7 @@
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">{{ $patient->name ?? 'Belum ada data' }}</h3>
                                 <p class="text-sm text-gray-500">{{ $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan' }} • {{ \Carbon\Carbon::parse($patient->date_birth)->age }} Tahun</p>
-                                <p class="text-xs text-gray-400 mt-1">Usia: {{ \Carbon\Carbon::parse($patient->date_birth)->diffInMonths(now()) }} Bulan</p>
+                                <p class="text-xs text-gray-400 mt-1">Usia: {{ (int) \Carbon\Carbon::parse($patient->date_birth)->diffInMonths(now()) }} Bulan</p>
                             </div>
                         </div>
                         <div class="space-y-3 text-sm">
@@ -72,6 +72,16 @@
                         <button @click="openModal = true" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition">
                             + Ajukan Vaksinasi
                         </button>
+                        @if($allVaccinesCompleted)
+                        <a href="{{ route('user.certificate') }}" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition block text-center">
+                            Download Sertifikat
+                        </a>
+                        @else
+                        <div class="mt-3 w-full bg-yellow-50 border border-yellow-200 text-yellow-800 py-3 px-4 rounded-xl text-sm text-center">
+                            <p class="font-bold mb-1">⚠ Sertifikat Belum Tersedia</p>
+                            <p class="text-xs">Lengkapi seluruh vaksinasi (status "Selesai") untuk mengunduh sertifikat.</p>
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Vaccination Status System -->
@@ -88,7 +98,16 @@
                                     @if($item->status == 'selesai')
                                         <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold">Selesai</span>
                                     @elseif($item->status == 'pengajuan')
-                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-bold">Diproses</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-bold">Diproses</span>
+                                            @if(isset($item->vp_id) && $item->vp_id)
+                                            <form action="{{ route('user.cancel', $item->vp_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?');" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">Batal</button>
+                                            </form>
+                                            @endif
+                                        </div>
                                     @elseif($item->status == 'bisa_diajukan')
                                         <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bold">Tersedia</span>
                                     @else
@@ -124,7 +143,12 @@
                         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Ajukan Vaksinasi</h3>
                         
                         @if(count($schedules) > 0)
-                        <div class="space-y-4" x-data="{ selectedSchedule: '', schedules: {{ json_encode($schedules) }} }">
+                        <div class="space-y-4" x-data="{ 
+                            selectedSchedule: '', 
+                            schedules: {{ json_encode($schedules) }},
+                            takenIds: {{ json_encode($takenVaccineIds) }},
+                            patientAge: {{ $patientAgeMonths }}
+                        }">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Pilih Jadwal Kegiatan</label>
                                 <select name="schedule_id" x-model="selectedSchedule" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
@@ -141,17 +165,28 @@
                             <template x-if="selectedSchedule">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Jenis Vaksin (Yang Tersedia)</label>
-                                    <select name="vaccine_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                        <option value="" disabled selected>-- Pilih Vaksin --</option>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Jenis Vaksin (Sesuai Usia & Belum Pernah)</label>
+                                    <div class="max-h-48 overflow-y-auto border rounded-md p-3 bg-gray-50">
                                         <template x-for="schedule in schedules.filter(s => s.id == selectedSchedule)" :key="schedule.id">
-                                            <template x-for="vaccine in schedule.vaccines">
-                                                <option :value="vaccine.id" x-text="vaccine.name + ' (Min. ' + vaccine.minimum_age + ' Bln)'"></option>
-                                            </template>
+                                            <div class="space-y-2">
+                                                <template x-for="vaccine in schedule.vaccines">
+                                                    <div x-show="!takenIds.includes(vaccine.id) && patientAge >= vaccine.minimum_age">
+                                                        <label class="flex items-start">
+                                                            <input type="checkbox" name="vaccine_ids[]" :value="vaccine.id" class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                                            <div class="ml-3 text-sm">
+                                                                <span class="font-medium text-gray-700" x-text="vaccine.name"></span>
+                                                                <span class="text-gray-500 block text-xs" x-text="'Min. Usia: ' + vaccine.minimum_age + ' Bulan'"></span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </template>
+                                                <!-- Message if no vaccines available for this schedule after filtering -->
+                                                <div x-show="schedule.vaccines.filter(v => !takenIds.includes(v.id) && patientAge >= v.minimum_age).length === 0" class="text-sm text-gray-500 italic">
+                                                    Tidak ada vaksin yang tersedia untuk usia Anda atau semua vaksin pada jadwal ini sudah diambil.
+                                                </div>
+                                            </div>
                                         </template>
-                                    </select>
-                                    <!-- Warning if no intersection with eligible vaccines (Optional enhancement, complex to do purely in Alpine without huge payload. Keeping it simple implies showing ALL available in schedule, OR filtering further. 
-                                         For now, showing what is available in the schedule is the safer bet as 'Eligible' is just a suggestion, availability is a constraint.) 
-                                    -->
+                                    </div>
                                 </div>
                             </template>
                             <template x-if="!selectedSchedule">

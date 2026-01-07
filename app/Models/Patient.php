@@ -10,7 +10,7 @@ class Patient extends Model
     use \Spatie\Activitylog\Traits\LogsActivity;
 
     protected $fillable = [
-        'user_id', 'name', 'mother_name', 'date_birth', 'address', 'gender', 'phone'
+        'user_id', 'village_id', 'name', 'mother_name', 'date_birth', 'address', 'gender', 'phone'
     ];
 
     protected $casts = [

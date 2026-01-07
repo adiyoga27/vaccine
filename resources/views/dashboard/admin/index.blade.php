@@ -61,7 +61,12 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <form action="{{ route('admin.approve', $req->id) }}" method="POST" class="inline-block">
                                         @csrf
-                                        <button type="submit" class="text-green-600 hover:text-green-900 font-bold bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 transition">Setujui</button>
+                                        <button type="submit" class="text-green-600 hover:text-green-900 font-bold bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 transition text-xs">Setujui</button>
+                                    </form>
+                                    <form action="{{ route('admin.reject', $req->id) }}" method="POST" class="inline-block ml-1" onsubmit="return confirm('Apakah Anda yakin ingin menolak permintaan ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900 font-bold bg-red-50 px-3 py-1 rounded-lg hover:bg-red-100 transition text-xs">Tolak</button>
                                     </form>
                                 </td>
                             </tr>

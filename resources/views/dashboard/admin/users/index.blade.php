@@ -14,11 +14,16 @@
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orang Tua</th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Lahir / Usia</th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat/Desa</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bergabung</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Riwayat Vaksin</th>
+                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Sertifikat</th>
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             @foreach($users as $user)
+            @php
+                $completedVaccines = $user->patient ? $user->patient->vaccinePatients->where('status', 'selesai')->unique('vaccine_id') : collect([]);
+                $isCompleted = ($totalVaccines > 0 && $completedVaccines->count() >= $totalVaccines);
+            @endphp
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
                     <div class="text-sm font-bold text-gray-900">{{ $user->patient->name ?? '-' }}</div>
@@ -40,8 +45,25 @@
                 <td class="px-6 py-4">
                     <div class="text-sm text-gray-900">{{ $user->patient->address ?? '-' }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ $user->created_at->format('d M Y') }}
+                <td class="px-6 py-4">
+                    <div class="flex flex-wrap gap-1 mb-2">
+                        @forelse($completedVaccines as $vp)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                {{ $vp->vaccine->name }}
+                            </span>
+                        @empty
+                            <span class="text-xs text-gray-400 italic">Belum ada vaksin selesai</span>
+                        @endforelse
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    @if($isCompleted)
+                        <a href="{{ route('admin.certificate', $user->patient->id) }}" target="_blank" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                            Unduh Sertifikat
+                        </a>
+                    @else
+                        <span class="text-xs text-gray-400">Belum Lengkap</span>
+                    @endif
                 </td>
             </tr>
             @endforeach

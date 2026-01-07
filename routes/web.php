@@ -50,11 +50,14 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
         foreach($allVaccines as $vac) {
             $status = 'upcoming'; // Default
             $isEligible = false;
+            $vaccinePatientId = null;
 
-            if (in_array($vac->id, $doneVaccineIds)) {
-                $status = 'selesai';
-            } elseif (in_array($vac->id, $pendingVaccineIds)) {
-                $status = 'pengajuan';
+            // Check history for this vaccine
+            $history = $patient ? $histories->where('vaccine_id', $vac->id)->first() : null;
+
+            if ($history) {
+                $status = $history->status;
+                $vaccinePatientId = $history->id;
             } else {
                 // Check eligibility based on age
                 if ($patientAgeMonths >= $vac->minimum_age) {
@@ -69,34 +72,78 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
                 'vaccine' => $vac,
                 'status' => $status,
                 'min_age' => $vac->minimum_age,
-                'is_eligible' => $isEligible
+                'is_eligible' => $isEligible,
+                'vp_id' => $vaccinePatientId
             ];
         }
         
         // Filter vaccines for dropdown: only those 'bisa_diajukan'
         $eligibleVaccines = collect($vaccineStatus)->where('is_eligible', true)->pluck('vaccine');
+        
+        $takenVaccineIds = array_merge($doneVaccineIds, $pendingVaccineIds);
 
-        return view('dashboard.user.index', compact('user', 'patient', 'histories', 'vaccineStatus', 'eligibleVaccines', 'schedules'));
+        // Check if all vaccines are completed
+        $totalVaccinesCount = Vaccine::count();
+        $completedVaccinesCount = $patient ? $histories->where('status', 'selesai')->unique('vaccine_id')->count() : 0;
+        $allVaccinesCompleted = ($totalVaccinesCount > 0 && $totalVaccinesCount === $completedVaccinesCount);
+
+        return view('dashboard.user.index', compact('user', 'patient', 'histories', 'vaccineStatus', 'eligibleVaccines', 'schedules', 'takenVaccineIds', 'patientAgeMonths', 'allVaccinesCompleted'));
     })->name('user.dashboard');
     
     Route::post('/request-vaccine', function (Request $request) {
         $request->validate([
-           'vaccine_id' => 'required',
+           'vaccine_ids' => 'required|array',
+           'vaccine_ids.*' => 'exists:vaccines,id',
            'schedule_id' => 'required|exists:vaccine_schedules,id' 
         ]);
         
         $schedule = App\Models\VaccineSchedule::findOrFail($request->schedule_id);
         
-        VaccinePatient::create([
-            'village_id' => $schedule->village_id,
-            'patient_id' => Auth::user()->patient->id,
-            'vaccine_id' => $request->vaccine_id,
-            'request_date' => $schedule->scheduled_at,
-            'status' => 'pengajuan'
-        ]);
+        foreach ($request->vaccine_ids as $vaccineId) {
+            // Optional: Check if already requested/done to prevent duplicates
+            $exists = VaccinePatient::where('patient_id', Auth::user()->patient->id)
+                        ->where('vaccine_id', $vaccineId)
+                        ->whereIn('status', ['pengajuan', 'selesai'])
+                        ->exists();
+
+            if (!$exists) {
+                VaccinePatient::create([
+                    'village_id' => $schedule->village_id,
+                    'patient_id' => Auth::user()->patient->id,
+                    'vaccine_id' => $vaccineId,
+                    'request_date' => $schedule->scheduled_at,
+                    'status' => 'pengajuan'
+                ]);
+            }
+        }
         
         return back()->with('success', 'Pengajuan vaksin berhasil dikirim!');
     })->name('user.request');
+
+    Route::delete('/cancel-request/{id}', function ($id) {
+        $vp = VaccinePatient::where('id', $id)
+                ->where('patient_id', Auth::user()->patient->id)
+                ->where('status', 'pengajuan')
+                ->firstOrFail();
+        
+        $vp->delete();
+        
+        return back()->with('success', 'Pengajuan vaksin berhasil dibatalkan.');
+    })->name('user.cancel');
+
+    Route::get('/certificate', function () {
+        $patient = Auth::user()->patient;
+        
+        // Strict check: must have all vaccines completed
+        $totalVaccinesCount = Vaccine::count();
+        $completedVaccinesCount = $patient ? $patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
+        
+        if ($totalVaccinesCount === 0 || $completedVaccinesCount < $totalVaccinesCount) {
+             return redirect()->route('user.dashboard')->with('error', 'Anda belum menyelesaikan semua tahapan imunisasi.');
+        }
+
+        return view('dashboard.user.certificate', compact('patient'));
+    })->name('user.certificate');
 });
 
 // Admin Dashboard
@@ -151,4 +198,14 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         ]);
         return back()->with('success', 'Status updated to Selesai');
     })->name('admin.approve');
+
+    Route::delete('/reject/{id}', function ($id) {
+        $vp = VaccinePatient::findOrFail($id);
+        $vp->delete();
+        return back()->with('success', 'Permintaan vaksinasi berhasil ditolak/dibatalkan.');
+    })->name('admin.reject');
+    
+    Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
+        return view('dashboard.user.certificate', compact('patient'));
+    })->name('admin.certificate');
 });
