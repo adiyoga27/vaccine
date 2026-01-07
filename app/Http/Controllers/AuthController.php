@@ -69,6 +69,7 @@ class AuthController extends Controller
 
             Patient::create([
                 'user_id' => $user->id,
+                'village_id' => $request->village_id,
                 'name' => $request->name, // Patient name same as User name for now or add field
                 'mother_name' => $request->mother_name,
                 'date_birth' => $request->date_birth,

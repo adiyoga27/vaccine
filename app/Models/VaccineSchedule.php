@@ -24,4 +24,9 @@ class VaccineSchedule extends Model
     {
         return $this->belongsTo(Village::class);
     }
+
+    public function vaccines()
+    {
+        return $this->belongsToMany(Vaccine::class, 'schedule_vaccine');
+    }
 }

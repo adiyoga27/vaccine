@@ -56,6 +56,7 @@
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">{{ $patient->name ?? 'Belum ada data' }}</h3>
                                 <p class="text-sm text-gray-500">{{ $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan' }} • {{ \Carbon\Carbon::parse($patient->date_birth)->age }} Tahun</p>
+                                <p class="text-xs text-gray-400 mt-1">Usia: {{ \Carbon\Carbon::parse($patient->date_birth)->diffInMonths(now()) }} Bulan</p>
                             </div>
                         </div>
                         <div class="space-y-3 text-sm">
@@ -65,7 +66,7 @@
                             </div>
                             <div class="flex justify-between border-b pb-2">
                                 <span class="text-gray-500">Desa</span>
-                                <span class="font-medium text-right">{{ $patient->address }}</span> <!-- Address used as desa temporarily if not linked -->
+                                <span class="font-medium text-right">{{ $patient->address }}</span>
                             </div>
                         </div>
                         <button @click="openModal = true" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition">
@@ -73,29 +74,30 @@
                         </button>
                     </div>
 
-                    <!-- History List -->
+                    <!-- Vaccination Status System -->
                     <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <h4 class="font-bold text-gray-900 mb-4">Riwayat Pengajuan</h4>
-                        @if(count($histories) > 0)
-                            <div class="space-y-4">
-                                @foreach($histories as $history)
-                                <div class="flex items-start gap-3">
-                                    <div class="mt-1 w-2 h-2 rounded-full {{ $history->status == 'selesai' ? 'bg-green-500' : 'bg-yellow-500' }}"></div>
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ $history->vaccine->name }}</p>
-                                        <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                                            <span>{{ \Carbon\Carbon::parse($history->request_date)->format('d M Y') }}</span>
-                                            <span class="px-2 py-0.5 rounded-full {{ $history->status == 'selesai' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                                {{ ucfirst($history->status) }}
-                                            </span>
-                                        </div>
-                                    </div>
+                        <h4 class="font-bold text-gray-900 mb-4">Jadwal & Status Imunisasi</h4>
+                        <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                            @foreach($vaccineStatus as $item)
+                            <div class="flex items-center justify-between p-3 rounded-lg border {{ $item->status == 'selesai' ? 'border-green-100 bg-green-50' : ($item->status == 'bisa_diajukan' ? 'border-blue-100 bg-white' : 'border-gray-100 bg-gray-50 opacity-70') }}">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">{{ $item->vaccine->name }}</p>
+                                    <p class="text-xs text-gray-500">Min. Usia: {{ $item->min_age }} Bulan</p>
                                 </div>
-                                @endforeach
+                                <div>
+                                    @if($item->status == 'selesai')
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold">Selesai</span>
+                                    @elseif($item->status == 'pengajuan')
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-bold">Diproses</span>
+                                    @elseif($item->status == 'bisa_diajukan')
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bold">Tersedia</span>
+                                    @else
+                                        <span class="px-2 py-1 bg-gray-200 text-gray-500 text-xs rounded-full">Nanti</span>
+                                    @endif
+                                </div>
                             </div>
-                        @else
-                            <p class="text-sm text-gray-500 text-center py-4">Belum ada riwayat vaksinasi.</p>
-                        @endif
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -113,42 +115,72 @@
     <!-- Request Modal -->
     <div x-cloak x-show="openModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div x-show="openModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="openModal = false"></div>
+            <div x-show="openModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="openModal = false"></div>
 
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div x-show="openModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div x-show="openModal" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form action="{{ route('user.request') }}" method="POST">
                     @csrf
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Ajukan Vaksinasi</h3>
-                                <div class="mt-4 space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Tanggal Rencana</label>
-                                        <input type="date" name="request_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Jenis Vaksin</label>
-                                        <select name="vaccine_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                            @foreach($vaccines as $v)
-                                                <option value="{{ $v->id }}">{{ $v->name }} (Min. {{ $v->minimum_age }} Bulan)</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Ajukan Vaksinasi</h3>
+                        
+                        @if(count($schedules) > 0)
+                        <div class="space-y-4" x-data="{ selectedSchedule: '', schedules: {{ json_encode($schedules) }} }">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pilih Jadwal Kegiatan</label>
+                                <select name="schedule_id" x-model="selectedSchedule" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                                    <option value="" disabled selected>-- Pilih Tanggal --</option>
+                                    @foreach($schedules as $sch)
+                                        <option value="{{ $sch->id }}">
+                                            Posyandu Tgl {{ \Carbon\Carbon::parse($sch->scheduled_at)->format('d F Y') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Hanya jadwal yang tersedia di desa Anda yang ditampilkan.</p>
                             </div>
+                            
+                            <template x-if="selectedSchedule">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Jenis Vaksin (Yang Tersedia)</label>
+                                    <select name="vaccine_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                                        <option value="" disabled selected>-- Pilih Vaksin --</option>
+                                        <template x-for="schedule in schedules.filter(s => s.id == selectedSchedule)" :key="schedule.id">
+                                            <template x-for="vaccine in schedule.vaccines">
+                                                <option :value="vaccine.id" x-text="vaccine.name + ' (Min. ' + vaccine.minimum_age + ' Bln)'"></option>
+                                            </template>
+                                        </template>
+                                    </select>
+                                    <!-- Warning if no intersection with eligible vaccines (Optional enhancement, complex to do purely in Alpine without huge payload. Keeping it simple implies showing ALL available in schedule, OR filtering further. 
+                                         For now, showing what is available in the schedule is the safer bet as 'Eligible' is just a suggestion, availability is a constraint.) 
+                                    -->
+                                </div>
+                            </template>
+                            <template x-if="!selectedSchedule">
+                                <div class="text-sm text-gray-500 italic">Pilih jadwal terlebih dahulu untuk melihat vaksin yang tersedia.</div>
+                            </template>
                         </div>
+                        @else
+                        <div class="text-center py-4 bg-yellow-50 rounded-lg text-yellow-700 text-sm">
+                            Maaf, belum ada jadwal kegiatan Posyandu yang tersedia untuk desa Anda saat ini.
+                        </div>
+                        @endif
+
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                    @if(count($schedules) > 0 && !$eligibleVaccines->isEmpty())
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:w-auto sm:text-sm">
                             Kirim Pengajuan
                         </button>
-                        <button type="button" @click="openModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="button" @click="openModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
                             Batal
                         </button>
                     </div>
+                    @else
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="openModal = false" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm">
+                            Tutup
+                        </button>
+                    </div>
+                    @endif
                 </form>
             </div>
         </div>
@@ -166,12 +198,22 @@
                     right: 'dayGridMonth,listWeek'
                 },
                 events: [
-                    // Mock events for now, ideally populated from DB
+                    // User History Events
                     @foreach($histories as $history)
                     {
-                        title: '{{ $history->vaccine->name }}',
+                        title: 'Vaksin: {{ $history->vaccine->name }}',
                         start: '{{ $history->request_date->format("Y-m-d") }}',
                         color: '{{ $history->status == "selesai" ? "#10B981" : "#F59E0B" }}'
+                    },
+                    @endforeach
+
+                    // Upcoming Schedules (Read-only visualization)
+                    @foreach($schedules as $sch)
+                    {
+                        title: 'Posyandu',
+                        start: '{{ $sch->scheduled_at->format("Y-m-d") }}',
+                        // display: 'background', // Removed for better visibility
+                        color: '#3B82F6' // Blue-500
                     },
                     @endforeach
                 ]

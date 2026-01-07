@@ -22,6 +22,11 @@ class Patient extends Model
         return \Spatie\Activitylog\LogOptions::defaults()->logAll();
     }
 
+    public function village()
+    {
+        return $this->belongsTo(Village::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

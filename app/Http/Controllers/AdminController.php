@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Village;
 use App\Models\Vaccine;
 use App\Models\VaccineSchedule;
+use App\Models\VaccinePatient;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
 
@@ -68,19 +69,48 @@ class AdminController extends Controller
     // Schedules
     public function schedules()
     {
-        $schedules = VaccineSchedule::with('village')->latest()->get();
+        $schedules = VaccineSchedule::with(['village', 'vaccines'])->latest()->get();
         $villages = Village::all();
-        return view('dashboard.admin.schedules.index', compact('schedules', 'villages'));
+        $vaccines = Vaccine::all();
+        return view('dashboard.admin.schedules.index', compact('schedules', 'villages', 'vaccines'));
     }
 
     public function storeSchedule(Request $request)
     {
         $request->validate([
             'village_id' => 'required|exists:villages,id',
-            'scheduled_at' => 'required|date'
+            'scheduled_at' => 'required|date',
+            'vaccine_ids' => 'required|array',
+            'vaccine_ids.*' => 'exists:vaccines,id'
         ]);
-        VaccineSchedule::create($request->all());
+
+        $schedule = VaccineSchedule::create([
+            'village_id' => $request->village_id,
+            'scheduled_at' => $request->scheduled_at
+        ]);
+        
+        $schedule->vaccines()->sync($request->vaccine_ids);
+        
         return back()->with('success', 'Jadwal berhasil dibuat');
+    }
+
+    public function updateSchedule(Request $request, VaccineSchedule $schedule)
+    {
+        $request->validate([
+            'village_id' => 'required|exists:villages,id',
+            'scheduled_at' => 'required|date',
+            'vaccine_ids' => 'array',
+            'vaccine_ids.*' => 'exists:vaccines,id'
+        ]);
+
+        $schedule->update([
+            'village_id' => $request->village_id,
+            'scheduled_at' => $request->scheduled_at
+        ]);
+
+        $schedule->vaccines()->sync($request->input('vaccine_ids', []));
+
+        return back()->with('success', 'Jadwal berhasil diperbarui');
     }
 
     public function destroySchedule(VaccineSchedule $schedule)
