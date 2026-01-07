@@ -25,4 +25,9 @@ class Village extends Model
     {
         return $this->hasMany(VaccinePatient::class);
     }
+
+    public function posyandus()
+    {
+        return $this->hasMany(Posyandu::class);
+    }
 }

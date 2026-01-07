@@ -87,14 +87,9 @@
             </div>
 
             <!-- Hero Image/Illustration -->
-            <div class="lg:w-1/2 relative" data-aos="fade-left" data-aos-duration="1000">
-                <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500">
-                    <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Ibu dan Anak di Posyandu" class="w-full h-auto object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute bottom-6 left-6 text-white max-w-xs">
-                        <p class="font-bold text-lg">Posyandu Desa Sehat</p>
-                        <p class="text-sm opacity-90">Melayani dengan Hati</p>
-                    </div>
+            <div class="lg:w-5/12 relative flex justify-center" data-aos="fade-left" data-aos-duration="1000">
+                <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white max-w-md">
+                    <img src="{{ asset('images/hero-baby.png') }}" alt="Ibu dan Anak di Posyandu" class="w-full h-auto object-cover">
                 </div>
                 <!-- Floating Elements -->
                 <div class="absolute -top-6 -right-6 w-24 h-24 bg-yellow-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>

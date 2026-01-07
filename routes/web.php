@@ -171,6 +171,16 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/villages/{village}', [\App\Http\Controllers\AdminController::class, 'updateVillage'])->name('admin.villages.update');
     Route::delete('/villages/{village}', [\App\Http\Controllers\AdminController::class, 'destroyVillage'])->name('admin.villages.destroy');
 
+    // Posyandus
+    Route::post('/posyandus', [\App\Http\Controllers\AdminController::class, 'storePosyandu'])->name('admin.posyandus.store');
+    Route::put('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'updatePosyandu'])->name('admin.posyandus.update');
+    Route::delete('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'destroyPosyandu'])->name('admin.posyandus.destroy');
+
+    // Posyandus
+    Route::post('/posyandus', [\App\Http\Controllers\AdminController::class, 'storePosyandu'])->name('admin.posyandus.store');
+    Route::put('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'updatePosyandu'])->name('admin.posyandus.update');
+    Route::delete('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'destroyPosyandu'])->name('admin.posyandus.destroy');
+
     // Vaccines
     Route::get('/vaccines', [\App\Http\Controllers\AdminController::class, 'vaccines'])->name('admin.vaccines');
     Route::post('/vaccines', [\App\Http\Controllers\AdminController::class, 'storeVaccine'])->name('admin.vaccines.store');

@@ -15,21 +15,21 @@ class AdminController extends Controller
     // Villages CRUD
     public function villages()
     {
-        $villages = Village::withCount('vaccinePatients')->get();
+        $villages = Village::withCount('vaccinePatients')->with('posyandus')->get();
         return view('dashboard.admin.villages.index', compact('villages'));
     }
 
     public function storeVillage(Request $request)
     {
         $request->validate(['name' => 'required']);
-        Village::create($request->all());
+        Village::create($request->except(['_token', '_method']));
         return back()->with('success', 'Desa berhasil ditambahkan');
     }
 
     public function updateVillage(Request $request, Village $village)
     {
         $request->validate(['name' => 'required']);
-        $village->update($request->all());
+        $village->update($request->except(['_token', '_method']));
         return back()->with('success', 'Desa berhasil diperbarui');
     }
 
@@ -37,6 +37,27 @@ class AdminController extends Controller
     {
         $village->delete();
         return back()->with('success', 'Desa berhasil dihapus');
+    }
+
+    // Posyandus CRUD
+    public function storePosyandu(Request $request) {
+        $request->validate([
+            'village_id' => 'required|exists:villages,id',
+            'name' => 'required'
+        ]);
+        \App\Models\Posyandu::create($request->except(['_token', '_method']));
+        return back()->with('success', 'Posyandu berhasil ditambahkan');
+    }
+
+    public function updatePosyandu(Request $request, \App\Models\Posyandu $posyandu) {
+        $request->validate(['name' => 'required']);
+        $posyandu->update($request->except(['_token', '_method']));
+        return back()->with('success', 'Posyandu berhasil diperbarui');
+    }
+
+    public function destroyPosyandu(\App\Models\Posyandu $posyandu) {
+        $posyandu->delete();
+        return back()->with('success', 'Posyandu berhasil dihapus');
     }
 
     // Vaccines CRUD

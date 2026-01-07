@@ -138,10 +138,12 @@
             </div>
             
             <!-- Signature Area (Optional, keeping simple as per image) -->
-            <div class="absolute bottom-12 right-16 text-right">
-                <p class="text-gray-600 mb-16">Selengen, {{ now()->translatedFormat('d F Y') }}</p>
-                <!-- <div class="w-40 border-b border-black mb-2"></div> -->
-                <p class="font-bold text-gray-800">Petugas Imunisasi</p>
+            <!-- Signature Area -->
+            <div class="w-full flex justify-end mt-12 pr-4">
+                <div class="text-center">
+                    <p class="text-gray-600 mb-20">Selengen, {{ now()->translatedFormat('d F Y') }}</p>
+                    <p class="font-bold text-gray-800 border-t border-gray-400 pt-2 px-8 inline-block select-none">Petugas Imunisasi</p>
+                </div>
             </div>
         </div>
     </div>
