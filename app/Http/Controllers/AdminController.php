@@ -297,13 +297,13 @@ class AdminController extends Controller
             public function array(): array
             {
                 return [
-                    ['Anak Contoh', 'Ibu Contoh', 'contoh@email.com', 'password123', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
+                    ['Anak Contoh', 'Ibu Contoh', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
                 ];
             }
 
             public function headings(): array
             {
-                return ['nama_anak', 'nama_ibu', 'email', 'password', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
+                return ['nama_anak', 'nama_ibu', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
             }
         }, 'template_import_peserta.xlsx');
     }

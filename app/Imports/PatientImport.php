@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class PatientImport implements ToModel, WithHeadingRow, WithValidation
 {
@@ -17,11 +18,14 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
         // Find village by name
         $village = Village::where('name', 'LIKE', '%' . trim($row['desa']) . '%')->first();
 
-        // Create User
+        // Auto-generate unique email (not used for login, just for DB uniqueness)
+        $autoEmail = 'peserta_' . Str::random(8) . '@tandu-gemas.local';
+
+        // Create User with auto-generated email
         $user = User::create([
             'name' => $row['nama_anak'],
-            'email' => $row['email'],
-            'password' => Hash::make($row['password'] ?? 'password123'),
+            'email' => $autoEmail,
+            'password' => Hash::make(Str::random(16)), // Random password, not used
             'role' => 'user',
         ]);
 
@@ -45,7 +49,6 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
         return [
             'nama_anak' => 'required|string',
             'nama_ibu' => 'required|string',
-            'email' => 'required|email|unique:users,email',
             'tanggal_lahir' => 'required',
             'jenis_kelamin' => 'required',
             'alamat' => 'required',

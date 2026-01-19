@@ -153,20 +153,16 @@ class AuthController extends Controller
         ]);
 
         $patient = Patient::find($request->patient_id);
-        $user = User::find($patient->user_id);
 
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Akun tidak ditemukan. Silahkan hubungi admin.']);
+        if (!$patient) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.']);
         }
 
-        // Log in the user
-        Auth::login($user);
-        $request->session()->regenerate();
-
+        // Redirect to the public URL-based dashboard (no login required)
         return response()->json([
             'success' => true,
             'message' => 'Selamat datang, ' . $patient->name . '!',
-            'redirect' => route('user.dashboard')
+            'redirect' => $patient->getAccessUrl()
         ]);
     }
 }

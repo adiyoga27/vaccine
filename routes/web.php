@@ -22,6 +22,104 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
 Route::post('/confirm-quick-login', [AuthController::class, 'confirmQuickLogin'])->name('confirm-quick-login');
 
+// Public Patient Dashboard (URL-based access without login)
+Route::get('/peserta/{dateBirth}/{slug}', function ($dateBirth, $slug) {
+    // Find patients with matching date of birth
+    $patients = Patient::with(['village', 'vaccinePatients.vaccine'])
+        ->whereDate('date_birth', $dateBirth)
+        ->get();
+
+    if ($patients->isEmpty()) {
+        abort(404, 'Data tidak ditemukan');
+    }
+
+    // Find patient matching the slug
+    $patient = $patients->first(function ($p) use ($slug) {
+        return $p->getSlug() === $slug;
+    });
+
+    if (!$patient) {
+        abort(404, 'Data tidak ditemukan');
+    }
+
+    // Build the dashboard data (same logic as user.dashboard)
+    $histories = $patient->vaccinePatients()->with('vaccine')->get();
+    $doneVaccineIds = $histories->where('status', 'selesai')->pluck('vaccine_id')->toArray();
+
+    $allVaccines = Vaccine::orderBy('minimum_age')->get();
+    $vaccineSchedules = [];
+    $patientAgeMonths = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1);
+
+    foreach ($allVaccines as $vac) {
+        $isDone = in_array($vac->id, $doneVaccineIds);
+        $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths($vac->minimum_age);
+        $endDate = $startDate->copy()->addDays($vac->duration_days ?? 7);
+
+        $status = 'upcoming';
+        if ($isDone) {
+            $status = 'selesai';
+        } elseif (now()->between($startDate, $endDate)) {
+            $status = 'bisa_diajukan';
+        } elseif (now()->greaterThan($endDate)) {
+            $status = 'terlewat';
+        }
+
+        $vaccineSchedules[] = (object) [
+            'vaccine' => $vac,
+            'status' => $status,
+            'min_age' => $vac->minimum_age,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'event_title' => "Vaksin: {$vac->name} ({$vac->minimum_age} Bulan)",
+            'event_start' => $startDate->format('Y-m-d'),
+            'event_end' => $endDate->format('Y-m-d'),
+        ];
+    }
+
+    // Build calendar events
+    $calendarEvents = [];
+    $groupedEvents = [];
+
+    foreach ($vaccineSchedules as $vs) {
+        if ($vs->start_date && $vs->end_date) {
+            $key = $vs->event_start . '_' . $vs->event_end . '_' . $vs->status;
+
+            if (!isset($groupedEvents[$key])) {
+                $color = '#3B82F6';
+                if ($vs->status == 'selesai') $color = '#059669';
+                elseif ($vs->status == 'bisa_diajukan') $color = '#22c55e';
+                elseif ($vs->status == 'terlewat') $color = '#EF4444';
+
+                $groupedEvents[$key] = [
+                    'titles' => [$vs->vaccine->name],
+                    'start' => $vs->event_start,
+                    'end' => $vs->end_date->copy()->addDay()->format('Y-m-d'),
+                    'color' => $color,
+                    'allDay' => true
+                ];
+            } else {
+                $groupedEvents[$key]['titles'][] = $vs->vaccine->name;
+            }
+        }
+    }
+
+    foreach ($groupedEvents as $group) {
+        $calendarEvents[] = [
+            'title' => 'Vaksin: ' . implode(', ', $group['titles']),
+            'start' => $group['start'],
+            'end' => $group['end'],
+            'color' => $group['color'],
+            'allDay' => true
+        ];
+    }
+
+    $totalVaccinesCount = $allVaccines->count();
+    $completedVaccinesCount = count($doneVaccineIds);
+    $allVaccinesCompleted = ($totalVaccinesCount > 0 && $totalVaccinesCount === $completedVaccinesCount);
+
+    return view('dashboard.user.index', compact('patient', 'vaccineSchedules', 'calendarEvents', 'patientAgeMonths', 'allVaccinesCompleted'));
+})->name('peserta.dashboard');
+
 // User Dashboard
 Route::middleware(['auth'])->prefix('user')->group(function () {
     Route::get('/dashboard', function () {
