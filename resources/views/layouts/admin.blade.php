@@ -20,9 +20,9 @@
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transition-transform duration-300 md:translate-x-0 md:static md:inset-auto md:h-screen md:sticky md:top-0 transform -translate-x-full">
             <div class="p-6 h-full overflow-y-auto">
                 <div class="flex items-center justify-between mb-8">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">A</div>
-                        <span class="font-bold text-xl tracking-wide">Posyandu<span class="text-blue-400">Admin</span></span>
+                    <div class="flex items-center gap-3">
+                        <img src="{{ asset('images/logo-tandu-gemas.png') }}" alt="TANDU GEMAS" class="w-10 h-10 rounded-full">
+                        <span class="font-bold text-xl tracking-wide"><span class="text-amber-400">TANDU</span> <span class="text-emerald-400">GEMAS</span></span>
                     </div>
                     <!-- Close Button (Mobile) -->
                     <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">

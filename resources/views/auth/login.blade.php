@@ -17,6 +17,7 @@
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="px-8 py-10">
             <div class="text-center mb-10">
+                <img src="{{ asset('images/logo-tandu-gemas.png') }}" alt="TANDU GEMAS" class="w-20 h-20 rounded-full mx-auto mb-4 shadow-lg">
                 <h2 class="text-3xl font-extrabold text-gray-900">Selamat Datang</h2>
                 <p class="mt-2 text-sm text-gray-600">Masuk ke akun Admin TANDU GEMAS</p>
             </div>

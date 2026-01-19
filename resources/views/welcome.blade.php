@@ -41,7 +41,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center gap-2">
-                    <div class="w-10 h-10 gold-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">🍼</div>
+                    <img src="{{ asset('images/logo-tandu-gemas.png') }}" alt="TANDU GEMAS" class="w-10 h-10 rounded-full shadow-lg">
                     <div>
                         <span class="font-extrabold text-xl tracking-tight">
                             <span class="text-amber-500">TANDU</span><span class="text-emerald-600"> GEMAS</span>
