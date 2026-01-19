@@ -66,8 +66,8 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden hero-pattern">
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col-reverse lg:flex-row items-center gap-12">
+    <div class="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden hero-pattern" x-data="quickLoginModal()">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12">
             <!-- Text Content -->
             <div class="lg:w-1/2 text-center lg:text-left z-10" data-aos="fade-right" data-aos-duration="1000">
                 <!-- Creative Acronym Banner -->
@@ -93,10 +93,6 @@
                     Sistem Digital Posyandu Modern untuk memantau jadwal vaksinasi, riwayat kesehatan, dan tumbuh kembang buah hati Anda dengan mudah, akurat, dan <span class="text-amber-600 font-semibold">100% GRATIS</span>!
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="#cek-jadwal" class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-200">
-                        🔍 Cek Jadwal Vaksinasi
-                        <svg class="w-5 h-5 ml-2 -mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                    </a>
                     <a href="#features" class="inline-flex items-center justify-center px-8 py-4 border-2 border-emerald-500 text-base font-semibold rounded-xl text-emerald-700 bg-white hover:bg-emerald-50 shadow-sm transition duration-200">
                         📖 Pelajari Lebih Lanjut
                     </a>
@@ -119,19 +115,100 @@
                 </div>
             </div>
 
-            <!-- Hero Image/Illustration -->
-            <div class="lg:w-5/12 relative flex justify-center" data-aos="fade-left" data-aos-duration="1000">
-                <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white max-w-md">
-                    <img src="{{ asset('images/hero-baby.png') }}" alt="Ibu dan Anak di Posyandu" class="w-full h-auto object-cover">
+            <!-- Hero Form (Replaces Image) -->
+            <div class="lg:w-1/2 w-full relative z-10" data-aos="fade-left" data-aos-duration="1000">
+                 <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-bl-[4rem] -mr-4 -mt-4 z-0"></div>
+
+                    <div class="relative z-10">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Cek Jadwal Imunisasi</h2>
+                        <p class="text-gray-500 mb-6">Masukkan data anak untuk melihat jadwal.</p>
+
+                        <!-- Error Message -->
+                        <div x-show="errorMessage" x-transition class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-red-700" x-text="errorMessage"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div x-show="successMessage" x-transition class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-green-700" x-text="successMessage"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form @submit.prevent="submitForm" class="space-y-4">
+                            <div>
+                                <label for="date_birth" class="block text-sm font-medium text-gray-700 mb-1">
+                                    📅 Tanggal Lahir Bayi
+                                </label>
+                                <input type="date" x-model="dateBirth" id="date_birth" required
+                                    class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+
+                            <div>
+                                <label for="child_name" class="block text-sm font-medium text-gray-700 mb-1">
+                                    👶 Nama Anak
+                                </label>
+                                <input type="text" x-model="childName" id="child_name" required minlength="2"
+                                    placeholder="Masukkan nama anak"
+                                    class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+
+                            <button type="submit" :disabled="loading"
+                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="!loading">🔍 Cari Data</span>
+                                <span x-show="loading" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Mencari...
+                                </span>
+                            </button>
+                        </form>
+
+                        <!-- Patient Selection List -->
+                        <div x-show="showPatientList" x-transition class="mt-4 border-t border-gray-100 pt-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Pilih Data Anak:</h4>
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                <template x-for="patient in patients" :key="patient.id">
+                                    <button @click="selectPatient(patient.id)" :disabled="confirming"
+                                        class="w-full p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 text-left transition flex justify-between items-center disabled:opacity-50">
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm" x-text="patient.name"></p>
+                                            <p class="text-xs text-gray-500">
+                                                <span x-text="patient.date_birth"></span>
+                                            </p>
+                                        </div>
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <!-- Floating Elements -->
-                <div class="absolute -top-6 -right-6 w-24 h-24 bg-amber-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>
-                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-400 rounded-full blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
             </div>
         </div>
     </div>
-
-    <!-- Features Section -->
+    <!-- Features Section (No changes needed) -->
     <div id="features" class="py-20 bg-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16" data-aos="fade-up">
@@ -165,108 +242,6 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Notifikasi Pintar</h3>
                     <p class="text-gray-600">Dapatkan pengingat otomatis sebelum jadwal posyandu dimulai. Membantu Anda disiplin waktu.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Login Section -->
-    <div id="cek-jadwal" class="py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden" x-data="quickLoginModal()">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-10" data-aos="fade-up">
-                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Cek Jadwal Imunisasi</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                    Lihat Jadwal Vaksinasi Anak Anda
-                </p>
-                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-                    Masukkan tanggal lahir bayi dan nama ibu untuk melihat jadwal imunisasi.
-                </p>
-            </div>
-
-            <div class="max-w-md mx-auto" data-aos="fade-up" data-aos-delay="100">
-                <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                    <!-- Error Message -->
-                    <div x-show="errorMessage" x-transition class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-red-700" x-text="errorMessage"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Success Message -->
-                    <div x-show="successMessage" x-transition class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-green-700" x-text="successMessage"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form @submit.prevent="submitForm" class="space-y-6">
-                        <div>
-                            <label for="date_birth" class="block text-sm font-medium text-gray-700 mb-2">
-                                📅 Tanggal Lahir Bayi
-                            </label>
-                            <input type="date" x-model="dateBirth" id="date_birth" required
-                                class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
-                        </div>
-
-                        <div>
-                            <label for="child_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                👶 Nama Anak
-                            </label>
-                            <input type="text" x-model="childName" id="child_name" required minlength="2"
-                                placeholder="Masukkan nama anak (minimal 2 huruf)"
-                                class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
-                            <p class="mt-1 text-xs text-gray-500">Cukup masukkan sebagian nama untuk mencari</p>
-                        </div>
-
-                        <button type="submit" :disabled="loading"
-                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-show="!loading">🔍 Cari Jadwal Vaksinasi</span>
-                            <span x-show="loading" class="flex items-center">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Mencari...
-                            </span>
-                        </button>
-                    </form>
-
-                    <!-- Patient Selection List -->
-                    <div x-show="showPatientList" x-transition class="mt-6">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Pilih Data Anak:</h4>
-                        <div class="space-y-2 max-h-64 overflow-y-auto">
-                            <template x-for="patient in patients" :key="patient.id">
-                                <button @click="selectPatient(patient.id)" :disabled="confirming"
-                                    class="w-full p-4 bg-gray-50 hover:bg-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 text-left transition flex justify-between items-center disabled:opacity-50">
-                                    <div>
-                                        <p class="font-semibold text-gray-900" x-text="patient.name"></p>
-                                        <p class="text-sm text-gray-500">
-                                            <span x-text="'Lahir: ' + patient.date_birth"></span> • 
-                                            <span x-text="'Ibu: ' + patient.mother_name"></span>
-                                        </p>
-                                        <p class="text-xs text-gray-400" x-text="'Desa: ' + patient.village"></p>
-                                    </div>
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
