@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Imunisasi Posyandu</title>
+    <title>TANDU GEMAS - Digital Posyandu untuk Generasi Keluarga Emas</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
@@ -11,11 +11,26 @@
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        body { font-family: 'Poppins', sans-serif; }
         .hero-pattern {
             background-color: #f3f4f6;
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .gold-gradient { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%); }
+        .text-gold { color: #f59e0b; }
+        .acronym-letter { 
+            display: inline-block;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
     </style>
 </head>
@@ -26,22 +41,23 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">P</div>
-                    <span class="font-bold text-xl text-blue-900 tracking-tight">Posyandu<span class="text-blue-500">Care</span></span>
+                    <div class="w-10 h-10 gold-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">🍼</div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight">
+                            <span class="text-amber-500">TANDU</span><span class="text-emerald-600"> GEMAS</span>
+                        </span>
+                    </div>
                 </div>
                 <div class="flex space-x-4">
                     @if (Route::has('login'))
                         @auth
                             @if(Auth::user()->role === 'admin')
-                                <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                                <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
                             @else
-                                <a href="{{ route('user.dashboard') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                                <a href="{{ route('user.dashboard') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
                             @endif
                         @else
-                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Login</a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-md transition transform hover:scale-105">Register</a>
-                            @endif
+                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Login Admin</a>
                         @endauth
                     @endif
                 </div>
@@ -54,37 +70,50 @@
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col-reverse lg:flex-row items-center gap-12">
             <!-- Text Content -->
             <div class="lg:w-1/2 text-center lg:text-left z-10" data-aos="fade-right" data-aos-duration="1000">
-                <div class="inline-block px-4 py-1.5 mb-6 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm tracking-wide shadow-sm">
-                    ✨ Kesehatan Masa Depan Buah Hati
+                <!-- Creative Acronym Banner -->
+                <div class="inline-block mb-6" data-aos="zoom-in">
+                    <div class="bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200 rounded-2xl px-6 py-4 shadow-lg">
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-x-1 text-sm sm:text-base">
+                            <span>digi<span class="acronym-letter text-lg">TA</span>l</span>
+                            <span>posy<span class="acronym-letter text-lg">ND</span>u</span>
+                            <span><span class="acronym-letter text-lg">U</span>ntuk</span>
+                            <span><span class="acronym-letter text-lg">G</span>enerasi</span>
+                            <span>k<span class="acronym-letter text-lg">E</span>luarga</span>
+                            <span>e<span class="acronym-letter text-lg">MAS</span></span>
+                        </div>
+                    </div>
                 </div>
+
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
-                    Lindungi Si Kecil dengan <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Imunisasi Lengkap</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-600">TANDU</span> 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-600">GEMAS</span>
+                    <span class="block text-2xl sm:text-3xl mt-2 font-semibold text-gray-600">✨ Imunisasi Anak Sehat & Cerdas</span>
                 </h1>
                 <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                    Sistem Manajemen Posyandu Digital untuk memantau jadwal vaksinasi, riwayat kesehatan, dan tumbuh kembang anak Anda dengan mudah dan akurat.
+                    Sistem Digital Posyandu Modern untuk memantau jadwal vaksinasi, riwayat kesehatan, dan tumbuh kembang buah hati Anda dengan mudah, akurat, dan <span class="text-amber-600 font-semibold">100% GRATIS</span>!
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-200">
-                        Ayo Lanjutkan
-                        <svg class="w-5 h-5 ml-2 -mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                    <a href="#cek-jadwal" class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-200">
+                        🔍 Cek Jadwal Vaksinasi
+                        <svg class="w-5 h-5 ml-2 -mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                     </a>
-                    <a href="#features" class="inline-flex items-center justify-center px-8 py-3 border border-gray-200 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm transition duration-200">
-                        Pelajari Lebih Lanjut
+                    <a href="#features" class="inline-flex items-center justify-center px-8 py-4 border-2 border-emerald-500 text-base font-semibold rounded-xl text-emerald-700 bg-white hover:bg-emerald-50 shadow-sm transition duration-200">
+                        📖 Pelajari Lebih Lanjut
                     </a>
                 </div>
                 
                 <!-- Stats -->
                 <div class="mt-12 grid grid-cols-3 gap-6 border-t border-gray-200 pt-8" data-aos="fade-up" data-aos-delay="200">
                     <div>
-                        <p class="text-3xl font-bold text-blue-600">100%</p>
+                        <p class="text-3xl font-bold text-amber-500">100%</p>
                         <p class="text-sm text-gray-500 mt-1">Gratis</p>
                     </div>
                     <div>
-                        <p class="text-3xl font-bold text-blue-600">500+</p>
+                        <p class="text-3xl font-bold text-emerald-500">500+</p>
                         <p class="text-sm text-gray-500 mt-1">Anak Terdaftar</p>
                     </div>
                     <div>
-                        <p class="text-3xl font-bold text-blue-600">24/7</p>
+                        <p class="text-3xl font-bold text-amber-500">24/7</p>
                         <p class="text-sm text-gray-500 mt-1">Akses Data</p>
                     </div>
                 </div>
@@ -96,8 +125,8 @@
                     <img src="{{ asset('images/hero-baby.png') }}" alt="Ibu dan Anak di Posyandu" class="w-full h-auto object-cover">
                 </div>
                 <!-- Floating Elements -->
-                <div class="absolute -top-6 -right-6 w-24 h-24 bg-yellow-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>
-                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-400 rounded-full blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
+                <div class="absolute -top-6 -right-6 w-24 h-24 bg-amber-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-400 rounded-full blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
             </div>
         </div>
     </div>
@@ -332,14 +361,14 @@
     </script>
 
     <!-- CTA Section -->
-    <div class="bg-blue-600 py-16">
+    <div class="bg-gradient-to-r from-amber-500 to-emerald-500 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" data-aos="zoom-in">
-            <h2 class="text-3xl font-extrabold text-white sm:text-4xl mb-6">Siap Memberikan yang Terbaik untuk Buah Hati?</h2>
-            <p class="text-xl text-blue-100 max-w-2xl mx-auto mb-10">
-                Bergabunglah dengan ribuan orang tua lainnya yang telah mempercayakan pencatatan kesehatan anaknya pada kami.
+            <h2 class="text-3xl font-extrabold text-white sm:text-4xl mb-6">🌟 Generasi Keluarga Emas Dimulai dari Sini</h2>
+            <p class="text-xl text-white/90 max-w-2xl mx-auto mb-10">
+                Pantau kesehatan dan jadwal vaksinasi anak Anda dengan mudah melalui TANDU GEMAS.
             </p>
-            <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-bold rounded-xl text-blue-700 bg-white hover:bg-blue-50 shadow-lg transform hover:-translate-y-1 transition duration-200">
-                Daftar Sekarang
+            <a href="#cek-jadwal" class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-bold rounded-xl text-amber-600 bg-white hover:bg-gray-50 shadow-lg transform hover:-translate-y-1 transition duration-200">
+                🔍 Cek Jadwal Sekarang
             </a>
         </div>
     </div>
@@ -348,14 +377,17 @@
     <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <span class="font-bold text-2xl tracking-tight">PosyanduCare</span>
-                    <p class="text-gray-400 text-sm mt-2">© 2026 PosyanduCare. All rights reserved.</p>
+                <div class="mb-6 md:mb-0 text-center md:text-left">
+                    <span class="font-extrabold text-2xl tracking-tight">
+                        <span class="text-amber-400">TANDU</span> <span class="text-emerald-400">GEMAS</span>
+                    </span>
+                    <p class="text-gray-400 text-sm mt-2">Digital Posyandu untuk Generasi Keluarga Emas</p>
+                    <p class="text-gray-500 text-xs mt-1">© 2026 TANDU GEMAS. All rights reserved.</p>
                 </div>
                 <div class="flex space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-white transition">Tentang Kami</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition">Kebijakan Privasi</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition">Hubungi Kami</a>
+                    <a href="#" class="text-gray-400 hover:text-amber-400 transition">Tentang Kami</a>
+                    <a href="#" class="text-gray-400 hover:text-amber-400 transition">Kebijakan Privasi</a>
+                    <a href="#" class="text-gray-400 hover:text-amber-400 transition">Hubungi Kami</a>
                 </div>
             </div>
         </div>
