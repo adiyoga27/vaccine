@@ -1,8 +1,8 @@
-# PosyanduCare - Sistem Manajemen Vaksinasi Digital
+# TANDU GEMAS - Sistem Manajemen Vaksinasi Digital
 
-![PosyanduCare Hero](https://via.placeholder.com/1200x400?text=PosyanduCare+Banner)
+![TANDU GEMAS Hero](https://via.placeholder.com/1200x400?text=TANDU+GEMAS+Banner)
 
-**PosyanduCare** adalah aplikasi berbasis web yang dirancang untuk mendigitalisasi proses manajemen posyandu, mulai dari pendaftaran peserta, penjadwalan vaksinasi, hingga pencatatan riwayat imunisasi anak. Sistem ini memudahkan orang tua dalam memantau jadwal vaksin buah hati dan membantu petugas posyandu dalam mengelola data secara efisien.
+**TANDU GEMAS** (digiTAl posyaNDu Untuk Generasi kEluarga eMAS) adalah aplikasi berbasis web yang dirancang untuk mendigitalisasi proses manajemen posyandu, mulai dari pendaftaran peserta, penjadwalan vaksinasi, hingga pencatatan riwayat imunisasi anak. Sistem ini memudahkan orang tua dalam memantau jadwal vaksin buah hati dan membantu petugas posyandu dalam mengelola data secara efisien.
 
 ## 🚀 Fitur Utama
 

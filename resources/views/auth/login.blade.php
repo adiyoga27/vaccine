@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - PosyanduCare</title>
+    <title>Login Admin - TANDU GEMAS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hero-pattern {
@@ -18,7 +18,7 @@
         <div class="px-8 py-10">
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-extrabold text-gray-900">Selamat Datang</h2>
-                <p class="mt-2 text-sm text-gray-600">Masuk ke akun PosyanduCare Anda</p>
+                <p class="mt-2 text-sm text-gray-600">Masuk ke akun Admin TANDU GEMAS</p>
             </div>
 
             <form action="{{ route('login') }}" method="POST" class="space-y-6">

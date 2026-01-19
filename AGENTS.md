@@ -1,4 +1,4 @@
-# AGENTS.md - PosyanduCare Development Guide
+# AGENTS.md - TANDU GEMAS Development Guide
 
 ## Build, Lint, and Test Commands
 

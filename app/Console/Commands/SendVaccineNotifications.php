@@ -77,7 +77,7 @@ class SendVaccineNotifications extends Command
     private function sendNotification($url, $patient, $vaccine, $date)
     {
         $message = "Halo Bunda {$patient->mother_name},\n\n";
-        $message .= "Ini adalah pengingat dari PosyanduCare.\n";
+        $message .= "Ini adalah pengingat dari TANDU GEMAS.\n";
         $message .= "Saat ini Ananda *{$patient->name}* sudah memasuki jadwal untuk imunisasi *{$vaccine->name}*.\n";
         $message .= "Silakan kunjungi Posyandu terdekat segera.\n\n";
         $message .= "Jadwal dimulai: " . $date->format('d F Y') . "\n";

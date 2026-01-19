@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Peserta - PosyanduCare</title>
+    <title>Dashboard Peserta - TANDU GEMAS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -20,7 +20,7 @@
                 <div class="flex justify-between h-16">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">P</div>
-                        <span class="font-bold text-xl text-gray-800">PosyanduCare</span>
+                        <span class="font-bold text-xl"><span class="text-amber-500">TANDU</span> <span class="text-emerald-600">GEMAS</span></span>
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="text-gray-700 text-sm hidden sm:block">Halo, <span class="font-semibold">{{ Auth::user()->name }}</span></span>
