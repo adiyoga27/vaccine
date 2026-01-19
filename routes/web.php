@@ -251,7 +251,7 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
             $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
             $romanMonth = $romanMonths[$month] ?? 'I';
             
-            $certificateNumber = sprintf("No: %03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
+            $certificateNumber = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
             
             $patient->update([
                 'completed_vaccination_at' => $completionDate,
@@ -339,10 +339,11 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('admin.notifications.status');
     Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('admin.notifications.logout');
     
-    Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
-        $certificateNumber = $patient->certificate_number;
+    Route::get('/certificate/{certificate_number}', function ($certificate_number) {
+        $certificateNumber = urldecode($certificate_number);
+        $patient = \App\Models\Patient::where('certificate_number', $certificateNumber)->firstOrFail();
         return view('dashboard.user.certificate', compact('patient', 'certificateNumber'));
-    })->name('admin.certificate');
+    })->where('certificate_number', '.*')->name('admin.certificate');
 
     // Requests Approval
     Route::post('/request/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveRequest'])->name('admin.approve');

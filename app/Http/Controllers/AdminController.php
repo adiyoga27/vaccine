@@ -653,7 +653,7 @@ class AdminController extends Controller
         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
         $romanMonth = $romanMonths[$month] ?? 'I';
         
-        $certNum = sprintf("No: %03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
+        $certNum = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
         
         $patient->update([
             'completed_vaccination_at' => $completionDate,

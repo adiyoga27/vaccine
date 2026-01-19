@@ -99,14 +99,11 @@
                 <p class="text-sm tracking-widest text-gray-500 uppercase font-semibold mb-2">SERTIFIKAT BAGIAN BELAKANG</p>
                 <h1 class="text-4xl font-bold mb-2 tracking-wide text-blue-900">SERTIFIKAT IMUNISASI DASAR LENGKAP</h1>
                 <p class="text-xl text-blue-600 font-serif italic mt-2">PUSTU ILP SELENGEN</p>
-                <p class="text-base font-bold text-gray-700 mt-2">{{ $certificateNumber }}</p>
+                <p class="text-base font-bold text-gray-700 mt-2">No. {{ $certificateNumber }}</p>
             </div>
 
             <!-- Pre-content -->
-            <div class="mb-8">
-                <p class="text-gray-600 text-lg uppercase tracking-wide">Dahak, ________________________</p>
-                <!-- Wait, image says 'DIBERIKAN KEPADA' in center. Logic adjustment -->
-            </div>
+            <!-- Removed placeholder as requested -->
             
             <div class="mb-10">
                 <p class="text-gray-500 font-serif italic mb-6">Diberikan Kepada :</p>
