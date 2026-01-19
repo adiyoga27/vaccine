@@ -61,29 +61,20 @@ class SendDailyReminders extends Command
                 
                 // If Today IS the Start Date (exact match for "Hari Ini")
                 if ($startDate->isToday()) {
-                    
-                    // Prepare Message
-                    $message = $template->content;
-                    $message = str_replace('[mother_name]', $patient->mother_name, $message);
-                    $message = str_replace('[vaccine_name]', $vaccine->name, $message);
-                    $message = str_replace('[patient_name]', $patient->name, $message);
-                    $message = str_replace('[village_name]', $patient->village->name ?? '-', $message);
-                    // For Posyandu, we might check if there's a scheduled event or just generic
-                    // Let's try to find a Schedule for this Village + Vaccine today
-                    $schedule = \App\Models\VaccineSchedule::where('village_id', $patient->village_id)
-                                ->whereDate('scheduled_at', now())
-                                ->whereHas('vaccines', function($q) use ($vaccine) {
-                                    $q->where('vaccines.id', $vaccine->id);
-                                })->first();
-
+                    // Start of restored posyandu logic
                     // For Posyandu, list all available in the village
                     $posyandus = \App\Models\Posyandu::where('village_id', $patient->village_id)->pluck('name')->toArray();
                     $posyanduName = empty($posyandus) ? 'Posyandu Terdekat' : implode(', ', $posyandus);
+                    // End of restored posyandu logic
                     
                     // Prepare Message
+                    $ageMonths = \Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()); // Age in months
                     $message = \App\Models\NotificationTemplate::parse($template->content, $patient, [
+                        'parent_name' => $patient->mother_name,
+                        'child_name' => $patient->name,
                         'vaccine_name' => $vaccine->name,
                         'posyandu_name' => $posyanduName,
+                        'age' => number_format($ageMonths, 1) . ' Bulan',
                     ]);
 
                     // Send

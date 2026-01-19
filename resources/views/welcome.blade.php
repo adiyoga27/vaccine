@@ -32,7 +32,11 @@
                 <div class="flex space-x-4">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                            @if(Auth::user()->role === 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                            @else
+                                <a href="{{ route('user.dashboard') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                            @endif
                         @else
                             <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2 rounded-md transition">Login</a>
                             @if (Route::has('register'))

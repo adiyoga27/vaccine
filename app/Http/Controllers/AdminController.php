@@ -322,7 +322,8 @@ class AdminController extends Controller
                      $posyanduName = $posyandu ? $posyandu->name : 'Posyandu';
 
                      $msg = \App\Models\NotificationTemplate::parse($approvedTemplate->content, $patient, [
-                        'patient_name' => $patient->name,
+                        'parent_name' => $patient->mother_name, // Changed from patient_name (and explicit mapping)
+                        'child_name' => $patient->name,
                         'vaccine_name' => $vaccine->name,
                         'vaccinated_at' => \Carbon\Carbon::parse($request->vaccinated_at)->format('d-m-Y'),
                         'posyandu_name' => $posyanduName,
@@ -368,7 +369,8 @@ class AdminController extends Controller
                     $link = route('admin.certificate', ['patient' => $patient->id]); // Using the public/admin route for download
                     
                     $message = \App\Models\NotificationTemplate::parse($template->content, $patient, [
-                        'patient_name' => $patient->name, // redundant but safe
+                        'parent_name' => $patient->mother_name,
+                        'child_name' => $patient->name,
                         'certificate_link' => $link
                     ]);
 
