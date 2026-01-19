@@ -184,6 +184,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('admin.users');
     Route::get('/users/create', [\App\Http\Controllers\AdminController::class, 'createUser'])->name('admin.users.create');
     Route::post('/users', [\App\Http\Controllers\AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::get('/users/{user}/edit', [\App\Http\Controllers\AdminController::class, 'editUser'])->name('admin.users.edit');
+    Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'updateUser'])->name('admin.users.update');
     
     Route::get('/history', [\App\Http\Controllers\AdminController::class, 'history'])->name('admin.history');
     Route::post('/history/store', [\App\Http\Controllers\AdminController::class, 'storeHistory'])->name('admin.history.store');

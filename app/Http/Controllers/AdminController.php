@@ -201,6 +201,57 @@ class AdminController extends Controller
         return redirect()->route('admin.users')->with('success', 'Peserta berhasil didaftarkan');
     }
 
+    public function editUser(User $user)
+    {
+        $user->load('patient');
+        $villages = Village::all();
+        return view('dashboard.admin.users.edit', compact('user', 'villages'));
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'nullable|confirmed|min:6', // Optional password update
+            // Patient Data
+            'mother_name' => 'required',
+            'date_birth' => 'required|date',
+            'address' => 'required',
+            'gender' => 'required|in:male,female',
+            'village_id' => 'required|exists:villages,id',
+            'phone' => 'required',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+            ];
+
+            if ($request->filled('password')) {
+                $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+            }
+
+            $user->update($updateData);
+
+            $user->patient()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'village_id' => $request->village_id,
+                    'name' => $request->name,
+                    'mother_name' => $request->mother_name,
+                    'date_birth' => $request->date_birth,
+                    'address' => $request->address,
+                    'gender' => $request->gender,
+                    'phone' => $request->phone,
+                ]
+            );
+        });
+
+        return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diperbarui');
+    }
+
     public function logs()
     {
         $logs = Activity::latest()->paginate(20);
