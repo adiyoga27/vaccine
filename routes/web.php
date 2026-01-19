@@ -87,7 +87,7 @@ Route::get('/peserta/{dateBirth}/{slug}', function ($dateBirth, $slug) {
             if (!isset($groupedEvents[$key])) {
                 $color = '#3B82F6';
                 if ($vs->status == 'selesai') $color = '#059669';
-                elseif ($vs->status == 'bisa_diajukan') $color = '#22c55e';
+                elseif ($vs->status == 'bisa_diajukan') $color = '#d97706'; // Amber-600
                 elseif ($vs->status == 'terlewat') $color = '#EF4444';
 
                 $groupedEvents[$key] = [
@@ -183,7 +183,7 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
                     if ($vs->status == 'selesai') {
                         $color = '#059669'; // Emerald-600
                     } elseif ($vs->status == 'bisa_diajukan') {
-                        $color = '#22c55e'; // Green-500
+                        $color = '#d97706'; // Amber-600 (Changed from Green to distinguish)
                     } elseif ($vs->status == 'terlewat') {
                         $color = '#EF4444'; // Red
                     }

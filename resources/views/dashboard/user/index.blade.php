@@ -103,7 +103,7 @@
                         <h4 class="font-bold text-gray-900 mb-4">Jadwal & Status Imunisasi</h4>
                         <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             @foreach($vaccineSchedules as $item)
-                            <div class="flex items-center justify-between p-3 rounded-lg border {{ $item->status == 'selesai' ? 'border-emerald-100 bg-emerald-50' : ($item->status == 'bisa_diajukan' ? 'border-green-100 bg-green-50' : ($item->status == 'terlewat' ? 'border-red-100 bg-red-50' : 'border-gray-100 bg-white')) }}">
+                            <div class="flex items-center justify-between p-3 rounded-lg border {{ $item->status == 'selesai' ? 'border-emerald-100 bg-emerald-50' : ($item->status == 'bisa_diajukan' ? 'border-amber-100 bg-amber-50' : ($item->status == 'terlewat' ? 'border-red-100 bg-red-50' : 'border-gray-100 bg-white')) }}">
                                 <div>
                                     <p class="text-sm font-semibold text-gray-900">{{ $item->vaccine->name }}</p>
                                     <p class="text-xs text-gray-500 mt-0.5">Jadwal: {{ $item->start_date ? $item->start_date->format('d M Y') : 'N/A' }}</p>
@@ -115,7 +115,7 @@
                                     @if($item->status == 'selesai')
                                         <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold">Selesai</span>
                                     @elseif($item->status == 'bisa_diajukan')
-                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold animate-pulse">Saatnya Vaksin</span>
+                                        <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-bold animate-pulse">Saatnya Vaksin</span>
                                     @elseif($item->status == 'terlewat')
                                         <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-bold">Terlewat</span>
                                     @else
@@ -133,6 +133,26 @@
                     <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 h-full min-h-[500px]">
                         <h3 class="font-bold text-gray-800 mb-4 text-lg">Kalender Imunisasi Anak</h3>
                         <div id="calendar"></div>
+                        
+                        <!-- Calendar Legend -->
+                        <div class="mt-6 flex flex-wrap gap-4 text-xs font-medium text-gray-600 border-t pt-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-[#059669]"></span>
+                                <span>Selesai</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-[#d97706]"></span>
+                                <span>Saatnya Vaksin</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-[#3B82F6]"></span>
+                                <span>Akan Datang</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-[#EF4444]"></span>
+                                <span>Terlewat</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
