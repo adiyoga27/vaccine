@@ -92,7 +92,7 @@
                         </td>
                         <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
                         <td class="px-6 py-4 flex items-center gap-2">
-                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 Approve
                             </button>
@@ -137,7 +137,7 @@
                         <td class="px-6 py-4 text-gray-500">{{ $item->start_date->format('d M Y') }}</td>
                         <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
                         <td class="px-6 py-4">
-                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 Approve
                             </button>
@@ -243,7 +243,7 @@
                             <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Terlewat</span>
                         </td>
                         <td class="px-6 py-4">
-                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 Approve
                             </button>
@@ -438,11 +438,12 @@
                 vaccine: {}
             },
 
-            openApproveModal(patientId, vaccineId, patientName, vaccineName) {
+            openApproveModal(patientId, vaccineId, patientName, vaccineName, villageId) {
                 this.selectedPatientId = patientId;
                 this.selectedVaccineId = vaccineId;
                 this.selectedPatientName = patientName;
                 this.selectedVaccineName = vaccineName;
+                this.selectedVillageId = villageId; // Pre-select village
                 this.approveModalOpen = true;
             },
 
