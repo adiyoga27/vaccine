@@ -87,7 +87,8 @@
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-600">TANDU</span> 
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-600">GEMAS</span>
-                    <span class="block text-2xl sm:text-3xl mt-2 font-semibold text-gray-600">✨ Imunisasi Anak Sehat & Cerdas</span>
+                    <span class="block text-sm sm:text-base font-medium text-emerald-600 mt-3 mb-1 tracking-wide">By Endang Junaela, S.ST., Ns</span>
+                    <span class="block text-2xl sm:text-3xl font-semibold text-gray-600">✨ Imunisasi Anak Sehat & Cerdas</span>
                 </h1>
                 <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                     Sistem Digital Posyandu Modern untuk memantau jadwal vaksinasi, riwayat kesehatan, dan tumbuh kembang buah hati Anda dengan mudah, akurat, dan <span class="text-amber-600 font-semibold">100% GRATIS</span>!

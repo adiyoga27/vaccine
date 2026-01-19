@@ -23,11 +23,16 @@
                         <span class="font-bold text-xl"><span class="text-amber-500">TANDU</span> <span class="text-emerald-600">GEMAS</span></span>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="text-gray-700 text-sm hidden sm:block">Halo, <span class="font-semibold">{{ Auth::user()->name }}</span></span>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition">Keluar</button>
-                        </form>
+                        @auth
+                            <span class="text-gray-700 text-sm hidden sm:block">Halo, <span class="font-semibold">{{ Auth::user()->name }}</span></span>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition">Keluar</button>
+                            </form>
+                        @else
+                            <span class="text-gray-700 text-sm hidden sm:block">Halo, <span class="font-semibold">{{ $patient->name ?? 'Tamu' }}</span></span>
+                            <a href="{{ url('/') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition">Beranda</a>
+                        @endauth
                     </div>
                 </div>
             </div>
