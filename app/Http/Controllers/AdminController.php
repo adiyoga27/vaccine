@@ -502,7 +502,11 @@ class AdminController extends Controller
         $completedIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
         
         // If count matches (User has done ALL vaccines)
+        // If count matches (User has done ALL vaccines)
         if ($allVaccines->count() === count($completedIds)) {
+            // Generate Certificate (Number & Date)
+            $this->generateCertificate($patient);
+
             $template = \App\Models\NotificationTemplate::where('slug', 'vaccine_completed')->first();
             if ($template && $patient->phone) {
                 try {
@@ -579,5 +583,67 @@ class AdminController extends Controller
         $record->delete();
 
         return back()->with('success', 'Data vaksinasi berhasil dikembalikan (rollback)');
+    }
+    public function approveRequest($id)
+    {
+        $record = \App\Models\VaccinePatient::findOrFail($id);
+        $record->update([
+            'status' => 'selesai',
+            'vaccinated_at' => now() // Set to now upon approval
+        ]);
+
+        // Check for completion
+        $patient = $record->patient;
+        $totalVaccines = Vaccine::count();
+        $completedCount = $patient->vaccinePatients()->where('status', 'selesai')->count();
+
+        if ($totalVaccines > 0 && $completedCount >= $totalVaccines) {
+            $this->generateCertificate($patient);
+            
+            // Trigger completion notification (reuse logic from storeHistory or call here?)
+            // For now, let's keep it simple. If we want notification, we should extract that logic.
+            // But user only asked for "Data update" and "Certificate Field".
+        }
+
+        return back()->with('success', 'Permintaan vaksinasi disetujui.');
+    }
+
+    public function rejectRequest($id)
+    {
+        $record = \App\Models\VaccinePatient::findOrFail($id);
+        $record->delete(); // Or set status to 'rejected' if column exists? Usually delete or 'rejected'.
+        // Request table status is enum('pendding', 'selesai'...). If no rejected status, delete.
+        // Schema check? Assuming delete for now as per dashboard view using DELETE method.
+        return back()->with('success', 'Permintaan vaksinasi ditolak.');
+    }
+
+    private function generateCertificate($patient)
+    {
+        // Avoid regenerating if already exists (as per user implication "simpan nomor")
+        if ($patient->certificate_number) return;
+
+        $lastRecord = $patient->vaccinePatients()->where('status', 'selesai')->latest('updated_at')->first();
+        $completionDate = $lastRecord ? $lastRecord->updated_at : now();
+        $month = $completionDate->month;
+        $year = $completionDate->year;
+        
+        $startOfMonth = $completionDate->copy()->startOfMonth();
+        
+        $sequence = \App\Models\VaccinePatient::where('status', 'selesai')
+            ->whereBetween('updated_at', [$startOfMonth, $completionDate])
+            ->distinct('patient_id')
+            ->count('patient_id');
+            
+        $sequence = $sequence ?: 1;
+        
+        $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+        $romanMonth = $romanMonths[$month] ?? 'I';
+        
+        $certNum = sprintf("No: %03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
+        
+        $patient->update([
+            'completed_vaccination_at' => $completionDate,
+            'certificate_number' => $certNum
+        ]);
     }
 }

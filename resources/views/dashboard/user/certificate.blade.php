@@ -99,6 +99,7 @@
                 <p class="text-sm tracking-widest text-gray-500 uppercase font-semibold mb-2">SERTIFIKAT BAGIAN BELAKANG</p>
                 <h1 class="text-4xl font-bold mb-2 tracking-wide text-blue-900">SERTIFIKAT IMUNISASI DASAR LENGKAP</h1>
                 <p class="text-xl text-blue-600 font-serif italic mt-2">PUSTU ILP SELENGEN</p>
+                <p class="text-base font-bold text-gray-700 mt-2">{{ $certificateNumber }}</p>
             </div>
 
             <!-- Pre-content -->

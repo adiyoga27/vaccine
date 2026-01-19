@@ -232,7 +232,37 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
              return redirect()->route('user.dashboard')->with('error', 'Anda belum menyelesaikan semua tahapan imunisasi.');
         }
 
-        return view('dashboard.user.certificate', compact('patient'));
+        // Check if certificate number exists
+        if (!$patient->certificate_number) {
+            // Generate and Save (Self-healing for existing data)
+            $lastRecord = $patient->vaccinePatients()->where('status', 'selesai')->latest('updated_at')->first();
+            $completionDate = $lastRecord ? $lastRecord->updated_at : now();
+            $month = $completionDate->month;
+            $year = $completionDate->year;
+            
+            $startOfMonth = $completionDate->copy()->startOfMonth();
+            
+            // Sequence logic
+            $sequence = \App\Models\VaccinePatient::where('status', 'selesai')
+                ->whereBetween('updated_at', [$startOfMonth, $completionDate])
+                ->distinct('patient_id')
+                ->count('patient_id');
+            $sequence = $sequence ?: 1;
+    
+            $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+            $romanMonth = $romanMonths[$month] ?? 'I';
+            
+            $certificateNumber = sprintf("No: %03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
+            
+            $patient->update([
+                'completed_vaccination_at' => $completionDate,
+                'certificate_number' => $certificateNumber
+            ]);
+        } else {
+            $certificateNumber = $patient->certificate_number;
+        }
+
+        return view('dashboard.user.certificate', compact('patient', 'certificateNumber'));
     })->name('user.certificate');
 });
 
@@ -313,4 +343,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
         return view('dashboard.user.certificate', compact('patient'));
     })->name('admin.certificate');
+
+    // Requests Approval
+    Route::post('/request/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveRequest'])->name('admin.approve');
+    Route::delete('/request/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectRequest'])->name('admin.reject');
 });
