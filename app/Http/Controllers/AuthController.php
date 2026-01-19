@@ -111,10 +111,21 @@ class AuthController extends Controller
             return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
         }
 
-        // Filter by child name (partial match)
+        // Filter by child name (Improved Fuzzy Search)
         $searchTerm = strtolower(trim($request->child_name));
-        $matchedPatients = $patients->filter(function ($patient) use ($searchTerm) {
-            return str_contains(strtolower($patient->name), $searchTerm);
+        $searchWords = explode(' ', $searchTerm);
+        
+        $matchedPatients = $patients->filter(function ($patient) use ($searchWords) {
+            $patientName = strtolower($patient->name);
+            $motherName = strtolower($patient->mother_name);
+            
+            // Check if ANY word from search term exists in patient name OR mother name
+            foreach ($searchWords as $word) {
+                if (str_contains($patientName, $word) || str_contains($motherName, $word)) {
+                    return true;
+                }
+            }
+            return false;
         });
 
         if ($matchedPatients->isEmpty()) {
@@ -128,7 +139,7 @@ class AuthController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'multiple' => true,
+                'multiple' => true, // Always show selection modal even for 1 result
                 'message' => 'Ditemukan ' . $matchedPatients->count() . ' data. Silahkan pilih:',
                 'patients' => $matchedPatients->map(function ($patient) {
                     return [
@@ -142,7 +153,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Fallback for non-AJAX (should not happen normally)
+        // Fallback for non-AJAX
         return back()->with('quick_login_error', 'Silahkan gunakan form pencarian.');
     }
 
