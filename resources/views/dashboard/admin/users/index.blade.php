@@ -70,7 +70,7 @@
                                 <strong>Tips:</strong> Download template terlebih dahulu untuk memastikan format data yang benar.
                             </p>
                             <a href="{{ route('admin.users.import-template') }}" class="text-sm text-blue-600 hover:underline mt-1 inline-block">
-                                📥 Download Template CSV
+                                📥 Download Template Excel (.xlsx)
                             </a>
                         </div>
                     </div>

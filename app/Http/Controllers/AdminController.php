@@ -293,20 +293,19 @@ class AdminController extends Controller
 
     public function downloadImportTemplate()
     {
-        $headers = ['nama_anak', 'nama_ibu', 'email', 'password', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
-        $example = ['Anak Contoh', 'Ibu Contoh', 'contoh@email.com', 'password123', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'];
+        return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            public function array(): array
+            {
+                return [
+                    ['Anak Contoh', 'Ibu Contoh', 'contoh@email.com', 'password123', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
+                ];
+            }
 
-        $callback = function() use ($headers, $example) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $headers);
-            fputcsv($file, $example);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_import_peserta.csv"',
-        ]);
+            public function headings(): array
+            {
+                return ['nama_anak', 'nama_ibu', 'email', 'password', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
+            }
+        }, 'template_import_peserta.xlsx');
     }
 
     public function logs()
