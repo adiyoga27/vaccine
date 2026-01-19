@@ -243,8 +243,8 @@ class AdminController extends Controller
                 }
 
                 // Calculate Window
-                $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths($vaccine->minimum_age);
-                $duration = $vaccine->duration_days ?? 7;
+                $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths((int) $vaccine->minimum_age);
+                $duration = (int) ($vaccine->duration_days ?? 7);
                 $endDate = $startDate->copy()->addDays($duration);
 
                 $data = (object)[

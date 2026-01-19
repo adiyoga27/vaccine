@@ -50,7 +50,8 @@
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="flex justify-end gap-2">
                         <button 
-                            onclick="openEditModal('{{ $schedule->id }}', '{{ $schedule->village_id }}', '{{ $schedule->scheduled_at->format('Y-m-d') }}', {{ json_encode($schedule->vaccines->pluck('id')) }})" 
+                            data-vaccines="{{ $schedule->vaccines->pluck('id') }}"
+                            onclick="openEditModal('{{ $schedule->id }}', '{{ $schedule->village_id }}', '{{ $schedule->scheduled_at->format('Y-m-d') }}', JSON.parse(this.dataset.vaccines))" 
                             class="text-blue-600 hover:text-blue-900">Edit</button>
                         <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" onsubmit="return confirm('Hapus jadwal ini?');">
                             @csrf
