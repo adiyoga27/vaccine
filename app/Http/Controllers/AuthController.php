@@ -100,7 +100,9 @@ class AuthController extends Controller
         ]);
 
         // Find patients with matching date of birth
-        $patients = Patient::whereDate('date_birth', $request->date_birth)->get();
+        $patients = Patient::with('village')
+            ->whereDate('date_birth', $request->date_birth)
+            ->get();
 
         if ($patients->isEmpty()) {
             if ($request->expectsJson()) {
@@ -109,48 +111,62 @@ class AuthController extends Controller
             return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
         }
 
-        // Check if child name contains the search term (partial match)
+        // Filter by child name (partial match)
         $searchTerm = strtolower(trim($request->child_name));
-        $matchedPatient = null;
+        $matchedPatients = $patients->filter(function ($patient) use ($searchTerm) {
+            return str_contains(strtolower($patient->name), $searchTerm);
+        });
 
-        foreach ($patients as $patient) {
-            $childNameLower = strtolower($patient->name);
-            // Check if child's name matches the search term
-            if (str_contains($childNameLower, $searchTerm)) {
-                $matchedPatient = $patient;
-                break;
-            }
-        }
-
-        if (!$matchedPatient) {
+        if ($matchedPatients->isEmpty()) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Nama Anak tidak cocok. Silahkan coba lagi.']);
             }
             return back()->with('quick_login_error', 'Nama Anak tidak cocok. Silahkan coba lagi.');
         }
 
-        // Get the user associated with this patient
-        $user = User::find($matchedPatient->user_id);
-        
+        // Return the list of matched patients for selection
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'multiple' => true,
+                'message' => 'Ditemukan ' . $matchedPatients->count() . ' data. Silahkan pilih:',
+                'patients' => $matchedPatients->map(function ($patient) {
+                    return [
+                        'id' => $patient->id,
+                        'name' => $patient->name,
+                        'mother_name' => $patient->mother_name,
+                        'date_birth' => $patient->date_birth->format('d M Y'),
+                        'village' => $patient->village->name ?? '-',
+                    ];
+                })->values()
+            ]);
+        }
+
+        // Fallback for non-AJAX (should not happen normally)
+        return back()->with('quick_login_error', 'Silahkan gunakan form pencarian.');
+    }
+
+    public function confirmQuickLogin(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+        ]);
+
+        $patient = Patient::find($request->patient_id);
+        $user = User::find($patient->user_id);
+
         if (!$user) {
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Akun tidak ditemukan. Silahkan hubungi admin.']);
-            }
-            return back()->with('quick_login_error', 'Akun tidak ditemukan. Silahkan hubungi admin.');
+            return response()->json(['success' => false, 'message' => 'Akun tidak ditemukan. Silahkan hubungi admin.']);
         }
 
         // Log in the user
         Auth::login($user);
         $request->session()->regenerate();
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true, 
-                'message' => 'Selamat datang, ' . $matchedPatient->name . '!',
-                'redirect' => route('user.dashboard')
-            ]);
-        }
-
-        return redirect()->route('user.dashboard');
+        return response()->json([
+            'success' => true,
+            'message' => 'Selamat datang, ' . $patient->name . '!',
+            'redirect' => route('user.dashboard')
+        ]);
     }
 }

@@ -215,6 +215,29 @@
                             </span>
                         </button>
                     </form>
+
+                    <!-- Patient Selection List -->
+                    <div x-show="showPatientList" x-transition class="mt-6">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Pilih Data Anak:</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            <template x-for="patient in patients" :key="patient.id">
+                                <button @click="selectPatient(patient.id)" :disabled="confirming"
+                                    class="w-full p-4 bg-gray-50 hover:bg-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 text-left transition flex justify-between items-center disabled:opacity-50">
+                                    <div>
+                                        <p class="font-semibold text-gray-900" x-text="patient.name"></p>
+                                        <p class="text-sm text-gray-500">
+                                            <span x-text="'Lahir: ' + patient.date_birth"></span> • 
+                                            <span x-text="'Ibu: ' + patient.mother_name"></span>
+                                        </p>
+                                        <p class="text-xs text-gray-400" x-text="'Desa: ' + patient.village"></p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -226,13 +249,18 @@
                 dateBirth: '',
                 childName: '',
                 loading: false,
+                confirming: false,
                 errorMessage: '',
                 successMessage: '',
+                showPatientList: false,
+                patients: [],
 
                 async submitForm() {
                     this.loading = true;
                     this.errorMessage = '';
                     this.successMessage = '';
+                    this.showPatientList = false;
+                    this.patients = [];
 
                     try {
                         const response = await fetch('{{ route("quick-login") }}', {
@@ -250,18 +278,53 @@
 
                         const data = await response.json();
 
-                        if (data.success) {
-                            this.successMessage = data.message || 'Data ditemukan! Mengalihkan...';
-                            setTimeout(() => {
-                                window.location.href = data.redirect || '/user/dashboard';
-                            }, 1000);
-                        } else {
+                        if (data.success && data.multiple) {
+                            // Show patient selection list
+                            this.patients = data.patients;
+                            this.showPatientList = true;
+                            this.successMessage = data.message;
+                        } else if (!data.success) {
                             this.errorMessage = data.message || 'Data tidak ditemukan.';
                         }
                     } catch (error) {
                         this.errorMessage = 'Terjadi kesalahan. Silahkan coba lagi.';
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                async selectPatient(patientId) {
+                    this.confirming = true;
+                    this.errorMessage = '';
+
+                    try {
+                        const response = await fetch('{{ route("confirm-quick-login") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                patient_id: patientId
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.successMessage = data.message || 'Berhasil! Mengalihkan...';
+                            this.showPatientList = false;
+                            setTimeout(() => {
+                                window.location.href = data.redirect || '/user/dashboard';
+                            }, 1000);
+                        } else {
+                            this.errorMessage = data.message || 'Gagal login.';
+                        }
+                    } catch (error) {
+                        this.errorMessage = 'Terjadi kesalahan. Silahkan coba lagi.';
+                    } finally {
+                        this.confirming = false;
                     }
                 }
             }

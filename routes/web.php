@@ -20,6 +20,7 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
+Route::post('/confirm-quick-login', [AuthController::class, 'confirmQuickLogin'])->name('confirm-quick-login');
 
 // User Dashboard
 Route::middleware(['auth'])->prefix('user')->group(function () {
