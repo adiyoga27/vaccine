@@ -10,6 +10,7 @@ use App\Models\VaccinePatient;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -263,6 +264,37 @@ class AdminController extends Controller
         });
 
         return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diperbarui');
+    }
+
+    public function destroyUser(User $user)
+    {
+        DB::transaction(function () use ($user) {
+            if ($user->patient) {
+                $user->patient()->delete(); // Soft delete patient
+            }
+            $user->delete(); // Soft delete user
+        });
+
+        return redirect()->route('admin.users')->with('success', 'Data peserta berhasil dihapus (Arsip).');
+    }
+
+    public function bulkDeleteUsers(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            User::whereIn('id', $request->ids)->each(function ($user) {
+                if ($user->patient) {
+                    $user->patient()->delete();
+                }
+                $user->delete();
+            });
+        });
+
+        return response()->json(['success' => true, 'message' => count($request->ids) . ' data peserta berhasil dihapus.']);
     }
 
     public function exportUsers()

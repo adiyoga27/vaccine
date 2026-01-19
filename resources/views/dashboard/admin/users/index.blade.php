@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div x-data="{ ...patientData, importModalOpen: false }">
+<div x-data="patientData">
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -9,6 +9,10 @@
                 <p class="text-gray-500 mt-1">Daftar semua orang tua dan anak yang terdaftar.</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <button x-show="selectedItems.length > 0" @click="confirmBulkDelete()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center" x-transition>
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Hapus Selected (<span x-text="selectedItems.length"></span>)
+                </button>
                 <a href="{{ route('admin.users.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Export Excel
@@ -107,6 +111,9 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
+                    <th scope="col" class="px-6 py-3 text-left">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" @click="toggleSelectAll()">
+                    </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Anak</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orang Tua</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Lahir / Usia</th>
@@ -123,6 +130,9 @@
                     $isCompleted = ($totalVaccines > 0 && $completedVaccines->count() >= $totalVaccines);
                 @endphp
                 <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <input type="checkbox" value="{{ $user->id }}" x-model="selectedItems" class="user-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    </td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-bold text-gray-900">{{ $user->patient->name ?? '-' }}</div>
                         <div class="text-xs text-gray-500">{{ $user->patient->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
@@ -169,10 +179,18 @@
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             Edit
                         </a>
-                        <button @click='openDetailModal(@json($user))' class="inline-flex items-center px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition">
+                        <button @click='openDetailModal(@json($user))' class="inline-flex items-center px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition mr-2">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             Detail
                         </button>
+                        <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini? Data akan diarsip (Soft Delete).');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 @endforeach
@@ -325,7 +343,10 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('patientData', () => ({
             detailModalOpen: false,
+            importModalOpen: false,
             detail: {},
+            selectedItems: [],
+            selectAll: false,
 
             openDetailModal(user) {
                 this.detail = user;
@@ -348,6 +369,48 @@
                     age--;
                 }
                 return age + ' Tahun';
+            },
+
+            toggleSelectAll() {
+                this.selectAll = !this.selectAll;
+                if (this.selectAll) {
+                    // Check all checkboxes
+                    const checkboxes = document.querySelectorAll('.user-checkbox');
+                    this.selectedItems = Array.from(checkboxes).map(req => req.value);
+                } else {
+                    this.selectedItems = [];
+                }
+            },
+
+            confirmBulkDelete() {
+                if (confirm('Apakah Anda yakin ingin menghapus ' + this.selectedItems.length + ' data peserta terpilih? Data akan dipindahkan ke arsip (Soft Delete).')) {
+                    this.bulkDelete();
+                }
+            },
+
+            async bulkDelete() {
+                try {
+                    const response = await fetch('{{ route("admin.users.bulk-delete") }}', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ ids: this.selectedItems })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if(data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menghapus data.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menghapus data.');
+                }
             }
         }))
     })
