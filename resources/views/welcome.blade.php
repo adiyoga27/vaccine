@@ -224,12 +224,12 @@
 
                         <div>
                             <label for="child_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                👶 Nama Anak
+                                👶 Nama Anak / Nama Ibu
                             </label>
                             <input type="text" x-model="childName" id="child_name" required minlength="2"
-                                placeholder="Masukkan nama anak (minimal 2 huruf)"
+                                placeholder="Masukkan nama anak atau nama ibu"
                                 class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
-                            <p class="mt-1 text-xs text-gray-500">Cukup masukkan sebagian nama untuk mencari</p>
+                            <p class="mt-1 text-xs text-gray-500">Bisa menggunakan nama anak atau nama ibu kandung</p>
                         </div>
 
                         <button type="submit" :disabled="loading"
