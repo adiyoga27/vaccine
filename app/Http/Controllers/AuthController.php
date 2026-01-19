@@ -104,6 +104,13 @@ class AuthController extends Controller
             ->whereDate('date_birth', $request->date_birth)
             ->get();
 
+        \Illuminate\Support\Facades\Log::info('QuickLogin Debug:', [
+            'date_birth' => $request->date_birth,
+            'found_count' => $patients->count(),
+            'search_term' => $request->child_name,
+            'patient_names' => $patients->pluck('name')->toArray()
+        ]);
+
         if ($patients->isEmpty()) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Data tidak ditemukan. Pastikan tanggal lahir benar.']);
