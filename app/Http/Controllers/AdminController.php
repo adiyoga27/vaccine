@@ -182,8 +182,6 @@ class AdminController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:6',
             // Patient Data
             'mother_name' => 'required',
             'date_birth' => 'required|date',
@@ -196,8 +194,8 @@ class AdminController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
             $user = User::create([
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'email' => \Illuminate\Support\Str::slug($request->name) . rand(1000, 9999) . '@local.test',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'), // Default password
                 'role' => 'user'
             ]);
 
@@ -220,15 +218,18 @@ class AdminController extends Controller
     {
         $user->load('patient');
         $villages = Village::all();
-        return view('dashboard.admin.users.edit', compact('user', 'villages'));
+        
+        $completedCount = $user->patient ? $user->patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
+        $totalVaccines = Vaccine::count();
+        $isCompleted = ($totalVaccines > 0 && $completedCount >= $totalVaccines) || ($user->patient && $user->patient->certificate_number);
+
+        return view('dashboard.admin.users.edit', compact('user', 'villages', 'isCompleted'));
     }
 
     public function updateUser(Request $request, User $user)
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,'.$user->id,
-            'password' => 'nullable|confirmed|min:6', // Optional password update
             // Patient Data
             'mother_name' => 'required',
             'date_birth' => 'required|date',
@@ -236,19 +237,13 @@ class AdminController extends Controller
             'gender' => 'required|in:male,female',
             'village_id' => 'required|exists:villages,id',
             'phone' => 'required',
+            'certificate_number' => 'nullable|string'
         ]);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
-            $updateData = [
-                'name' => $request->name,
-                'email' => $request->email,
-            ];
-
-            if ($request->filled('password')) {
-                $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
-            }
-
-            $user->update($updateData);
+            $user->update([
+                'name' => $request->name
+            ]);
 
             $user->patient()->updateOrCreate(
                 ['user_id' => $user->id],
@@ -262,6 +257,10 @@ class AdminController extends Controller
                     'phone' => $request->phone,
                 ]
             );
+
+            if ($request->has('certificate_number')) {
+                $user->patient()->update(['certificate_number' => $request->certificate_number]);
+            }
         });
 
         return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diperbarui');

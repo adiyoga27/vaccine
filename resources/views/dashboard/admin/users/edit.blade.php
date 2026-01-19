@@ -29,22 +29,7 @@
                 @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email (Untuk Login)</label>
-                <input type="email" name="email" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required value="{{ old('email', $user->email) }}">
-                @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru (Opsional)</label>
-                <input type="password" name="password" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Kosongkan jika tidak ingin mengubah">
-                @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
-                <input type="password" name="password_confirmation" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Kosongkan jika tidak ingin mengubah">
-            </div>
+            <!-- Removed Email and Password fields as requested -->
 
             <!-- Data Pasien -->
             <div class="md:col-span-2 mt-4">
@@ -90,6 +75,13 @@
                 <input type="text" name="phone" placeholder="ex: 08123456789" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required value="{{ old('phone', $user->patient->phone ?? '') }}">
                 <p class="text-xs text-gray-500 mt-1">Pastikan nomor terdaftar di WhatsApp.</p>
             </div>
+
+            @if(isset($isCompleted) && $isCompleted)
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nomor Sertifikat (Opsional)</label>
+                <input type="text" name="certificate_number" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" value="{{ old('certificate_number', $user->patient->certificate_number ?? '') }}">
+            </div>
+            @endif
 
         </div>
 
