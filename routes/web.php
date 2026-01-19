@@ -243,11 +243,10 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
             $startOfMonth = $completionDate->copy()->startOfMonth();
             
             // Sequence logic
-            $sequence = \App\Models\VaccinePatient::where('status', 'selesai')
-                ->whereBetween('updated_at', [$startOfMonth, $completionDate])
-                ->distinct('patient_id')
-                ->count('patient_id');
-            $sequence = $sequence ?: 1;
+            $previousCount = \App\Models\Patient::whereNotNull('completed_vaccination_at')
+                ->whereBetween('completed_vaccination_at', [$startOfMonth, $completionDate])
+                ->count();
+            $sequence = $previousCount + 1;
     
             $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
             $romanMonth = $romanMonths[$month] ?? 'I';
