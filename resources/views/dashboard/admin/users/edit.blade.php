@@ -25,7 +25,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap (Anak)</label>
-                <input type="text" name="name" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required value="{{ old('name', $user->name) }}">
+                <input type="text" name="name" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required value="{{ old('name', $user->patient->name ?? $user->name) }}">
                 @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 

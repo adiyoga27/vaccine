@@ -121,20 +121,35 @@ class AuthController extends Controller
         // Filter by child name (Improved Fuzzy Search)
         $searchTerm = strtolower(trim($request->child_name));
         $searchWords = explode(' ', $searchTerm);
+        $searchNoSpaces = str_replace(' ', '', $searchTerm);
         
-        $matchedPatients = $patients->filter(function ($patient) use ($searchWords) {
+        $matchedPatients = $patients->filter(function ($patient) use ($searchWords, $searchNoSpaces) {
             $patientName = strtolower($patient->name);
-            
-            // Check if ANY word from search term exists in patient name
+            $patientNameNoSpaces = str_replace(' ', '', $patientName);
+
+            // Check 1: ANY word from search term exists in patient name
             foreach ($searchWords as $word) {
                 if (str_contains($patientName, $word)) {
                     return true;
                 }
             }
+
+            // Check 2: Match if spaces are removed (e.g. "Su Artini" == "Suartini")
+            if (str_contains($patientNameNoSpaces, $searchNoSpaces) || str_contains($searchNoSpaces, $patientNameNoSpaces)) {
+                return true;
+            }
+
             return false;
         });
 
         if ($matchedPatients->isEmpty()) {
+            // LOGGING FOR DEBUGGING
+             \Illuminate\Support\Facades\Log::info('QuickLogin Failed Search:', [
+                'date_birth' => $request->date_birth,
+                'search_term' => $request->child_name,
+                'available_names_for_dob' => $patients->pluck('name')->toArray()
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Nama Anak tidak cocok. Silahkan coba lagi.']);
             }
