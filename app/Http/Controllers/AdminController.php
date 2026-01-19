@@ -579,7 +579,22 @@ class AdminController extends Controller
     public function rollbackHistory(Request $request, $id)
     {
         $record = \App\Models\VaccinePatient::findOrFail($id);
+        $patient = $record->patient;
+        
         $record->delete();
+
+        // Check if patient is still complete?
+        // If we remove a record, likely they are not complete anymore (unless they had dupes).
+        // Safest is to check counts.
+        $totalVaccines = Vaccine::count();
+        $completedCount = $patient->vaccinePatients()->where('status', 'selesai')->count();
+
+        if ($completedCount < $totalVaccines) {
+            $patient->update([
+                'certificate_number' => null,
+                'completed_vaccination_at' => null
+            ]);
+        }
 
         return back()->with('success', 'Data vaksinasi berhasil dikembalikan (rollback)');
     }
