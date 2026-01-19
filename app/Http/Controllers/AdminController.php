@@ -206,11 +206,67 @@ class AdminController extends Controller
         return view('dashboard.admin.logs.index', compact('logs'));
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        $histories = VaccinePatient::with(['patient', 'vaccine', 'village'])
-                    ->latest()
-                    ->paginate(20);
-        return view('dashboard.admin.history.index', compact('histories'));
+        $query = \App\Models\Patient::with(['vaccinePatients', 'village']);
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('mother_name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $patients = $query->get();
+        $vaccines = Vaccine::orderBy('minimum_age')->get();
+
+        $active = collect();
+        $upcoming = collect();
+        $done = collect();
+        $overdue = collect();
+
+        foreach ($patients as $patient) {
+            $doneVaccineIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
+
+            foreach ($vaccines as $vaccine) {
+                // Done
+                if (in_array($vaccine->id, $doneVaccineIds)) {
+                    $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
+                    $done->push((object)[
+                        'patient' => $patient,
+                        'vaccine' => $vaccine,
+                        'date' => $record->vaccinated_at,
+                        'status' => 'Selesai'
+                    ]);
+                    continue;
+                }
+
+                // Calculate Window
+                $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths($vaccine->minimum_age);
+                $duration = $vaccine->duration_days ?? 7;
+                $endDate = $startDate->copy()->addDays($duration);
+
+                $data = (object)[
+                    'patient' => $patient,
+                    'vaccine' => $vaccine,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ];
+
+                if (now()->between($startDate, $endDate)) {
+                    // Active (Jadwal Vaksin)
+                    $active->push($data);
+                } elseif (now()->greaterThan($endDate)) {
+                    // Overdue (Terlewat)
+                    $overdue->push($data);
+                } else {
+                    // Upcoming (Akan Vaksin)
+                    $upcoming->push($data);
+                }
+            }
+        }
+
+        return view('dashboard.admin.history.index', compact('active', 'upcoming', 'done', 'overdue'));
     }
 }
