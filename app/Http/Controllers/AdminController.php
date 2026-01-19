@@ -150,11 +150,24 @@ class AdminController extends Controller
     }
 
     // Monitoring
-    public function users()
+    public function users(Request $request)
     {
-        $users = User::with(['patient.vaccinePatients.vaccine'])->where('role', 'user')->latest()->paginate(10);
+        $search = $request->input('search');
+        
+        $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
+            ->where('role', 'user')
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('patient', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('mother_name', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->appends(['search' => $search]);
+            
         $totalVaccines = Vaccine::count();
-        return view('dashboard.admin.users.index', compact('users', 'totalVaccines'));
+        return view('dashboard.admin.users.index', compact('users', 'totalVaccines', 'search'));
     }
 
     public function createUser()
@@ -250,6 +263,50 @@ class AdminController extends Controller
         });
 
         return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diperbarui');
+    }
+
+    public function exportUsers()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\PatientExport, 'data_peserta_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function importUsers(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\PatientImport, $request->file('file'));
+            return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diimport!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+            foreach ($failures as $failure) {
+                $errors[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            return redirect()->route('admin.users')->with('error', 'Gagal import: ' . implode(' | ', $errors));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users')->with('error', 'Gagal import: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadImportTemplate()
+    {
+        $headers = ['nama_anak', 'nama_ibu', 'email', 'password', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
+        $example = ['Anak Contoh', 'Ibu Contoh', 'contoh@email.com', 'password123', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'];
+
+        $callback = function() use ($headers, $example) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+            fputcsv($file, $example);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_peserta.csv"',
+        ]);
     }
 
     public function logs()

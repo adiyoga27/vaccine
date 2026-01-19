@@ -1,16 +1,106 @@
 @extends('layouts.admin')
 
 @section('content')
-<div x-data="patientData">
+<div x-data="{ ...patientData, importModalOpen: false }">
     <div class="mb-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-800">Data Peserta Imunisasi</h1>
-            <a href="{{ route('admin.users.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
-                + Registrasi Peserta
-            </a>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Data Peserta Imunisasi</h1>
+                <p class="text-gray-500 mt-1">Daftar semua orang tua dan anak yang terdaftar.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.users.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export Excel
+                </a>
+                <button @click="importModalOpen = true" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Import Excel
+                </button>
+                <a href="{{ route('admin.users.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+                    + Registrasi Peserta
+                </a>
+            </div>
         </div>
-        <p class="text-gray-500 mt-1">Daftar semua orang tua dan anak yang terdaftar.</p>
+
+        <!-- Search Box -->
+        <div class="mt-4">
+            <form action="{{ route('admin.users') }}" method="GET" class="flex gap-2 max-w-md">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text" name="search" value="{{ $search ?? '' }}" 
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-200 sm:text-sm transition" 
+                        placeholder="Cari Nama Anak atau Nama Ibu...">
+                </div>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                    Cari
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('admin.users') }}" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition flex items-center">
+                        Reset
+                    </a>
+                @endif
+            </form>
+        </div>
     </div>
+
+    <!-- Import Modal -->
+    <div x-show="importModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="importModalOpen = false">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form action="{{ route('admin.users.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Import Data Peserta</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload File Excel/CSV</label>
+                            <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <p class="text-xs text-gray-500 mt-2">Format yang didukung: .xlsx, .xls, .csv (Max 10MB)</p>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Tips:</strong> Download template terlebih dahulu untuk memastikan format data yang benar.
+                            </p>
+                            <a href="{{ route('admin.users.import-template') }}" class="text-sm text-blue-600 hover:underline mt-1 inline-block">
+                                📥 Download Template CSV
+                            </a>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                            Import
+                        </button>
+                        <button @click="importModalOpen = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if(session('error'))
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700 font-medium">{{ session('error') }}</p>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
