@@ -13,14 +13,32 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Villages
+        // 1. Villages and their Posyandus
         $villages = [
-            'Gubuk Baru', 'SBJ Barat', 'SBJ Perigi', 'Dompo Indah', 'Sangiang', 
-            'SBJ Timur', 'Tangga', 'Lokok Mandi', 'Panggung Timur', 
-            'Panggung Barat', 'Lembah Berora', 'Selengen', 'Tampes'
+            'Gubuk Baru' => ['Mawar', 'Cempaka', 'Lestari'],
+            'SBJ Barat' => ['Melati', 'Kenanga', 'Sejahtera'],
+            'SBJ Perigi' => ['Anggrek', 'Dahlia', 'Bahagia'],
+            'Dompo Indah' => ['Teratai', 'Flamboyan', 'Indah'],
+            'Sangiang' => ['Kamboja', 'Alamanda', 'Sehat'],
+            'SBJ Timur' => ['Bougenville', 'Asoka', 'Makmur'],
+            'Tangga' => ['Sepatu', 'Matahari', 'Ceria'],
+            'Lokok Mandi' => ['Sedap Malam', 'Nusa Indah', 'Harmoni'],
+            'Panggung Timur' => ['Bakung', 'Seruni', 'Sentosa'],
+            'Panggung Barat' => ['Krisan', 'Amarilis', 'Damai'],
+            'Lembah Berora' => ['Seroja', 'Lily', 'Abadi'],
+            'Selengen' => ['Edelweis', 'Lavender', 'Jaya'],
+            'Tampes' => ['Sakura', 'Jasmine', 'Mulia']
         ];
 
-        foreach ($villages as $v) {
-            Village::create(['name' => $v]);
+        foreach ($villages as $villageName => $posyandus) {
+            $village = Village::create(['name' => $villageName]);
+            
+            foreach ($posyandus as $p) {
+                \App\Models\Posyandu::create([
+                    'village_id' => $village->id,
+                    'name' => 'Posyandu ' . $p
+                ]);
+            }
         }
 
         // 2. Vaccines
@@ -73,17 +91,27 @@ class DatabaseSeeder extends Seeder
         );
 
         // 4. Dummy Users
-        User::factory(10)->create(['role' => 'user'])->each(function ($user) {
-            $user->patient()->create([
-                'name' => fake()->name(),
-                'mother_name' => fake()->name('female'),
-                'date_birth' => fake()->date(),
-                'address' => fake()->address(),
-                'village_id' => \App\Models\Village::inRandomOrder()->first()->id, // Assign random village
-                'gender' => fake()->randomElement(['male', 'female']),
-                'phone' => fake()->phoneNumber(),
+        // 4. Dummy Users
+        $faker = \Faker\Factory::create('id_ID');
+
+        for ($i = 0; $i <= 30; $i++) {
+            $user = User::create([
+                'name' => $faker->name(),
+                'email' => $faker->unique()->freeEmail(),
+                'password' => Hash::make('password'),
+                'role' => 'user',
             ]);
-        });
+
+            $user->patient()->create([
+                'name' => $faker->name(),
+                'mother_name' => $faker->name('female'),
+                'date_birth' => now()->subMonths($i),
+                'address' => $faker->address(),
+                'village_id' => \App\Models\Village::inRandomOrder()->first()->id,
+                'gender' => $faker->randomElement(['male', 'female']),
+                'phone' => $faker->phoneNumber(),
+            ]);
+        }
 
         // 5. Schedules (Create schedule for each village 2 weeks from now)
         $allVaccines = Vaccine::all();

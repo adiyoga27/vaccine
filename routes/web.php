@@ -165,10 +165,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'updatePosyandu'])->name('admin.posyandus.update');
     Route::delete('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'destroyPosyandu'])->name('admin.posyandus.destroy');
 
-    // Posyandus
-    Route::post('/posyandus', [\App\Http\Controllers\AdminController::class, 'storePosyandu'])->name('admin.posyandus.store');
-    Route::put('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'updatePosyandu'])->name('admin.posyandus.update');
-    Route::delete('/posyandus/{posyandu}', [\App\Http\Controllers\AdminController::class, 'destroyPosyandu'])->name('admin.posyandus.destroy');
+
 
     // Vaccines
     Route::get('/vaccines', [\App\Http\Controllers\AdminController::class, 'vaccines'])->name('admin.vaccines');
@@ -188,24 +185,11 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/users', [\App\Http\Controllers\AdminController::class, 'storeUser'])->name('admin.users.store');
     
     Route::get('/history', [\App\Http\Controllers\AdminController::class, 'history'])->name('admin.history');
-    Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
+    Route::post('/history/store', [\App\Http\Controllers\AdminController::class, 'storeHistory'])->name('admin.history.store');
+    Route::post('/history/certification', [\App\Http\Controllers\AdminController::class, 'certification'])->name('admin.history.certification');
+    Route::delete('/history/rollback/{id}', [\App\Http\Controllers\AdminController::class, 'rollbackHistory'])->name('admin.history.rollback');
     
-    Route::post('/approve/{id}', function ($id) {
-        $vp = VaccinePatient::findOrFail($id);
-        $age = $vp->patient->date_birth->diffInMonths(now());
-        $vp->update([
-            'status' => 'selesai',
-            'vaccinated_at' => now(),
-            'age_in_months' => $age
-        ]);
-        return back()->with('success', 'Status updated to Selesai');
-    })->name('admin.approve');
-
-    Route::delete('/reject/{id}', function ($id) {
-        $vp = VaccinePatient::findOrFail($id);
-        $vp->delete();
-        return back()->with('success', 'Permintaan vaksinasi berhasil ditolak/dibatalkan.');
-    })->name('admin.reject');
+    Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
     
     Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
         return view('dashboard.user.certificate', compact('patient'));

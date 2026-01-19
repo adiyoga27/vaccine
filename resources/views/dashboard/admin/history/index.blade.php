@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<div x-data="{ tab: 'jadwal' }">
+<div x-data="approvalData">
     <!-- Tabs Header -->
     <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 overflow-x-auto">
         <button @click="tab = 'jadwal'" 
@@ -80,14 +80,22 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse($active as $item)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ $item->patient->name }} <br><span class="text-xs text-gray-500">Ibu: {{ $item->patient->mother_name }}</span></td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            {{ $item->patient->name }} 
+                            <div class="text-xs text-gray-500 mt-1">
+                                Ibu: {{ $item->patient->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
+                            </div>
+                        </td>
                         <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
                         <td class="px-6 py-4">
                             <span class="text-green-600 font-bold">{{ $item->start_date->format('d M Y') }}</span> - {{ $item->end_date->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold animate-pulse">Segera</span>
+                        <td class="px-6 py-4 flex items-center gap-2">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Approve
+                            </button>
                         </td>
                     </tr>
                     @empty
@@ -113,19 +121,31 @@
                         <th class="px-6 py-3">Vaksin</th>
                         <th class="px-6 py-3">Rencana Jadwal</th>
                         <th class="px-6 py-3">Desa</th>
+                        <th class="px-6 py-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($upcoming as $item)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ $item->patient->name }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            {{ $item->patient->name }}
+                            <div class="text-xs text-gray-500 mt-1">
+                                Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
+                            </div>
+                        </td>
                         <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
                         <td class="px-6 py-4 text-gray-500">{{ $item->start_date->format('d M Y') }}</td>
                         <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
+                        <td class="px-6 py-4">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Approve
+                            </button>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">Tidak ada data.</td>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada data.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -146,21 +166,41 @@
                         <th class="px-6 py-3">Vaksin</th>
                         <th class="px-6 py-3">Tanggal Vaksin</th>
                         <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($done as $item)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ $item->patient->name }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            {{ $item->patient->name }}
+                            <div class="text-xs text-gray-500 mt-1">
+                                Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
+                            </div>
+                        </td>
                         <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
                         <td class="px-6 py-4 text-emerald-600 font-medium">{{ \Carbon\Carbon::parse($item->date)->format('d M Y H:i') }}</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Selesai</span>
                         </td>
+                        <td class="px-6 py-4 flex items-center gap-2">
+                            <button @click='openDetailModal(@json($item))' class="px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                Detail
+                            </button>
+                            <form action="{{ route('admin.history.rollback', $item->id) }}" method="POST" onsubmit="return confirm('Apakah anda yakin akan mengembalikan data belum di approve?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                    Rollback
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">Belum ada data vaksinasi selesai.</td>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Belum ada data vaksinasi selesai.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -182,12 +222,18 @@
                         <th class="px-6 py-3">Seharusnya</th>
                         <th class="px-6 py-3">Desa</th>
                         <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($overdue as $item)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ $item->patient->name }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            {{ $item->patient->name }}
+                            <div class="text-xs text-gray-500 mt-1">
+                                Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
+                            </div>
+                        </td>
                         <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
                         <td class="px-6 py-4 text-red-600 font-bold">
                             {{ $item->start_date->format('d M Y') }} - {{ $item->end_date->format('d M Y') }}
@@ -196,15 +242,221 @@
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Terlewat</span>
                         </td>
+                        <td class="px-6 py-4">
+                            <button @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Approve
+                            </button>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada jadwal terlewat.</td>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">Tidak ada jadwal terlewat.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+    <!-- Approve Modal -->
+    <div x-show="approveModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form action="{{ route('admin.history.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="patient_id" x-model="selectedPatientId">
+                    <input type="hidden" name="vaccine_id" x-model="selectedVaccineId">
+                    
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Approve Vaksinasi
+                                </h3>
+                                <div class="mt-2 text-sm text-gray-500 mb-4">
+                                    <p>Konfirmasi vaksinasi untuk <span class="font-bold" x-text="selectedPatientName"></span> - <span class="font-bold" x-text="selectedVaccineName"></span></p>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Tanggal Vaksin</label>
+                                        <input type="date" name="vaccinated_at" required value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Lokasi Desa</label>
+                                        <select name="village_id" x-model="selectedVillageId" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <option value="">Pilih Desa</option>
+                                            @foreach($villages as $v)
+                                            <option value="{{ $v->id }}">{{ $v->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Lokasi Posyandu</label>
+                                        <select name="posyandu_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <option value="">Pilih Posyandu</option>
+                                            <!-- Logic to filter posyandu based on village using Alpine or JS -->
+                                            @foreach($villages as $v)
+                                                @foreach($v->posyandus as $p)
+                                                    <option x-show="selectedVillageId == '{{ $v->id }}'" value="{{ $p->id }}">{{ $p->name }}</option>
+                                                @endforeach
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan & Approve
+                        </button>
+                        <button @click="approveModalOpen = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div x-show="detailModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-xl leading-8 font-bold text-gray-900 border-b pb-2 mb-4">
+                                Detail Vaksinasi
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Data Pasien -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Data Pasien</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <p class="text-xs text-gray-400">Nama Lengkap</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.patient.name"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Nama Ibu</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.mother_name"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Tanggal Lahir</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.dob"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Usia Saat Ini</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.age"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Jenis Kelamin</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.gender"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Alamat</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.address"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Data Vaksinasi -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Data Vaksinasi</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <p class="text-xs text-gray-400">Jenis Vaksin</p>
+                                            <p class="text-sm font-bold text-blue-600" x-text="detail.vaccine.name"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Tanggal Vaksinasi</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="formatDate(detail.date)"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Desa</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.patient.village ? detail.patient.village.name : '-'"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Posyandu</p>
+                                            <p class="text-sm font-medium text-gray-900" x-text="detail.posyandu"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Status</p>
+                                            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold inline-block mt-1">Selesai</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button @click="detailModalOpen = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('approvalData', () => ({
+            tab: 'jadwal',
+            approveModalOpen: false,
+            detailModalOpen: false,
+            
+            selectedPatientId: '',
+            selectedVaccineId: '',
+            selectedPatientName: '',
+            selectedVaccineName: '',
+            selectedVillageId: '',
+
+            // Detail Modal Data
+            detail: {
+                patient: {},
+                vaccine: {}
+            },
+
+            openApproveModal(patientId, vaccineId, patientName, vaccineName) {
+                this.selectedPatientId = patientId;
+                this.selectedVaccineId = vaccineId;
+                this.selectedPatientName = patientName;
+                this.selectedVaccineName = vaccineName;
+                this.approveModalOpen = true;
+            },
+
+            openDetailModal(item) {
+                this.detail = item;
+                this.detailModalOpen = true;
+            },
+
+            formatDate(dateString) {
+                if(!dateString) return '-';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+        }))
+    })
+</script>
 @endsection

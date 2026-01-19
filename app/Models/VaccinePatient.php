@@ -10,7 +10,7 @@ class VaccinePatient extends Model
     use \Spatie\Activitylog\Traits\LogsActivity;
 
     protected $fillable = [
-        'village_id', 'patient_id', 'vaccine_id', 'request_date', 'vaccinated_at', 'status'
+        'village_id', 'posyandu_id', 'patient_id', 'vaccine_id', 'request_date', 'vaccinated_at', 'status'
     ];
 
     protected $casts = [
@@ -26,6 +26,11 @@ class VaccinePatient extends Model
     public function village()
     {
         return $this->belongsTo(Village::class);
+    }
+
+    public function posyandu()
+    {
+        return $this->belongsTo(Posyandu::class);
     }
 
     public function patient()

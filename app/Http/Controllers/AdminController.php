@@ -234,10 +234,18 @@ class AdminController extends Controller
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
                     $done->push((object)[
+                        'id' => $record->id,
                         'patient' => $patient,
                         'vaccine' => $vaccine,
                         'date' => $record->vaccinated_at,
-                        'status' => 'Selesai'
+                        'status' => 'Selesai',
+                        'posyandu' => $record->posyandu->name ?? '-',
+                        'mother_name' => $patient->mother_name,
+                        'dob' => \Carbon\Carbon::parse($patient->date_birth)->format('d M Y'),
+                        'gender' => $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan',
+                        'address' => $patient->address,
+                        // Age at the time of vaccination
+                        'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths($record->vaccinated_at), 1) . ' Bulan'
                     ]);
                     continue;
                 }
@@ -247,11 +255,16 @@ class AdminController extends Controller
                 $duration = (int) ($vaccine->duration_days ?? 7);
                 $endDate = $startDate->copy()->addDays($duration);
 
+                // Current Age
+                $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';
+
                 $data = (object)[
                     'patient' => $patient,
                     'vaccine' => $vaccine,
                     'start_date' => $startDate,
                     'end_date' => $endDate,
+                    'age' => $currentAge,
+                    'mother_name' => $patient->mother_name
                 ];
 
                 if (now()->between($startDate, $endDate)) {
@@ -267,6 +280,67 @@ class AdminController extends Controller
             }
         }
 
-        return view('dashboard.admin.history.index', compact('active', 'upcoming', 'done', 'overdue'));
+        $villages = Village::with('posyandus')->get();
+
+        return view('dashboard.admin.history.index', compact('active', 'upcoming', 'done', 'overdue', 'villages'));
+    }
+
+    public function storeHistory(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'vaccine_id' => 'required|exists:vaccines,id',
+            'village_id' => 'required|exists:villages,id',
+            'posyandu_id' => 'nullable|exists:posyandus,id',
+            'vaccinated_at' => 'required|date',
+        ]);
+
+        \App\Models\VaccinePatient::updateOrCreate(
+            [
+                'patient_id' => $request->patient_id,
+                'vaccine_id' => $request->vaccine_id,
+            ],
+            [
+                'village_id' => $request->village_id,
+                'posyandu_id' => $request->posyandu_id,
+                'vaccinated_at' => $request->vaccinated_at,
+                'status' => 'selesai',
+                'request_date' => now(), // Ensure request_date is set if creating new
+            ]
+        );
+
+        return back()->with('success', 'Data vaksinasi berhasil disimpan');
+    }
+
+    public function certification(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'vaccine_id' => 'required|exists:vaccines,id',
+        ]);
+
+        $record = \App\Models\VaccinePatient::where('patient_id', $request->patient_id)
+            ->where('vaccine_id', $request->vaccine_id)
+            ->where('status', 'selesai')
+            ->firstOrFail();
+            
+        $data = [
+            'record' => $record,
+            'patient' => $record->patient,
+            'vaccine' => $record->vaccine,
+            'village' => $record->village,
+            'posyandu' => $record->posyandu,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
+        return $pdf->download('Sertifikat_Vaksin_' . $record->patient->name . '.pdf');
+    }
+
+    public function rollbackHistory(Request $request, $id)
+    {
+        $record = \App\Models\VaccinePatient::findOrFail($id);
+        $record->delete();
+
+        return back()->with('success', 'Data vaksinasi berhasil dikembalikan (rollback)');
     }
 }
