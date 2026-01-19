@@ -19,6 +19,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
 
 // User Dashboard
 Route::middleware(['auth'])->prefix('user')->group(function () {

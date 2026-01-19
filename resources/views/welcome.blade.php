@@ -141,6 +141,133 @@
         </div>
     </div>
 
+    <!-- Quick Login Section -->
+    <div id="cek-jadwal" class="py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden" x-data="quickLoginModal()">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10" data-aos="fade-up">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Cek Jadwal Imunisasi</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Lihat Jadwal Vaksinasi Anak Anda
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                    Masukkan tanggal lahir bayi dan nama ibu untuk melihat jadwal imunisasi.
+                </p>
+            </div>
+
+            <div class="max-w-md mx-auto" data-aos="fade-up" data-aos-delay="100">
+                <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                    <!-- Error Message -->
+                    <div x-show="errorMessage" x-transition class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700" x-text="errorMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div x-show="successMessage" x-transition class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-green-700" x-text="successMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form @submit.prevent="submitForm" class="space-y-6">
+                        <div>
+                            <label for="date_birth" class="block text-sm font-medium text-gray-700 mb-2">
+                                📅 Tanggal Lahir Bayi
+                            </label>
+                            <input type="date" x-model="dateBirth" id="date_birth" required
+                                class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+
+                        <div>
+                            <label for="mother_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                👩 Nama Ibu Kandung
+                            </label>
+                            <input type="text" x-model="motherName" id="mother_name" required minlength="2"
+                                placeholder="Masukkan nama ibu (minimal 2 huruf)"
+                                class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
+                            <p class="mt-1 text-xs text-gray-500">Cukup masukkan sebagian nama untuk mencari</p>
+                        </div>
+
+                        <button type="submit" :disabled="loading"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="!loading">🔍 Cari Jadwal Vaksinasi</span>
+                            <span x-show="loading" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Mencari...
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function quickLoginModal() {
+            return {
+                dateBirth: '',
+                motherName: '',
+                loading: false,
+                errorMessage: '',
+                successMessage: '',
+
+                async submitForm() {
+                    this.loading = true;
+                    this.errorMessage = '';
+                    this.successMessage = '';
+
+                    try {
+                        const response = await fetch('{{ route("quick-login") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                date_birth: this.dateBirth,
+                                mother_name: this.motherName
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.successMessage = data.message || 'Data ditemukan! Mengalihkan...';
+                            setTimeout(() => {
+                                window.location.href = data.redirect || '/user/dashboard';
+                            }, 1000);
+                        } else {
+                            this.errorMessage = data.message || 'Data tidak ditemukan.';
+                        }
+                    } catch (error) {
+                        this.errorMessage = 'Terjadi kesalahan. Silahkan coba lagi.';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+
     <!-- CTA Section -->
     <div class="bg-blue-600 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" data-aos="zoom-in">

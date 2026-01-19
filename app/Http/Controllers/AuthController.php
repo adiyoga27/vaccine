@@ -91,4 +91,66 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect('/');
     }
+
+    public function quickLogin(Request $request)
+    {
+        $request->validate([
+            'date_birth' => 'required|date',
+            'mother_name' => 'required|string|min:2',
+        ]);
+
+        // Find patients with matching date of birth
+        $patients = Patient::whereDate('date_birth', $request->date_birth)->get();
+
+        if ($patients->isEmpty()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Data tidak ditemukan. Pastikan tanggal lahir benar.']);
+            }
+            return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
+        }
+
+        // Check if mother_name contains the search term (partial match)
+        $searchTerm = strtolower(trim($request->mother_name));
+        $matchedPatient = null;
+
+        foreach ($patients as $patient) {
+            $motherNameLower = strtolower($patient->mother_name);
+            // Check if any word in mother_name matches the search term
+            if (str_contains($motherNameLower, $searchTerm)) {
+                $matchedPatient = $patient;
+                break;
+            }
+        }
+
+        if (!$matchedPatient) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Nama Ibu tidak cocok. Silahkan coba lagi.']);
+            }
+            return back()->with('quick_login_error', 'Nama Ibu tidak cocok. Silahkan coba lagi.');
+        }
+
+        // Get the user associated with this patient
+        $user = User::find($matchedPatient->user_id);
+        
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akun tidak ditemukan. Silahkan hubungi admin.']);
+            }
+            return back()->with('quick_login_error', 'Akun tidak ditemukan. Silahkan hubungi admin.');
+        }
+
+        // Log in the user
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true, 
+                'message' => 'Selamat datang, ' . $matchedPatient->name . '!',
+                'redirect' => route('user.dashboard')
+            ]);
+        }
+
+        return redirect()->route('user.dashboard');
+    }
 }
