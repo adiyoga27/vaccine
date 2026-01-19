@@ -29,112 +29,101 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
 
         // Get IDs of vaccines already done or in progress
         $doneVaccineIds = $patient ? $histories->where('status', 'selesai')->pluck('vaccine_id')->toArray() : [];
-        $pendingVaccineIds = $patient ? $histories->where('status', 'pengajuan')->pluck('vaccine_id')->toArray() : [];
         
-        // Fetch upcoming schedules (events)
-        $schedules = [];
-        if($patient && $patient->village_id) {
-            $schedules = App\Models\VaccineSchedule::with('vaccines')
-                        ->where('village_id', $patient->village_id)
-                        ->whereDate('scheduled_at', '>=', now())
-                        ->orderBy('scheduled_at')
-                        ->get();
-        }
-        
-        // Process all vaccines to determine status for this patient
+        // Process all vaccines to determine Personalized Schedule
         $allVaccines = Vaccine::orderBy('minimum_age')->get();
-        $vaccineStatus = [];
+        $vaccineSchedules = [];
         
-        $patientAgeMonths = $patient ? \Carbon\Carbon::parse($patient->date_birth)->diffInMonths(now()) : 0;
+        // Calculate age in months accurately with 1 decimal
+        $patientAgeMonths = $patient ? number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) : 0;
 
         foreach($allVaccines as $vac) {
-            $status = 'upcoming'; // Default
-            $isEligible = false;
-            $vaccinePatientId = null;
-
-            // Check history for this vaccine
-            $history = $patient ? $histories->where('vaccine_id', $vac->id)->first() : null;
-
-            if ($history) {
-                $status = $history->status;
-                $vaccinePatientId = $history->id;
-            } else {
-                // Check eligibility based on age
-                if ($patientAgeMonths >= $vac->minimum_age) {
-                    $status = 'bisa_diajukan'; // Eligible (Missed or Ready)
-                    $isEligible = true;
-                } else {
-                    $status = 'belum_waktunya'; // In future
-                }
-            }
+            $isDone = in_array($vac->id, $doneVaccineIds);
             
-            $vaccineStatus[] = (object) [
+            // Calculate Schedule Window
+            // Start Date = BirthDate + Minimum Age (Months)
+            $startDate = $patient ? \Carbon\Carbon::parse($patient->date_birth)->addMonths($vac->minimum_age) : null;
+            $endDate = $startDate ? $startDate->copy()->addDays($vac->duration_days ?? 7) : null;
+            
+            $status = 'upcoming'; // Default
+            
+            if ($isDone) {
+                $status = 'selesai';
+            } elseif ($startDate && now()->between($startDate, $endDate)) {
+                $status = 'bisa_diajukan'; // Currently in the vaccination window
+            } elseif ($startDate && now()->greaterThan($endDate)) {
+                $status = 'terlewat'; // Overdue
+            }
+
+            $vaccineSchedules[] = (object) [
                 'vaccine' => $vac,
                 'status' => $status,
                 'min_age' => $vac->minimum_age,
-                'is_eligible' => $isEligible,
-                'vp_id' => $vaccinePatientId
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                // For calendar event
+                'event_title' => "Vaksin: {$vac->name} ({$vac->minimum_age} Bulan)",
+                'event_start' => $startDate ? $startDate->format('Y-m-d') : null,
+                'event_end' => $endDate ? $endDate->format('Y-m-d') : null, // FullCalendar end date is exclusive, strictly it might need +1 day but keeping simple
             ];
         }
         
-        // Filter vaccines for dropdown: only those 'bisa_diajukan'
-        $eligibleVaccines = collect($vaccineStatus)->where('is_eligible', true)->pluck('vaccine');
-        
-        $takenVaccineIds = array_merge($doneVaccineIds, $pendingVaccineIds);
+        // Prepare events for FullCalendar with Grouping
+        $calendarEvents = [];
+        $groupedEvents = [];
 
-        // Check if all vaccines are completed
-        $totalVaccinesCount = Vaccine::count();
-        $completedVaccinesCount = $patient ? $histories->where('status', 'selesai')->unique('vaccine_id')->count() : 0;
-        $allVaccinesCompleted = ($totalVaccinesCount > 0 && $totalVaccinesCount === $completedVaccinesCount);
+        foreach($vaccineSchedules as $vs) {
+            if ($vs->start_date && $vs->end_date) {
+                // Create a unique key for grouping: StartDate_EndDate_Status
+                $key = $vs->event_start . '_' . $vs->event_end . '_' . $vs->status;
 
-        return view('dashboard.user.index', compact('user', 'patient', 'histories', 'vaccineStatus', 'eligibleVaccines', 'schedules', 'takenVaccineIds', 'patientAgeMonths', 'allVaccinesCompleted'));
-    })->name('user.dashboard');
-    
-    Route::post('/request-vaccine', function (Request $request) {
-        $request->validate([
-           'vaccine_ids' => 'required|array',
-           'vaccine_ids.*' => 'exists:vaccines,id',
-           'schedule_id' => 'required|exists:vaccine_schedules,id' 
-        ]);
-        
-        $schedule = App\Models\VaccineSchedule::findOrFail($request->schedule_id);
-        
-        foreach ($request->vaccine_ids as $vaccineId) {
-            // Optional: Check if already requested/done to prevent duplicates
-            $exists = VaccinePatient::where('patient_id', Auth::user()->patient->id)
-                        ->where('vaccine_id', $vaccineId)
-                        ->whereIn('status', ['pengajuan', 'selesai'])
-                        ->exists();
+                if (!isset($groupedEvents[$key])) {
+                    $color = '#3B82F6'; // Default Blue
+                    if ($vs->status == 'selesai') {
+                        $color = '#059669'; // Emerald-600
+                    } elseif ($vs->status == 'bisa_diajukan') {
+                        $color = '#22c55e'; // Green-500
+                    } elseif ($vs->status == 'terlewat') {
+                        $color = '#EF4444'; // Red
+                    }
 
-            if (!$exists) {
-                VaccinePatient::create([
-                    'village_id' => $schedule->village_id,
-                    'patient_id' => Auth::user()->patient->id,
-                    'vaccine_id' => $vaccineId,
-                    'request_date' => $schedule->scheduled_at,
-                    'status' => 'pengajuan'
-                ]);
+                    $groupedEvents[$key] = [
+                        'titles' => [$vs->vaccine->name],
+                        'start' => $vs->event_start,
+                        'end' => $vs->end_date->copy()->addDay()->format('Y-m-d'),
+                        'color' => $color,
+                        'allDay' => true
+                    ];
+                } else {
+                    $groupedEvents[$key]['titles'][] = $vs->vaccine->name;
+                }
             }
         }
-        
-        return back()->with('success', 'Pengajuan vaksin berhasil dikirim!');
-    })->name('user.request');
 
-    Route::delete('/cancel-request/{id}', function ($id) {
-        $vp = VaccinePatient::where('id', $id)
-                ->where('patient_id', Auth::user()->patient->id)
-                ->where('status', 'pengajuan')
-                ->firstOrFail();
-        
-        $vp->delete();
-        
-        return back()->with('success', 'Pengajuan vaksin berhasil dibatalkan.');
-    })->name('user.cancel');
+        // Convert grouped events to final format
+        foreach ($groupedEvents as $group) {
+            $title = 'Vaksin: ' . implode(', ', $group['titles']);
+            $calendarEvents[] = [
+                'title' => $title,
+                'start' => $group['start'],
+                'end' => $group['end'],
+                'color' => $group['color'],
+                'allDay' => true
+            ];
+        }
 
+        // Check completion
+        $totalVaccinesCount = $allVaccines->count();
+        $completedVaccinesCount = count($doneVaccineIds);
+        $allVaccinesCompleted = ($totalVaccinesCount > 0 && $totalVaccinesCount === $completedVaccinesCount);
+
+        return view('dashboard.user.index', compact('user', 'patient', 'vaccineSchedules', 'calendarEvents', 'patientAgeMonths', 'allVaccinesCompleted'));
+    })->name('user.dashboard');
+    
+    // Certificate (Only if all completed)
     Route::get('/certificate', function () {
         $patient = Auth::user()->patient;
         
-        // Strict check: must have all vaccines completed
         $totalVaccinesCount = Vaccine::count();
         $completedVaccinesCount = $patient ? $patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
         
@@ -195,6 +184,9 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     // Monitoring
     Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('admin.users');
+    Route::get('/users/create', [\App\Http\Controllers\AdminController::class, 'createUser'])->name('admin.users.create');
+    Route::post('/users', [\App\Http\Controllers\AdminController::class, 'storeUser'])->name('admin.users.store');
+    
     Route::get('/history', [\App\Http\Controllers\AdminController::class, 'history'])->name('admin.history');
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
     

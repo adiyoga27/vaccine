@@ -21,7 +21,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openEditModal({{ $vaccine->id }}, '{{ $vaccine->name }}', {{ $vaccine->minimum_age }})" class="text-gray-400 hover:text-blue-600 transition">
+                    <button onclick="openEditModal({{ $vaccine->id }}, '{{ $vaccine->name }}', {{ $vaccine->minimum_age }}, {{ $vaccine->duration_days ?? 7 }})" class="text-gray-400 hover:text-blue-600 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
                     <form action="{{ route('admin.vaccines.destroy', $vaccine->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus?');">
@@ -35,6 +35,7 @@
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $vaccine->name }}</h3>
             <p class="text-sm text-gray-500">Usia Min: <span class="font-semibold text-gray-700">{{ $vaccine->minimum_age }} Bulan</span></p>
+            <p class="text-sm text-gray-500">Durasi: <span class="font-semibold text-gray-700">{{ $vaccine->duration_days ?? 7 }} Hari</span></p>
         </div>
     </div>
     @endforeach
@@ -54,6 +55,11 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Usia Minimum (Bulan)</label>
                     <input type="number" name="minimum_age" value="0" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
+                    <input type="number" name="duration_days" value="7" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Default: 7 Hari (1 Minggu)</p>
                 </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
@@ -80,6 +86,10 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Usia Minimum (Bulan)</label>
                     <input type="number" name="minimum_age" id="edit_minimum_age" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
+                    <input type="number" name="duration_days" id="edit_duration_days" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
                 <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
@@ -90,10 +100,11 @@
 </div>
 
 <script>
-    function openEditModal(id, name, age) {
+    function openEditModal(id, name, age, duration) {
         document.getElementById('editForm').action = '/admin/vaccines/' + id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_minimum_age').value = age;
+        document.getElementById('edit_duration_days').value = duration || 7;
         document.getElementById('editModal').classList.remove('hidden');
     }
 </script>

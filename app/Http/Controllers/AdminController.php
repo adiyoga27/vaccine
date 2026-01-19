@@ -69,14 +69,22 @@ class AdminController extends Controller
 
     public function storeVaccine(Request $request)
     {
-        $request->validate(['name' => 'required', 'minimum_age' => 'required|integer']);
+        $request->validate([
+            'name' => 'required', 
+            'minimum_age' => 'required|integer',
+            'duration_days' => 'required|integer|min:1'
+        ]);
         Vaccine::create($request->all());
         return back()->with('success', 'Vaksin berhasil ditambahkan');
     }
 
     public function updateVaccine(Request $request, Vaccine $vaccine)
     {
-        $request->validate(['name' => 'required', 'minimum_age' => 'required|integer']);
+        $request->validate([
+            'name' => 'required', 
+            'minimum_age' => 'required|integer',
+            'duration_days' => 'required|integer|min:1'
+        ]);
         $vaccine->update($request->all());
         return back()->with('success', 'Vaksin berhasil diperbarui');
     }
@@ -146,6 +154,50 @@ class AdminController extends Controller
         $users = User::with(['patient.vaccinePatients.vaccine'])->where('role', 'user')->latest()->paginate(10);
         $totalVaccines = Vaccine::count();
         return view('dashboard.admin.users.index', compact('users', 'totalVaccines'));
+    }
+
+    public function createUser()
+    {
+        $villages = Village::all();
+        return view('dashboard.admin.users.create', compact('villages'));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|confirmed|min:6',
+            // Patient Data
+            'mother_name' => 'required',
+            'date_birth' => 'required|date',
+            'address' => 'required',
+            'gender' => 'required|in:male,female',
+            'village_id' => 'required|exists:villages,id',
+            'phone' => 'required',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'role' => 'user'
+            ]);
+
+            \App\Models\Patient::create([
+                'user_id' => $user->id,
+                'village_id' => $request->village_id,
+                'name' => $request->name,
+                'mother_name' => $request->mother_name,
+                'date_birth' => $request->date_birth,
+                'address' => $request->address,
+                'gender' => $request->gender,
+                'phone' => $request->phone,
+            ]);
+        });
+
+        return redirect()->route('admin.users')->with('success', 'Peserta berhasil didaftarkan');
     }
 
     public function logs()

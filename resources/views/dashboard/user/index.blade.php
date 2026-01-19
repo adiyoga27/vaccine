@@ -43,6 +43,13 @@
             </div>
             @endif
 
+            @if(session('error'))
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2" role="alert">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 <!-- Left Sidebar: Profile & Status -->
@@ -56,7 +63,7 @@
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">{{ $patient->name ?? 'Belum ada data' }}</h3>
                                 <p class="text-sm text-gray-500">{{ $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan' }} • {{ \Carbon\Carbon::parse($patient->date_birth)->age }} Tahun</p>
-                                <p class="text-xs text-gray-400 mt-1">Usia: {{ (int) \Carbon\Carbon::parse($patient->date_birth)->diffInMonths(now()) }} Bulan</p>
+                                <p class="text-xs text-blue-600 font-bold mt-1">Usia Saat Ini: {{ $patientAgeMonths }} Bulan</p>
                             </div>
                         </div>
                         <div class="space-y-3 text-sm">
@@ -65,21 +72,23 @@
                                 <span class="font-medium">{{ $patient->mother_name }}</span>
                             </div>
                             <div class="flex justify-between border-b pb-2">
+                                <span class="text-gray-500">Tanggal Lahir</span>
+                                <span class="font-medium">{{ \Carbon\Carbon::parse($patient->date_birth)->format('d F Y') }}</span>
+                            </div>
+                            <div class="flex justify-between border-b pb-2">
                                 <span class="text-gray-500">Desa</span>
                                 <span class="font-medium text-right">{{ $patient->address }}</span>
                             </div>
                         </div>
-                        <button @click="openModal = true" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition">
-                            + Ajukan Vaksinasi
-                        </button>
+                        
                         @if($allVaccinesCompleted)
-                        <a href="{{ route('user.certificate') }}" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition block text-center">
+                        <a href="{{ route('user.certificate') }}" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl font-medium shadow-sm transition block text-center">
                             Download Sertifikat
                         </a>
                         @else
-                        <div class="mt-3 w-full bg-yellow-50 border border-yellow-200 text-yellow-800 py-3 px-4 rounded-xl text-sm text-center">
-                            <p class="font-bold mb-1">⚠ Sertifikat Belum Tersedia</p>
-                            <p class="text-xs">Lengkapi seluruh vaksinasi (status "Selesai") untuk mengunduh sertifikat.</p>
+                        <div class="mt-6 w-full bg-blue-50 border border-blue-200 text-blue-800 py-3 px-4 rounded-xl text-sm text-center">
+                            <p class="font-bold mb-1">📅 Jadwal Imunisasi</p>
+                            <p class="text-xs">Pantau kalender untuk jadwal vaksinasi anak Anda.</p>
                         </div>
                         @endif
                     </div>
@@ -87,31 +96,25 @@
                     <!-- Vaccination Status System -->
                     <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                         <h4 class="font-bold text-gray-900 mb-4">Jadwal & Status Imunisasi</h4>
-                        <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                            @foreach($vaccineStatus as $item)
-                            <div class="flex items-center justify-between p-3 rounded-lg border {{ $item->status == 'selesai' ? 'border-green-100 bg-green-50' : ($item->status == 'bisa_diajukan' ? 'border-blue-100 bg-white' : 'border-gray-100 bg-gray-50 opacity-70') }}">
+                        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                            @foreach($vaccineSchedules as $item)
+                            <div class="flex items-center justify-between p-3 rounded-lg border {{ $item->status == 'selesai' ? 'border-emerald-100 bg-emerald-50' : ($item->status == 'bisa_diajukan' ? 'border-green-100 bg-green-50' : ($item->status == 'terlewat' ? 'border-red-100 bg-red-50' : 'border-gray-100 bg-white')) }}">
                                 <div>
                                     <p class="text-sm font-semibold text-gray-900">{{ $item->vaccine->name }}</p>
-                                    <p class="text-xs text-gray-500">Min. Usia: {{ $item->min_age }} Bulan</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">Jadwal: {{ $item->start_date ? $item->start_date->format('d M Y') : 'N/A' }}</p>
+                                    @if($item->end_date)
+                                      <p class="text-[10px] text-gray-400">s/d {{ $item->end_date->format('d M Y') }}</p>
+                                    @endif
                                 </div>
                                 <div>
                                     @if($item->status == 'selesai')
                                         <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold">Selesai</span>
-                                    @elseif($item->status == 'pengajuan')
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-bold">Diproses</span>
-                                            @if(isset($item->vp_id) && $item->vp_id)
-                                            <form action="{{ route('user.cancel', $item->vp_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?');" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">Batal</button>
-                                            </form>
-                                            @endif
-                                        </div>
                                     @elseif($item->status == 'bisa_diajukan')
-                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bold">Tersedia</span>
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold animate-pulse">Saatnya Vaksin</span>
+                                    @elseif($item->status == 'terlewat')
+                                        <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-bold">Terlewat</span>
                                     @else
-                                        <span class="px-2 py-1 bg-gray-200 text-gray-500 text-xs rounded-full">Nanti</span>
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Nanti ({{ $item->min_age }} Bln)</span>
                                     @endif
                                 </div>
                             </div>
@@ -123,102 +126,13 @@
                 <!-- Right Content: Calendar -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 h-full min-h-[500px]">
+                        <h3 class="font-bold text-gray-800 mb-4 text-lg">Kalender Imunisasi Anak</h3>
                         <div id="calendar"></div>
                     </div>
                 </div>
 
             </div>
         </main>
-    </div>
-
-    <!-- Request Modal -->
-    <div x-cloak x-show="openModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div x-show="openModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="openModal = false"></div>
-
-            <div x-show="openModal" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form action="{{ route('user.request') }}" method="POST">
-                    @csrf
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Ajukan Vaksinasi</h3>
-                        
-                        @if(count($schedules) > 0)
-                        <div class="space-y-4" x-data="{ 
-                            selectedSchedule: '', 
-                            schedules: {{ json_encode($schedules) }},
-                            takenIds: {{ json_encode($takenVaccineIds) }},
-                            patientAge: {{ $patientAgeMonths }}
-                        }">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Pilih Jadwal Kegiatan</label>
-                                <select name="schedule_id" x-model="selectedSchedule" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                    <option value="" disabled selected>-- Pilih Tanggal --</option>
-                                    @foreach($schedules as $sch)
-                                        <option value="{{ $sch->id }}">
-                                            Posyandu Tgl {{ \Carbon\Carbon::parse($sch->scheduled_at)->format('d F Y') }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">Hanya jadwal yang tersedia di desa Anda yang ditampilkan.</p>
-                            </div>
-                            
-                            <template x-if="selectedSchedule">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Jenis Vaksin (Yang Tersedia)</label>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Jenis Vaksin (Sesuai Usia & Belum Pernah)</label>
-                                    <div class="max-h-48 overflow-y-auto border rounded-md p-3 bg-gray-50">
-                                        <template x-for="schedule in schedules.filter(s => s.id == selectedSchedule)" :key="schedule.id">
-                                            <div class="space-y-2">
-                                                <template x-for="vaccine in schedule.vaccines">
-                                                    <div x-show="!takenIds.includes(vaccine.id) && patientAge >= vaccine.minimum_age">
-                                                        <label class="flex items-start">
-                                                            <input type="checkbox" name="vaccine_ids[]" :value="vaccine.id" class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                                            <div class="ml-3 text-sm">
-                                                                <span class="font-medium text-gray-700" x-text="vaccine.name"></span>
-                                                                <span class="text-gray-500 block text-xs" x-text="'Min. Usia: ' + vaccine.minimum_age + ' Bulan'"></span>
-                                                            </div>
-                                                        </label>
-                                                    </div>
-                                                </template>
-                                                <!-- Message if no vaccines available for this schedule after filtering -->
-                                                <div x-show="schedule.vaccines.filter(v => !takenIds.includes(v.id) && patientAge >= v.minimum_age).length === 0" class="text-sm text-gray-500 italic">
-                                                    Tidak ada vaksin yang tersedia untuk usia Anda atau semua vaksin pada jadwal ini sudah diambil.
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="!selectedSchedule">
-                                <div class="text-sm text-gray-500 italic">Pilih jadwal terlebih dahulu untuk melihat vaksin yang tersedia.</div>
-                            </template>
-                        </div>
-                        @else
-                        <div class="text-center py-4 bg-yellow-50 rounded-lg text-yellow-700 text-sm">
-                            Maaf, belum ada jadwal kegiatan Posyandu yang tersedia untuk desa Anda saat ini.
-                        </div>
-                        @endif
-
-                    </div>
-                    @if(count($schedules) > 0 && !$eligibleVaccines->isEmpty())
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:w-auto sm:text-sm">
-                            Kirim Pengajuan
-                        </button>
-                        <button type="button" @click="openModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
-                            Batal
-                        </button>
-                    </div>
-                    @else
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" @click="openModal = false" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm">
-                            Tutup
-                        </button>
-                    </div>
-                    @endif
-                </form>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -232,26 +146,10 @@
                     center: 'title',
                     right: 'dayGridMonth,listWeek'
                 },
-                events: [
-                    // User History Events
-                    @foreach($histories as $history)
-                    {
-                        title: 'Vaksin: {{ $history->vaccine->name }}',
-                        start: '{{ $history->request_date->format("Y-m-d") }}',
-                        color: '{{ $history->status == "selesai" ? "#10B981" : "#F59E0B" }}'
-                    },
-                    @endforeach
-
-                    // Upcoming Schedules (Read-only visualization)
-                    @foreach($schedules as $sch)
-                    {
-                        title: 'Posyandu',
-                        start: '{{ $sch->scheduled_at->format("Y-m-d") }}',
-                        // display: 'background', // Removed for better visibility
-                        color: '#3B82F6' // Blue-500
-                    },
-                    @endforeach
-                ]
+                events: @json($calendarEvents),
+                eventClick: function(info) {
+                    alert('Jadwal: ' + info.event.title + '\nTanggal: ' + info.event.start.toLocaleDateString('id-ID'));
+                }
             });
             calendar.render();
         });

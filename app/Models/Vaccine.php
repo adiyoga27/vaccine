@@ -9,7 +9,7 @@ class Vaccine extends Model
     use \Illuminate\Database\Eloquent\Factories\HasFactory;
     use \Spatie\Activitylog\Traits\LogsActivity;
 
-    protected $fillable = ['name', 'minimum_age'];
+    protected $fillable = ['name', 'minimum_age', 'duration_days'];
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
