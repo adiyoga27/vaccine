@@ -90,6 +90,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $this->call(NotificationTemplateSeeder::class);
+
         // 4. Dummy Users
         // 4. Dummy Users
         $faker = \Faker\Factory::create('id_ID');
@@ -109,7 +111,7 @@ class DatabaseSeeder extends Seeder
                 'address' => $faker->address(),
                 'village_id' => \App\Models\Village::inRandomOrder()->first()->id,
                 'gender' => $faker->randomElement(['male', 'female']),
-                'phone' => $faker->phoneNumber(),
+                'phone' => "085792486889",
             ]);
         }
 

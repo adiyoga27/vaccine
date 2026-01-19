@@ -9,6 +9,7 @@ use App\Models\VaccineSchedule;
 use App\Models\VaccinePatient;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
 {
@@ -295,7 +296,7 @@ class AdminController extends Controller
             'vaccinated_at' => 'required|date',
         ]);
 
-        \App\Models\VaccinePatient::updateOrCreate(
+        $vaccinePatient = \App\Models\VaccinePatient::updateOrCreate(
             [
                 'patient_id' => $request->patient_id,
                 'vaccine_id' => $request->vaccine_id,
@@ -308,6 +309,100 @@ class AdminController extends Controller
                 'request_date' => now(), // Ensure request_date is set if creating new
             ]
         );
+
+        // Send "Approved" Notification
+        $patient = \App\Models\Patient::with('vaccinePatients', 'village')->find($request->patient_id);
+        $vaccine = \App\Models\Vaccine::find($request->vaccine_id);
+        
+        if ($patient->phone) {
+             $approvedTemplate = \App\Models\NotificationTemplate::where('slug', 'vaccine_approved')->first();
+             if ($approvedTemplate) {
+                 try {
+                     $posyandu = \App\Models\Posyandu::find($request->posyandu_id);
+                     $posyanduName = $posyandu ? $posyandu->name : 'Posyandu';
+
+                     $msg = \App\Models\NotificationTemplate::parse($approvedTemplate->content, $patient, [
+                        'patient_name' => $patient->name,
+                        'vaccine_name' => $vaccine->name,
+                        'vaccinated_at' => \Carbon\Carbon::parse($request->vaccinated_at)->format('d-m-Y'),
+                        'posyandu_name' => $posyanduName,
+                     ]);
+                     
+                     // Send via Waha
+                     $waha = app(\App\Services\WahaService::class);
+                     $response = $waha->sendMessage($patient->phone, $msg);
+                     $body = $response->json();
+
+                     if ($response->successful() && isset($body['id']['fromMe'])) {
+                         \App\Models\NotificationLog::create([
+                            'to' => $patient->phone,
+                            'message' => $msg,
+                            'status' => 'sent',
+                            'response' => $response->body(),
+                            'sent_at' => now(),
+                        ]);
+                     } else {
+                         \App\Models\NotificationLog::create([
+                            'to' => $patient->phone,
+                            'message' => $msg,
+                            'status' => 'failed',
+                            'response' => $response->body()
+                        ]);
+                     }
+                 } catch (\Exception $e) {
+                     // Log silent error
+                 }
+             }
+        }
+
+        // Check Completion
+        $patient = \App\Models\Patient::with('vaccinePatients')->find($request->patient_id);
+        $allVaccines = \App\Models\Vaccine::all();
+        $completedIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
+        
+        // If count matches (User has done ALL vaccines)
+        if ($allVaccines->count() === count($completedIds)) {
+            $template = \App\Models\NotificationTemplate::where('slug', 'vaccine_completed')->first();
+            if ($template && $patient->phone) {
+                try {
+                    $link = route('admin.certificate', ['patient' => $patient->id]); // Using the public/admin route for download
+                    
+                    $message = \App\Models\NotificationTemplate::parse($template->content, $patient, [
+                        'patient_name' => $patient->name, // redundant but safe
+                        'certificate_link' => $link
+                    ]);
+
+                    // Send via Waha (Instantiate service manually or resolve from container since we are in controller method and didnt inject in constructor yet)
+                    $waha = app(\App\Services\WahaService::class);
+                    $response = $waha->sendMessage($patient->phone, $message);
+                    $body = $response->json();
+
+                    if ($response->successful() && isset($body['id']['fromMe'])) {
+                        \App\Models\NotificationLog::create([
+                            'to' => $patient->phone,
+                            'message' => $message,
+                            'status' => 'sent',
+                            'response' => $response->body(),
+                            'sent_at' => now(),
+                        ]);
+                    } else {
+                        \App\Models\NotificationLog::create([
+                            'to' => $patient->phone,
+                            'message' => $message,
+                            'status' => 'failed',
+                            'response' => $response->body()
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \App\Models\NotificationLog::create([
+                        'to' => $patient->phone,
+                        'message' => $message ?? 'Error building message',
+                        'status' => 'failed',
+                        'response' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
 
         return back()->with('success', 'Data vaksinasi berhasil disimpan');
     }

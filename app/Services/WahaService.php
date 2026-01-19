@@ -23,8 +23,9 @@ class WahaService
     public function getQR()
     {
         $response = Http::withHeaders([
-            'X-Api-Key' => $this->apiKey
-        ])->get("{$this->baseUrl}/api/sessions/{$this->session}/auth/qr?format=image");
+            'X-Api-Key' => $this->apiKey,
+            'Accept' => 'image/png'
+        ])->get("{$this->baseUrl}/api/{$this->session}/auth/qr?format=image");
 
         // Return base64 or image data directly?
         // Let's assume we want base64 for easiest display
@@ -44,11 +45,25 @@ class WahaService
         return $response->json();
     }
 
+    /**
+     * @return \Illuminate\Http\Client\Response
+     */
     public function sendMessage($to, $message)
     {
+        // Format Phone Number
+        // 1. Remove non-numeric characters (handles +62 -> 62)
+        $to = preg_replace('/[^0-9]/', '', $to);
+
+        // 2. If starts with 08, replace 0 with 62
+        if (substr($to, 0, 2) === '08') {
+             $to = '62' . substr($to, 1);
+        }
+
         $response = Http::withHeaders([
-            'X-Api-Key' => $this->apiKey
-        ])->post("{$this->baseUrl}/api/send/whatsapp-text", [
+            'X-Api-Key' => $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ])->post("{$this->baseUrl}/api/sendText", [
             'chatId' => $to . '@c.us',
             'text' => $message,
             'session' => $this->session

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Vaccine;
 use App\Models\Village;
 use App\Models\Patient;
@@ -190,6 +191,17 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::delete('/history/rollback/{id}', [\App\Http\Controllers\AdminController::class, 'rollbackHistory'])->name('admin.history.rollback');
     
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
+    
+    // Notifications
+    Route::get('/notifications/config', [\App\Http\Controllers\NotificationController::class, 'configuration'])->name('admin.notifications.config'); // Renamed from index
+    Route::get('/notifications/templates', [\App\Http\Controllers\NotificationController::class, 'templates'])->name('admin.notifications.templates');
+    Route::put('/notifications/templates/{id}', [\App\Http\Controllers\NotificationController::class, 'updateTemplate'])->name('admin.notifications.templates.update');
+    Route::get('/notifications/history', [\App\Http\Controllers\NotificationController::class, 'history'])->name('admin.notifications.history');
+    
+    // AJAX for WAHA
+    Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('admin.notifications.scan');
+    Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('admin.notifications.status');
+    Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('admin.notifications.logout');
     
     Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
         return view('dashboard.user.certificate', compact('patient'));
