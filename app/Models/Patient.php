@@ -12,11 +12,13 @@ class Patient extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'village_id', 'name', 'mother_name', 'date_birth', 'address', 'gender', 'phone'
+        'user_id', 'village_id', 'name', 'mother_name', 'date_birth', 'address', 'gender', 'phone', 
+        'completed_vaccination_at', 'certificate_number'
     ];
 
     protected $casts = [
         'date_birth' => 'date',
+        'completed_vaccination_at' => 'datetime',
     ];
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
