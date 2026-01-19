@@ -340,7 +340,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('admin.notifications.logout');
     
     Route::get('/certificate/{patient}', function (App\Models\Patient $patient) {
-        return view('dashboard.user.certificate', compact('patient'));
+        $certificateNumber = $patient->certificate_number;
+        return view('dashboard.user.certificate', compact('patient', 'certificateNumber'));
     })->name('admin.certificate');
 
     // Requests Approval
