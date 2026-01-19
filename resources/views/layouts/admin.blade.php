@@ -10,15 +10,24 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased text-gray-900">
+<body class="bg-gray-50 font-sans antialiased text-gray-900" x-data="{ sidebarOpen: false }">
     
     <div class="min-h-screen flex flex-col md:flex-row">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900 opacity-50 z-20 md:hidden" style="display: none;"></div>
+
         <!-- Sidebar -->
-        <aside class="w-full md:w-64 bg-slate-900 text-white flex-shrink-0 md:h-screen sticky top-0">
-            <div class="p-6">
-                <div class="flex items-center gap-2 mb-8">
-                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">A</div>
-                    <span class="font-bold text-xl tracking-wide">Posyandu<span class="text-blue-400">Admin</span></span>
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transition-transform duration-300 md:translate-x-0 md:static md:inset-auto md:h-screen md:sticky md:top-0 transform -translate-x-full">
+            <div class="p-6 h-full overflow-y-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+                        <span class="font-bold text-xl tracking-wide">Posyandu<span class="text-blue-400">Admin</span></span>
+                    </div>
+                    <!-- Close Button (Mobile) -->
+                    <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
                 
                 <nav class="space-y-1">
@@ -54,12 +63,6 @@
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Riwayat Notifikasi
                     </a>
-                    {{--
-                    <a href="{{ route('admin.schedules') }}" class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('admin.schedules') ? 'bg-slate-800 text-blue-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        Jadwal Posyandu
-                    </a>
-                    --}}
 
                     <div class="pt-4 pb-2">
                         <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Monitoring</p>
@@ -95,6 +98,9 @@
             <header class="bg-white shadow-sm md:hidden">
                 <div class="px-4 py-4 flex justify-between items-center">
                     <span class="font-bold text-lg text-gray-900">Posyandu Admin</span>
+                    <button @click="sidebarOpen = true" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
                 </div>
             </header>
             
