@@ -194,11 +194,11 @@
                         </div>
 
                         <div>
-                            <label for="mother_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                👩 Nama Ibu Kandung
+                            <label for="child_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                👶 Nama Anak
                             </label>
-                            <input type="text" x-model="motherName" id="mother_name" required minlength="2"
-                                placeholder="Masukkan nama ibu (minimal 2 huruf)"
+                            <input type="text" x-model="childName" id="child_name" required minlength="2"
+                                placeholder="Masukkan nama anak (minimal 2 huruf)"
                                 class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition">
                             <p class="mt-1 text-xs text-gray-500">Cukup masukkan sebagian nama untuk mencari</p>
                         </div>
@@ -224,7 +224,7 @@
         function quickLoginModal() {
             return {
                 dateBirth: '',
-                motherName: '',
+                childName: '',
                 loading: false,
                 errorMessage: '',
                 successMessage: '',
@@ -244,7 +244,7 @@
                             },
                             body: JSON.stringify({
                                 date_birth: this.dateBirth,
-                                mother_name: this.motherName
+                                child_name: this.childName
                             })
                         });
 

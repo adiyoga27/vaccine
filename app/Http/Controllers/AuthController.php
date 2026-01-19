@@ -96,7 +96,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'date_birth' => 'required|date',
-            'mother_name' => 'required|string|min:2',
+            'child_name' => 'required|string|min:2',
         ]);
 
         // Find patients with matching date of birth
@@ -109,14 +109,14 @@ class AuthController extends Controller
             return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
         }
 
-        // Check if mother_name contains the search term (partial match)
-        $searchTerm = strtolower(trim($request->mother_name));
+        // Check if child name contains the search term (partial match)
+        $searchTerm = strtolower(trim($request->child_name));
         $matchedPatient = null;
 
         foreach ($patients as $patient) {
-            $motherNameLower = strtolower($patient->mother_name);
-            // Check if any word in mother_name matches the search term
-            if (str_contains($motherNameLower, $searchTerm)) {
+            $childNameLower = strtolower($patient->name);
+            // Check if child's name matches the search term
+            if (str_contains($childNameLower, $searchTerm)) {
                 $matchedPatient = $patient;
                 break;
             }
@@ -124,9 +124,9 @@ class AuthController extends Controller
 
         if (!$matchedPatient) {
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Nama Ibu tidak cocok. Silahkan coba lagi.']);
+                return response()->json(['success' => false, 'message' => 'Nama Anak tidak cocok. Silahkan coba lagi.']);
             }
-            return back()->with('quick_login_error', 'Nama Ibu tidak cocok. Silahkan coba lagi.');
+            return back()->with('quick_login_error', 'Nama Anak tidak cocok. Silahkan coba lagi.');
         }
 
         // Get the user associated with this patient
