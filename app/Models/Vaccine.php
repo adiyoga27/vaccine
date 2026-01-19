@@ -11,6 +11,11 @@ class Vaccine extends Model
 
     protected $fillable = ['name', 'minimum_age', 'duration_days'];
 
+    protected $casts = [
+        'minimum_age' => 'integer',
+        'duration_days' => 'integer',
+    ];
+
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()->logAll();
