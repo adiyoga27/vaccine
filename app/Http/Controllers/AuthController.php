@@ -117,11 +117,10 @@ class AuthController extends Controller
         
         $matchedPatients = $patients->filter(function ($patient) use ($searchWords) {
             $patientName = strtolower($patient->name);
-            $motherName = strtolower($patient->mother_name);
             
-            // Check if ANY word from search term exists in patient name OR mother name
+            // Check if ANY word from search term exists in patient name
             foreach ($searchWords as $word) {
-                if (str_contains($patientName, $word) || str_contains($motherName, $word)) {
+                if (str_contains($patientName, $word)) {
                     return true;
                 }
             }
