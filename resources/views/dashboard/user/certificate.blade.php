@@ -7,70 +7,135 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Roboto:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Courgette&family=Poppins:wght@400;500;600;700&display=swap');
         
         body {
             background-color: #f3f4f6;
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         
         #certificate-container {
-            width: 297mm; /* A4 Landscape width */
-            height: 210mm; /* A4 Landscape height */
+            width: 297mm;
+            height: 210mm;
             margin: 0 auto;
-            background: white;
             position: relative;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             overflow: hidden;
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%);
         }
 
-        .border-pattern {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            bottom: 15px;
-            border: 5px solid #1e40af; /* Blue-800 */
-            z-index: 10;
+        .certificate-title {
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(180deg, #ec4899 0%, #db2777 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            letter-spacing: 8px;
         }
 
-        .border-pattern::before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            border: 2px solid #93c5fd; /* Blue-300 */
+        .subtitle-blue {
+            font-family: 'Fredoka One', cursive;
+            color: #2563eb;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
 
-        .watermark {
+        .subtitle-pink {
+            font-family: 'Fredoka One', cursive;
+            color: #ec4899;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+
+        .given-to {
+            font-family: 'Courgette', cursive;
+            color: #1e40af;
+        }
+
+        .info-label {
+            font-family: 'Poppins', sans-serif;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .info-dots {
+            border-bottom: 2px dotted #1e3a8a;
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+
+        .info-value {
+            font-family: 'Poppins', sans-serif;
+            color: #1e3a8a;
+            font-weight: 500;
+        }
+
+        .statement-text {
+            font-family: 'Poppins', sans-serif;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        .ribbon {
+            width: 60px;
+            height: 80px;
+            position: relative;
+        }
+
+        .ribbon-circle {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .ribbon-center {
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 120px;
-            opacity: 0.03;
-            font-weight: bold;
-            color: #1e40af;
-            z-index: 0;
-            white-space: nowrap;
+            transform: translate(-50%, -50%);
         }
 
-        .content-layer {
-            position: relative;
-            z-index: 20;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 40px 60px;
-            text-align: center;
+        .ribbon-tail {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #2563eb;
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        h1 {
-            font-family: 'Playfair Display', serif;
-            color: #1e3a8a; /* Blue-900 */
+        .signature-area {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Decorative elements */
+        .star {
+            position: absolute;
+            color: white;
+            opacity: 0.8;
+        }
+
+        .corner-decoration {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .certificate-number {
+            font-family: 'Poppins', sans-serif;
+            color: #dc2626;
+            font-weight: 700;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -80,67 +145,102 @@
         <a href="{{ route('user.dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded shadow transition">
             Kembali
         </a>
-        <button onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition flex items-center">
+        <button onclick="downloadPDF()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded shadow transition flex items-center">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Download PDF
         </button>
     </div>
 
     <div id="certificate-container">
-        <!-- Decorative Borders -->
-        <div class="border-pattern"></div>
+        <!-- Decorative Stars -->
+        <div class="star" style="top: 80px; right: 60px; font-size: 24px;">✦</div>
+        <div class="star" style="top: 120px; right: 40px; font-size: 16px;">✦</div>
+        <div class="star" style="top: 160px; right: 70px; font-size: 20px;">✦</div>
+        <div class="star" style="bottom: 100px; right: 50px; font-size: 18px;">✦</div>
         
-        <!-- Watermark -->
-        <div class="watermark">IMUNISASI LENGKAP</div>
+        <!-- Corner decorations -->
+        <div class="corner-decoration" style="top: -100px; right: -100px;"></div>
+        <div class="corner-decoration" style="bottom: -100px; left: -100px;"></div>
 
-        <div class="content-layer">
-            <!-- Header -->
-            <div class="mb-8">
-                <p class="text-sm tracking-widest text-gray-500 uppercase font-semibold mb-2">SERTIFIKAT BAGIAN BELAKANG</p>
-                <h1 class="text-4xl font-bold mb-2 tracking-wide text-blue-900">SERTIFIKAT IMUNISASI DASAR LENGKAP</h1>
-                <p class="text-xl text-blue-600 font-serif italic mt-2">PUSTU ILP SELENGEN</p>
-                <p class="text-base font-bold text-gray-700 mt-2">No. {{ $certificateNumber }}</p>
+        <!-- Main Content -->
+        <div class="relative z-10 h-full flex flex-col" style="padding: 30px 50px;">
+            
+            <!-- Header Title -->
+            <div class="text-center mb-4">
+                <h1 class="certificate-title text-5xl mb-2">SERTIFIKAT</h1>
+                <h2 class="subtitle-blue text-2xl tracking-wider mb-1">IMUNISASI DASAR LENGKAP</h2>
+                <h3 class="subtitle-pink text-xl tracking-widest">PUSTU ILP SELENGEN</h3>
             </div>
 
-            <!-- Pre-content -->
-            <!-- Removed placeholder as requested -->
-            
-            <div class="mb-10">
-                <p class="text-gray-500 font-serif italic mb-6">Diberikan Kepada :</p>
-                
-                <div class="max-w-3xl mx-auto space-y-4 text-left pl-20">
-                    <div class="grid grid-cols-3 gap-4 border-b border-gray-200 pb-2">
-                        <span class="font-bold text-gray-700 col-span-1">NAMA</span>
-                        <span class="col-span-2 text-xl font-serif text-blue-900">: {{ strtoupper($patient->name) }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4 border-b border-gray-200 pb-2">
-                        <span class="font-bold text-gray-700 col-span-1">TANGGAL LAHIR</span>
-                        <span class="col-span-2 text-lg text-gray-800">: {{ \Carbon\Carbon::parse($patient->date_birth)->translatedFormat('d F Y') }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4 border-b border-gray-200 pb-2">
-                        <span class="font-bold text-gray-700 col-span-1">NAMA ORANG TUA</span>
-                        <span class="col-span-2 text-lg text-gray-800">: {{ strtoupper($patient->mother_name) }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4 border-b border-gray-200 pb-2">
-                        <span class="font-bold text-gray-700 col-span-1">ALAMAT</span>
-                        <span class="col-span-2 text-lg text-gray-800">: {{ strtoupper($patient->address) }}</span>
-                    </div>
+            <!-- Certificate Number -->
+            <div class="text-center mb-3">
+                <p class="certificate-number">No. {{ $certificateNumber }}</p>
+            </div>
+
+            <!-- Given To Section -->
+            <div class="text-center mb-4">
+                <p class="given-to text-2xl italic">Diberikan kepada :</p>
+            </div>
+
+            <!-- Information Fields -->
+            <div class="max-w-2xl mx-auto w-full space-y-3 mb-6" style="padding-left: 80px; padding-right: 80px;">
+                <div class="flex items-end">
+                    <span class="info-label w-36">Nama</span>
+                    <span class="info-dots"></span>
+                    <span class="info-value text-lg" style="min-width: 250px;">{{ strtoupper($patient->name) }}</span>
+                </div>
+                <div class="flex items-end">
+                    <span class="info-label w-36">Tanggal lahir</span>
+                    <span class="info-dots"></span>
+                    <span class="info-value text-lg" style="min-width: 250px;">{{ \Carbon\Carbon::parse($patient->date_birth)->translatedFormat('d F Y') }}</span>
+                </div>
+                <div class="flex items-end">
+                    <span class="info-label w-36">Nama ibu</span>
+                    <span class="info-dots"></span>
+                    <span class="info-value text-lg" style="min-width: 250px;">{{ strtoupper($patient->mother_name) }}</span>
                 </div>
             </div>
 
-            <!-- Footer Statement -->
-            <div class="mt-4 border-t-2 border-blue-100 pt-6 mx-20">
-                <p class="text-lg font-bold text-gray-800 leading-relaxed uppercase">
-                    TELAH MENYELESAIKAN IMUNISASI DASAR LENGKAP SESUAI DENGAN JADWAL IMUNISASI
+            <!-- Statement -->
+            <div class="text-center mb-6">
+                <p class="statement-text text-lg leading-relaxed">
+                    Telah Menyelesaikan Imunisasi Dasar Lengkap Sesuai Dengan
+                </p>
+                <p class="statement-text text-lg">
+                    Jadwal Imunisasi
                 </p>
             </div>
-            
-            <!-- Signature Area (Optional, keeping simple as per image) -->
-            <!-- Signature Area -->
-            <div class="w-full flex justify-end mt-12 pr-4">
-                <div class="text-center">
-                    <p class="text-gray-600 mb-20">Selengen, {{ now()->translatedFormat('d F Y') }}</p>
-                    <p class="font-bold text-gray-800 border-t border-gray-400 pt-2 px-8 inline-block select-none">Petugas Imunisasi</p>
+
+            <!-- Signature Area with Ribbon -->
+            <div class="flex justify-between items-end mt-auto" style="padding: 0 40px;">
+                <!-- Left Signature -->
+                <div class="signature-area text-center">
+                    <p class="text-sm font-semibold text-blue-900 mb-2">Kepala UPT BLUD Puskesmas</p>
+                    <p class="text-sm font-semibold text-blue-900 mb-1">Kayangan</p>
+                    <div class="relative h-16 flex items-center justify-center">
+                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-14 object-contain">
+                    </div>
+                    <p class="font-bold text-blue-900">SABRI, SKM</p>
+                </div>
+
+                <!-- Center Ribbon -->
+                <div class="flex flex-col items-center">
+                    <div class="ribbon">
+                        <div class="ribbon-circle">
+                            <div class="ribbon-center"></div>
+                        </div>
+                        <div class="ribbon-tail"></div>
+                    </div>
+                </div>
+
+                <!-- Right Signature -->
+                <div class="signature-area text-center">
+                    <p class="text-sm font-semibold text-blue-900 mb-1">Petugas Jurim Pustu ILP</p>
+                    <p class="text-sm font-semibold text-blue-900 mb-1">Selengen</p>
+                    <div class="relative h-20 flex items-center justify-center">
+                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-20 object-contain">
+                    </div>
+                    <p class="font-bold text-blue-900">Endang Junaela, S.ST.,NS</p>
                 </div>
             </div>
         </div>
@@ -157,8 +257,6 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            // Choose to download or print
-            // Using html2pdf to download
             html2pdf().set(opt).from(element).save();
         }
     </script>
