@@ -20,7 +20,10 @@
             margin: 0 auto;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%);
+            background-image: url('/images/certificate_background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .certificate-title {
