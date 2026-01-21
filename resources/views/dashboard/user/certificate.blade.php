@@ -20,7 +20,7 @@
             margin: 0 auto;
             position: relative;
             overflow: hidden;
-            background-image: url('/images/certificate_background.jpg');
+            background-image: url('/images/certificate_background.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -166,7 +166,7 @@
         <div class="corner-decoration" style="bottom: -100px; left: -100px;"></div>
 
         <!-- Main Content -->
-        <div class="relative z-10 h-full flex flex-col" style="padding: 30px 50px;">
+        <div class="absolute inset-0 z-10 flex flex-col items-center justify-center" style="padding: 20px 60px;">
             
             <!-- Header Title -->
             <div class="text-center mb-4">
@@ -186,26 +186,23 @@
             </div>
 
             <!-- Information Fields -->
-            <div class="max-w-2xl mx-auto w-full space-y-3 mb-6" style="padding-left: 80px; padding-right: 80px;">
+            <div class="w-full max-w-xl mx-auto space-y-3 mb-6">
                 <div class="flex items-end">
                     <span class="info-label w-36">Nama</span>
-                    <span class="info-dots"></span>
-                    <span class="info-value text-lg" style="min-width: 250px;">{{ strtoupper($patient->name) }}</span>
+                    <span class="info-value text-lg" style="min-width: 250px;">: {{ strtoupper($patient->name) }}</span>
                 </div>
                 <div class="flex items-end">
                     <span class="info-label w-36">Tanggal lahir</span>
-                    <span class="info-dots"></span>
-                    <span class="info-value text-lg" style="min-width: 250px;">{{ \Carbon\Carbon::parse($patient->date_birth)->translatedFormat('d F Y') }}</span>
+                    <span class="info-value text-lg" style="min-width: 250px;">: {{ \Carbon\Carbon::parse($patient->date_birth)->translatedFormat('d F Y') }}</span>
                 </div>
                 <div class="flex items-end">
                     <span class="info-label w-36">Nama ibu</span>
-                    <span class="info-dots"></span>
-                    <span class="info-value text-lg" style="min-width: 250px;">{{ strtoupper($patient->mother_name) }}</span>
+                    <span class="info-value text-lg" style="min-width: 250px;">: {{ strtoupper($patient->mother_name) }}</span>
                 </div>
             </div>
 
             <!-- Statement -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-2">
                 <p class="statement-text text-lg leading-relaxed">
                     Telah Menyelesaikan Imunisasi Dasar Lengkap Sesuai Dengan
                 </p>
@@ -214,36 +211,31 @@
                 </p>
             </div>
 
-            <!-- Signature Area with Ribbon -->
-            <div class="flex justify-between items-end mt-auto" style="padding: 0 40px;">
+            <!-- Signature Area -->
+            <div class="flex justify-center items-end w-full gap-64 mt-2">
                 <!-- Left Signature -->
                 <div class="signature-area text-center">
                     <p class="text-sm font-semibold text-blue-900 mb-2">Kepala UPT BLUD Puskesmas</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Kayangan</p>
-                    <div class="relative h-16 flex items-center justify-center">
-                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-14 object-contain">
+                    <div class="relative h-12 flex items-end justify-center -mb-2">
+                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-16 object-contain">
                     </div>
-                    <p class="font-bold text-blue-900">SABRI, SKM</p>
+                    <p class="font-bold text-blue-900 relative z-10">SABRI, SKM</p>
                 </div>
 
-                <!-- Center Ribbon -->
-                <div class="flex flex-col items-center">
-                    <div class="ribbon">
-                        <div class="ribbon-circle">
-                            <div class="ribbon-center"></div>
-                        </div>
-                        <div class="ribbon-tail"></div>
-                    </div>
+                <!-- Center Medal/Ribbon -->
+                <div class="flex items-center justify-center">
+                    <img src="{{ asset('images/ribbon_medal.png') }}" alt="Medal" class="h-32 object-contain">
                 </div>
 
                 <!-- Right Signature -->
                 <div class="signature-area text-center">
                     <p class="text-sm font-semibold text-blue-900 mb-1">Petugas Jurim Pustu ILP</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Selengen</p>
-                    <div class="relative h-20 flex items-center justify-center">
-                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-20 object-contain">
+                    <div class="relative h-16 flex items-end justify-center -mb-3">
+                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-24 object-contain">
                     </div>
-                    <p class="font-bold text-blue-900">Endang Junaela, S.ST.,NS</p>
+                    <p class="font-bold text-blue-900 relative z-10">Endang Junaela, S.ST.,NS</p>
                 </div>
             </div>
         </div>
