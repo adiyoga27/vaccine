@@ -217,8 +217,8 @@
                 <div class="signature-area text-center">
                     <p class="text-sm font-semibold text-blue-900 mb-2">Kepala UPT BLUD Puskesmas</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Kayangan</p>
-                    <div class="relative h-12 flex items-end justify-center -mb-2">
-                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-16 object-contain">
+                    <div class="relative flex items-end justify-center" style="margin-bottom: -20px;">
+                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-20 object-contain">
                     </div>
                     <p class="font-bold text-blue-900 relative z-10">SABRI, SKM</p>
                 </div>
@@ -232,8 +232,8 @@
                 <div class="signature-area text-center">
                     <p class="text-sm font-semibold text-blue-900 mb-1">Petugas Jurim Pustu ILP</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Selengen</p>
-                    <div class="relative h-16 flex items-end justify-center -mb-3">
-                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-24 object-contain">
+                    <div class="relative flex items-end justify-center" style="margin-bottom: -25px;">
+                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-28 object-contain">
                     </div>
                     <p class="font-bold text-blue-900 relative z-10">Endang Junaela, S.ST.,NS</p>
                 </div>
