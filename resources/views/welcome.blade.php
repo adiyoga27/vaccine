@@ -36,7 +36,40 @@
     <meta property="twitter:image" content="{{ asset('images/logo-tandu-gemas.png') }}">
 
     <!-- Structured Data (JSON-LD) -->
-    <!-- Structured Data (JSON-LD) removed for debugging -->
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "GovernmentService",
+      "name": "TANDU GEMAS",
+      "alternateName": "Digital Posyandu UPT BLUD Puskesmas Kayangan",
+      "url": "{{ url('/') }}",
+      "logo": "{{ asset('images/logo-tandu-gemas.png') }}",
+      "description": "Layanan informasi digital untuk pemantauan imunisasi dan kesehatan anak di wilayah kerja Puskesmas Kayangan.",
+      "provider": {
+        "@@type": "GovernmentOrganization",
+        "name": "UPT BLUD Puskesmas Kayangan",
+        "address": {
+          "@@type": "PostalAddress",
+          "addressLocality": "Kayangan",
+          "addressRegion": "Lombok Utara",
+          "addressCountry": "ID"
+        }
+      },
+      "areaServed": {
+        "@@type": "AdministrativeArea",
+        "name": "Lombok Utara"
+      },
+      "audience": {
+        "@@type": "Audience",
+        "audienceType": "Masyarakat Umum",
+        "geographicArea": {
+          "@@type": "AdministrativeArea",
+          "name": "Kecamatan Kayangan"
+        }
+      }
+    }
+    </script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
