@@ -3,7 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TANDU GEMAS - Digital Posyandu untuk Generasi Keluarga Emas</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>TANDU GEMAS - Sistem Informasi Posyandu Digital & Imunisasi Anak</title>
+    <meta name="title" content="TANDU GEMAS - Sistem Informasi Posyandu Digital & Imunisasi Anak">
+    <meta name="description" content="TANDU GEMAS adalah aplikasi posyandu digital resmi dari UPT BLUD Puskesmas Kayangan untuk memantau jadwal imunisasi, riwayat vaksinasi, dan tumbuh kembang anak secara gratis dan akurat.">
+    <meta name="keywords" content="posyandu, imunisasi, vaksin anak, jadwal imunisasi, kesehatan anak, stunting, posyandu digital, lombok utara, puskesmas kayangan, tandu gemas, imunisasi online">
+    <meta name="author" content="UPT BLUD Puskesmas Kayangan">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Indonesian">
+    <meta name="geo.region" content="ID-NB">
+    <meta name="geo.placename" content="Lombok Utara">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ url('/') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tandu-gemas.png') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="TANDU GEMAS - Digital Posyandu untuk Generasi Keluarga Emas">
+    <meta property="og:description" content="Pantau jadwal imunisasi dan kesehatan anak dengan mudah melalui TANDU GEMAS. Gratis, Akurat, dan Terpercaya.">
+    <meta property="og:image" content="{{ asset('images/logo-tandu-gemas.png') }}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url('/') }}">
+    <meta property="twitter:title" content="TANDU GEMAS - Digital Posyandu untuk Generasi Keluarga Emas">
+    <meta property="twitter:description" content="Pantau jadwal imunisasi dan kesehatan anak dengan mudah melalui TANDU GEMAS. Gratis, Akurat, dan Terpercaya.">
+    <meta property="twitter:image" content="{{ asset('images/logo-tandu-gemas.png') }}">
+
+    <!-- Structured Data (JSON-LD) -->
+    <!-- Structured Data (JSON-LD) removed for debugging -->
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
