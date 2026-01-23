@@ -14,32 +14,32 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Villages
         // 1. Villages and their Posyandus
-        $villages = [
-            'Gubuk Baru' => ['Mawar', 'Cempaka', 'Lestari'],
-            'SBJ Barat' => ['Melati', 'Kenanga', 'Sejahtera'],
-            'SBJ Perigi' => ['Anggrek', 'Dahlia', 'Bahagia'],
-            'Dompo Indah' => ['Teratai', 'Flamboyan', 'Indah'],
-            'Sangiang' => ['Kamboja', 'Alamanda', 'Sehat'],
-            'SBJ Timur' => ['Bougenville', 'Asoka', 'Makmur'],
-            'Tangga' => ['Sepatu', 'Matahari', 'Ceria'],
-            'Lokok Mandi' => ['Sedap Malam', 'Nusa Indah', 'Harmoni'],
-            'Panggung Timur' => ['Bakung', 'Seruni', 'Sentosa'],
-            'Panggung Barat' => ['Krisan', 'Amarilis', 'Damai'],
-            'Lembah Berora' => ['Seroja', 'Lily', 'Abadi'],
-            'Selengen' => ['Edelweis', 'Lavender', 'Jaya'],
-            'Tampes' => ['Sakura', 'Jasmine', 'Mulia']
-        ];
+        // $villages = [
+        //     'Gubuk Baru' => ['Mawar', 'Cempaka', 'Lestari'],
+        //     'SBJ Barat' => ['Melati', 'Kenanga', 'Sejahtera'],
+        //     'SBJ Perigi' => ['Anggrek', 'Dahlia', 'Bahagia'],
+        //     'Dompo Indah' => ['Teratai', 'Flamboyan', 'Indah'],
+        //     'Sangiang' => ['Kamboja', 'Alamanda', 'Sehat'],
+        //     'SBJ Timur' => ['Bougenville', 'Asoka', 'Makmur'],
+        //     'Tangga' => ['Sepatu', 'Matahari', 'Ceria'],
+        //     'Lokok Mandi' => ['Sedap Malam', 'Nusa Indah', 'Harmoni'],
+        //     'Panggung Timur' => ['Bakung', 'Seruni', 'Sentosa'],
+        //     'Panggung Barat' => ['Krisan', 'Amarilis', 'Damai'],
+        //     'Lembah Berora' => ['Seroja', 'Lily', 'Abadi'],
+        //     'Selengen' => ['Edelweis', 'Lavender', 'Jaya'],
+        //     'Tampes' => ['Sakura', 'Jasmine', 'Mulia']
+        // ];
 
-        foreach ($villages as $villageName => $posyandus) {
-            $village = Village::create(['name' => $villageName]);
+        // foreach ($villages as $villageName => $posyandus) {
+        //     $village = Village::create(['name' => $villageName]);
             
-            foreach ($posyandus as $p) {
-                \App\Models\Posyandu::create([
-                    'village_id' => $village->id,
-                    'name' => 'Posyandu ' . $p
-                ]);
-            }
-        }
+        //     foreach ($posyandus as $p) {
+        //         \App\Models\Posyandu::create([
+        //             'village_id' => $village->id,
+        //             'name' => 'Posyandu ' . $p
+        //         ]);
+        //     }
+        // }
 
         // 2. Vaccines
         $vaccines = [
@@ -82,7 +82,7 @@ class DatabaseSeeder extends Seeder
         // 3. Admin
         // 3. Admin
         User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
+            ['email' => 'admin@inovasisehat.com'],
             [
                 'name' => 'Admin Posyandu',
                 'password' => Hash::make('password'),
@@ -94,39 +94,39 @@ class DatabaseSeeder extends Seeder
 
         // 4. Dummy Users
         // 4. Dummy Users
-        $faker = \Faker\Factory::create('id_ID');
+        // $faker = \Faker\Factory::create('id_ID');
 
-        for ($i = 0; $i <= 30; $i++) {
-            $user = User::create([
-                'name' => $faker->name(),
-                'email' => $faker->unique()->freeEmail(),
-                'password' => Hash::make('password'),
-                'role' => 'user',
-            ]);
+        // for ($i = 0; $i <= 30; $i++) {
+        //     $user = User::create([
+        //         'name' => $faker->name(),
+        //         'email' => $faker->unique()->freeEmail(),
+        //         'password' => Hash::make('password'),
+        //         'role' => 'user',
+        //     ]);
 
-            $user->patient()->create([
-                'name' => $faker->name(),
-                'mother_name' => $faker->name('female'),
-                'date_birth' => now()->subMonths($i),
-                'address' => $faker->address(),
-                'village_id' => \App\Models\Village::inRandomOrder()->first()->id,
-                'gender' => $faker->randomElement(['male', 'female']),
-                'phone' => "085792486889",
-            ]);
-        }
+        //     $user->patient()->create([
+        //         'name' => $faker->name(),
+        //         'mother_name' => $faker->name('female'),
+        //         'date_birth' => now()->subMonths($i),
+        //         'address' => $faker->address(),
+        //         'village_id' => \App\Models\Village::inRandomOrder()->first()->id,
+        //         'gender' => $faker->randomElement(['male', 'female']),
+        //         'phone' => "085792486889",
+        //     ]);
+        // }
 
-        // 5. Schedules (Create schedule for each village 2 weeks from now)
-        $allVaccines = Vaccine::all();
-        $targetDate = now()->addWeeks(2);
+        // // 5. Schedules (Create schedule for each village 2 weeks from now)
+        // $allVaccines = Vaccine::all();
+        // $targetDate = now()->addWeeks(2);
 
-        foreach (Village::all() as $village) {
-            $schedule = \App\Models\VaccineSchedule::create([
-                'village_id' => $village->id,
-                'scheduled_at' => $targetDate,
-            ]);
+        // foreach (Village::all() as $village) {
+        //     $schedule = \App\Models\VaccineSchedule::create([
+        //         'village_id' => $village->id,
+        //         'scheduled_at' => $targetDate,
+        //     ]);
 
-            // Attach all vaccines to this schedule
-            $schedule->vaccines()->attach($allVaccines->pluck('id'));
-        }
+        //     // Attach all vaccines to this schedule
+        //     $schedule->vaccines()->attach($allVaccines->pluck('id'));
+        // }
     }
 }

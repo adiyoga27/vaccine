@@ -357,6 +357,12 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/certificate-settings', [\App\Http\Controllers\AdminController::class, 'certificateSettings'])->name('admin.certificate-settings');
     Route::post('/certificate-settings', [\App\Http\Controllers\AdminController::class, 'updateCertificateSettings'])->name('admin.certificate-settings.update');
 
+    // Admin Users Management
+    Route::get('/admins', [\App\Http\Controllers\AdminController::class, 'adminUsers'])->name('admin.admins');
+    Route::post('/admins', [\App\Http\Controllers\AdminController::class, 'storeAdminUser'])->name('admin.admins.store');
+    Route::put('/admins/{admin}', [\App\Http\Controllers\AdminController::class, 'updateAdminUser'])->name('admin.admins.update');
+    Route::delete('/admins/{admin}', [\App\Http\Controllers\AdminController::class, 'destroyAdminUser'])->name('admin.admins.destroy');
+
     // Requests Approval
     Route::post('/request/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveRequest'])->name('admin.approve');
     Route::delete('/request/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectRequest'])->name('admin.reject');

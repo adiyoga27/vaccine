@@ -716,5 +716,60 @@ class AdminController extends Controller
 
         return back()->with('success', 'Pengaturan sertifikat berhasil disimpan');
     }
+
+    // Admin Users Management
+    public function adminUsers()
+    {
+        $admins = User::where('role', 'admin')->get();
+        return view('dashboard.admin.admins.index', compact('admins'));
+    }
+
+    public function storeAdminUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => 'admin',
+        ]);
+
+        return back()->with('success', 'Administrator berhasil ditambahkan');
+    }
+
+    public function updateAdminUser(Request $request, User $admin)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $admin->id,
+            'password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        $admin->name = $request->name;
+        $admin->email = $request->email;
+        
+        if ($request->filled('password')) {
+            $admin->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+        
+        $admin->save();
+
+        return back()->with('success', 'Administrator berhasil diperbarui');
+    }
+
+    public function destroyAdminUser(User $admin)
+    {
+        if ($admin->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat menghapus akun sendiri');
+        }
+        
+        $admin->delete();
+        return back()->with('success', 'Administrator berhasil dihapus');
+    }
 }
 
