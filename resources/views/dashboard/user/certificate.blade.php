@@ -20,7 +20,7 @@
             margin: 0 auto;
             position: relative;
             overflow: hidden;
-            background-image: url('/images/certificate_background.png');
+            background-image: url('{{ asset($patient->cert_background_image ?? "/images/certificate_background.png") }}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -218,9 +218,9 @@
                     <p class="text-sm font-semibold text-blue-900 mb-2">Kepala UPT BLUD Puskesmas</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Kayangan</p>
                     <div class="relative flex items-end justify-center" style="margin-bottom: -20px;">
-                        <img src="{{ asset('images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-20 object-contain">
+                        <img src="{{ asset($patient->cert_kepala_upt_signature ?? 'images/signature_sabri.png') }}" alt="Tanda Tangan" class="h-20 object-contain">
                     </div>
-                    <p class="font-bold text-blue-900 relative z-10">SABRI, SKM</p>
+                    <p class="font-bold text-blue-900 relative z-10">{{ $patient->cert_kepala_upt_name ?? 'SABRI, SKM' }}</p>
                 </div>
 
                 <!-- Center Medal/Ribbon -->
@@ -233,9 +233,9 @@
                     <p class="text-sm font-semibold text-blue-900 mb-1">Petugas Jurim Pustu ILP</p>
                     <p class="text-sm font-semibold text-blue-900 mb-1">Selengen</p>
                     <div class="relative flex items-end justify-center" style="margin-bottom: -25px;">
-                        <img src="{{ asset('images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-28 object-contain">
+                        <img src="{{ asset($patient->cert_petugas_jurim_signature ?? 'images/signature_endang.png') }}" alt="Stempel dan Tanda Tangan" class="h-28 object-contain">
                     </div>
-                    <p class="font-bold text-blue-900 relative z-10">Endang Junaela, S.ST.,NS</p>
+                    <p class="font-bold text-blue-900 relative z-10">{{ $patient->cert_petugas_jurim_name ?? 'Endang Junaela, S.ST.,NS' }}</p>
                 </div>
             </div>
         </div>

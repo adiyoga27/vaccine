@@ -655,9 +655,66 @@ class AdminController extends Controller
         
         $certNum = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
         
+        // Get current certificate settings and snapshot to patient
+        $settings = \App\Models\CertificateSetting::current();
+        
         $patient->update([
             'completed_vaccination_at' => $completionDate,
-            'certificate_number' => $certNum
+            'certificate_number' => $certNum,
+            'cert_kepala_upt_name' => $settings->kepala_upt_name,
+            'cert_kepala_upt_signature' => $settings->kepala_upt_signature,
+            'cert_petugas_jurim_name' => $settings->petugas_jurim_name,
+            'cert_petugas_jurim_signature' => $settings->petugas_jurim_signature,
+            'cert_background_image' => $settings->background_image,
         ]);
     }
+
+    // Certificate Settings
+    public function certificateSettings()
+    {
+        $settings = \App\Models\CertificateSetting::current();
+        return view('dashboard.admin.settings.index', compact('settings'));
+    }
+
+    public function updateCertificateSettings(Request $request)
+    {
+        $request->validate([
+            'kepala_upt_name' => 'nullable|string|max:255',
+            'petugas_jurim_name' => 'nullable|string|max:255',
+            'kepala_upt_signature' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'petugas_jurim_signature' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'background_image' => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
+        ]);
+
+        $settings = \App\Models\CertificateSetting::first() ?? new \App\Models\CertificateSetting();
+
+        // Only update name fields if provided
+        if ($request->filled('kepala_upt_name')) {
+            $settings->kepala_upt_name = $request->kepala_upt_name;
+        }
+        if ($request->filled('petugas_jurim_name')) {
+            $settings->petugas_jurim_name = $request->petugas_jurim_name;
+        }
+
+        // Handle file uploads
+        if ($request->hasFile('kepala_upt_signature')) {
+            $path = $request->file('kepala_upt_signature')->store('certificates', 'public');
+            $settings->kepala_upt_signature = '/storage/' . $path;
+        }
+
+        if ($request->hasFile('petugas_jurim_signature')) {
+            $path = $request->file('petugas_jurim_signature')->store('certificates', 'public');
+            $settings->petugas_jurim_signature = '/storage/' . $path;
+        }
+
+        if ($request->hasFile('background_image')) {
+            $path = $request->file('background_image')->store('certificates', 'public');
+            $settings->background_image = '/storage/' . $path;
+        }
+
+        $settings->save();
+
+        return back()->with('success', 'Pengaturan sertifikat berhasil disimpan');
+    }
 }
+

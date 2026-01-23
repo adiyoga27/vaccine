@@ -253,9 +253,17 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
             
             $certificateNumber = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
             
+            // Get current certificate settings and snapshot to patient
+            $settings = \App\Models\CertificateSetting::current();
+            
             $patient->update([
                 'completed_vaccination_at' => $completionDate,
-                'certificate_number' => $certificateNumber
+                'certificate_number' => $certificateNumber,
+                'cert_kepala_upt_name' => $settings->kepala_upt_name,
+                'cert_kepala_upt_signature' => $settings->kepala_upt_signature,
+                'cert_petugas_jurim_name' => $settings->petugas_jurim_name,
+                'cert_petugas_jurim_signature' => $settings->petugas_jurim_signature,
+                'cert_background_image' => $settings->background_image,
             ]);
         } else {
             $certificateNumber = $patient->certificate_number;
@@ -344,6 +352,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         $patient = \App\Models\Patient::where('certificate_number', $certificateNumber)->firstOrFail();
         return view('dashboard.user.certificate', compact('patient', 'certificateNumber'));
     })->where('certificate_number', '.*')->name('admin.certificate');
+
+    // Certificate Settings
+    Route::get('/certificate-settings', [\App\Http\Controllers\AdminController::class, 'certificateSettings'])->name('admin.certificate-settings');
+    Route::post('/certificate-settings', [\App\Http\Controllers\AdminController::class, 'updateCertificateSettings'])->name('admin.certificate-settings.update');
 
     // Requests Approval
     Route::post('/request/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveRequest'])->name('admin.approve');
