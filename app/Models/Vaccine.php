@@ -12,6 +12,7 @@ class Vaccine extends Model
     protected $fillable = ['name', 'minimum_age', 'duration_days'];
 
     protected $casts = [
+        'name' => 'string',
         'minimum_age' => 'integer',
         'duration_days' => 'integer',
     ];
