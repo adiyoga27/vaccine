@@ -23,8 +23,8 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
-
-        if (Auth::attempt($credentials)) {
+        try {
+            if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
             if (Auth::user()->role === 'admin') {
@@ -34,9 +34,16 @@ class AuthController extends Controller
             return redirect()->intended('user/dashboard');
         }
 
+        
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+       
+
     }
 
     public function showRegister()
