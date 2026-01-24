@@ -76,7 +76,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($vaccines as $name => $age) {
-            Vaccine::create(['name' => $name, 'minimum_age' => $age]);
+            Vaccine::create(['name' => $name, 'minimum_age' => $age, 'duration_days' => 7]);
         }
 
         // 3. Admin
