@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@inovasisehat.com'],
             [
                 'name' => 'Admin Posyandu',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('InovasiSehat2026'),
                 'role' => 'admin',
             ]
         );
