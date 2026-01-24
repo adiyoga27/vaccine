@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Vaccine extends Model
 {
     use \Illuminate\Database\Eloquent\Factories\HasFactory;
-    use \Spatie\Activitylog\Traits\LogsActivity;
+    // use \Spatie\Activitylog\Traits\LogsActivity;
 
     protected $fillable = ['name', 'minimum_age', 'duration_days'];
 
@@ -17,10 +17,10 @@ class Vaccine extends Model
         'duration_days' => 'integer',
     ];
 
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
-    {
-        return \Spatie\Activitylog\LogOptions::defaults()->logAll();
-    }
+    // public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    // {
+    //     return \Spatie\Activitylog\LogOptions::defaults()->logAll();
+    // }
 
     public function vaccinePatients()
     {
