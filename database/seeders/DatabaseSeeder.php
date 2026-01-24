@@ -80,12 +80,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // 3. Admin
-        // 3. Admin
         User::firstOrCreate(
             ['email' => 'admin@inovasisehat.com'],
             [
                 'name' => 'Admin Posyandu',
-                'password' => Hash::make('InovasiSehat2026'),
+                'password' => 'InovasiSehat2026',
                 'role' => 'admin',
             ]
         );
