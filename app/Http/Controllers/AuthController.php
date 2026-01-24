@@ -23,6 +23,8 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        dd($request->toArray());
         try {
             if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
