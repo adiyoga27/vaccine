@@ -18,6 +18,33 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
         // Find village by name
         $village = Village::where('name', 'LIKE', '%' . trim($row['desa']) . '%')->first();
 
+        // Parse Date
+        $dob = $row['tanggal_lahir'];
+        try {
+            if (is_numeric($dob)) {
+                $dob = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dob)->format('Y-m-d');
+            } else {
+                // Try format d/m/Y
+                $dob = \Carbon\Carbon::createFromFormat('d/m/Y', $dob)->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            try {
+                // Fallback to standard parsing
+                $dob = \Carbon\Carbon::parse($dob)->format('Y-m-d');
+            } catch (\Exception $ex) {
+                // Keep original if all fails
+            }
+        }
+
+        // Parse Gender
+        $genderRaw = strtoupper(trim($row['jenis_kelamin']));
+        $gender = 'male'; // Default
+        if ($genderRaw == 'L' || $genderRaw == 'LAKI-LAKI') {
+            $gender = 'male';
+        } elseif ($genderRaw == 'P' || $genderRaw == 'PEREMPUAN') {
+            $gender = 'female';
+        }
+
         // Auto-generate unique email (not used for login, just for DB uniqueness)
         $autoEmail = 'peserta_' . Str::random(8) . '@tandu-gemas.local';
 
@@ -35,8 +62,8 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
             'village_id' => $village->id ?? null,
             'name' => $row['nama_anak'],
             'mother_name' => $row['nama_ibu'],
-            'date_birth' => $row['tanggal_lahir'],
-            'gender' => strtolower($row['jenis_kelamin']) == 'laki-laki' ? 'male' : 'female',
+            'date_birth' => $dob,
+            'gender' => $gender,
             'address' => $row['alamat'],
             'phone' => $row['no_hp'],
         ]);
