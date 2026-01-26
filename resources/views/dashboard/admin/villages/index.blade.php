@@ -33,11 +33,19 @@
                 @foreach($villages as $village)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $village->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {{ $village->posyandus->count() }} Posyandu
-                            </span>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            @if($village->posyandus->count() > 0)
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($village->posyandus as $posyandu)
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ $posyandu->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                -
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $village->vaccine_patients_count }}
                             Riwayat</td>
@@ -187,16 +195,16 @@
                 village.posyandus.forEach(posyandu => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                                            <td class="px-4 py-3 text-sm text-gray-900">${posyandu.name}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-500">${posyandu.address || '-'}</td>
-                                            <td class="px-4 py-3 text-right text-sm font-medium flex justify-end gap-2">
-                                                 <form action="/admin/posyandus/${posyandu.id}" method="POST" onsubmit="return confirm('Hapus posyandu ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
-                                                </form>
-                                            </td>
-                                        `;
+                                                <td class="px-4 py-3 text-sm text-gray-900">${posyandu.name}</td>
+                                                <td class="px-4 py-3 text-sm text-gray-500">${posyandu.address || '-'}</td>
+                                                <td class="px-4 py-3 text-right text-sm font-medium flex justify-end gap-2">
+                                                     <form action="/admin/posyandus/${posyandu.id}" method="POST" onsubmit="return confirm('Hapus posyandu ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                                    </form>
+                                                </td>
+                                            `;
                     tbody.appendChild(tr);
                 });
             } else {
