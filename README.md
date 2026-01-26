@@ -21,7 +21,7 @@
     - Data Peserta (Orang tua & Anak).
     - Riwayat Transaksi Vaksinasi lengkap.
 - **Manajemen Master Data**:
-    - Kelola Data Desa/Posyandu.
+    - Kelola Data Dusun/Posyandu.
     - Kelola Jenis Vaksin & Batas Usia Minimal.
     - Kelola Jadwal Kegiatan Posyandu.
 - **Approval System**: Menyetujui atau menolak pengajuan vaksin dari pengguna.
@@ -61,7 +61,7 @@ Aplikasi ini menggunakan struktur MVC Laravel standar dengan penambahan folder k
     - register.blade.php    # Form Registrasi Dual Data (User+Patient)
   /dashboard
     /admin                  # Views khusus Admin
-      /villages             # CRUD Desa
+      /villages             # CRUD Dusun
       /vaccines             # CRUD Vaksin
       /history              # Riwayat Vaksinasi
       - index.blade.php     # Dashboard Admin Utama
@@ -109,7 +109,7 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek di komputer lokal Anda:
    ```
 
 5. **Migrasi & Seeding Data**
-   Jalankan perintah ini untuk membuat tabel dan mengisi data dummy (Desa, Vaksin, Admin, User).
+   Jalankan perintah ini untuk membuat tabel dan mengisi data dummy (Dusun, Vaksin, Admin, User).
    ```bash
    php artisan migrate:fresh --seed
    ```

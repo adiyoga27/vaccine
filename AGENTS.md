@@ -131,7 +131,7 @@ public function updateVillage(Request $request, Village $village)
 {
     $request->validate(['name' => 'required']);
     $village->update($request->except(['_token', '_method']));
-    return back()->with('success', 'Desa berhasil diperbarui');
+    return back()->with('success', 'Dusun berhasil diperbarui');
 }
 ```
 

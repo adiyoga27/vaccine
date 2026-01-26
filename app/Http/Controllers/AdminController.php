@@ -25,24 +25,25 @@ class AdminController extends Controller
     {
         $request->validate(['name' => 'required']);
         Village::create($request->except(['_token', '_method']));
-        return back()->with('success', 'Desa berhasil ditambahkan');
+        return back()->with('success', 'Dusun berhasil ditambahkan');
     }
 
     public function updateVillage(Request $request, Village $village)
     {
         $request->validate(['name' => 'required']);
         $village->update($request->except(['_token', '_method']));
-        return back()->with('success', 'Desa berhasil diperbarui');
+        return back()->with('success', 'Dusun berhasil diperbarui');
     }
 
     public function destroyVillage(Village $village)
     {
         $village->delete();
-        return back()->with('success', 'Desa berhasil dihapus');
+        return back()->with('success', 'Dusun berhasil dihapus');
     }
 
     // Posyandus CRUD
-    public function storePosyandu(Request $request) {
+    public function storePosyandu(Request $request)
+    {
         $request->validate([
             'village_id' => 'required|exists:villages,id',
             'name' => 'required'
@@ -51,13 +52,15 @@ class AdminController extends Controller
         return back()->with('success', 'Posyandu berhasil ditambahkan');
     }
 
-    public function updatePosyandu(Request $request, \App\Models\Posyandu $posyandu) {
+    public function updatePosyandu(Request $request, \App\Models\Posyandu $posyandu)
+    {
         $request->validate(['name' => 'required']);
         $posyandu->update($request->except(['_token', '_method']));
         return back()->with('success', 'Posyandu berhasil diperbarui');
     }
 
-    public function destroyPosyandu(\App\Models\Posyandu $posyandu) {
+    public function destroyPosyandu(\App\Models\Posyandu $posyandu)
+    {
         $posyandu->delete();
         return back()->with('success', 'Posyandu berhasil dihapus');
     }
@@ -72,7 +75,7 @@ class AdminController extends Controller
     public function storeVaccine(Request $request)
     {
         $request->validate([
-            'name' => 'required', 
+            'name' => 'required',
             'minimum_age' => 'required|integer',
             'duration_days' => 'required|integer|min:1'
         ]);
@@ -83,7 +86,7 @@ class AdminController extends Controller
     public function updateVaccine(Request $request, Vaccine $vaccine)
     {
         $request->validate([
-            'name' => 'required', 
+            'name' => 'required',
             'minimum_age' => 'required|integer',
             'duration_days' => 'required|integer|min:1'
         ]);
@@ -119,9 +122,9 @@ class AdminController extends Controller
             'village_id' => $request->village_id,
             'scheduled_at' => $request->scheduled_at
         ]);
-        
+
         $schedule->vaccines()->sync($request->vaccine_ids);
-        
+
         return back()->with('success', 'Jadwal berhasil dibuat');
     }
 
@@ -154,20 +157,20 @@ class AdminController extends Controller
     public function users(Request $request)
     {
         $search = $request->input('search');
-        
+
         $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
             ->where('role', 'user')
             ->when($search, function ($query) use ($search) {
                 $query->whereHas('patient', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('mother_name', 'like', "%{$search}%");
+                        ->orWhere('mother_name', 'like', "%{$search}%");
                 });
             })
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->appends(['search' => $search]);
-            
+
         $totalVaccines = Vaccine::count();
         return view('dashboard.admin.users.index', compact('users', 'totalVaccines', 'search'));
     }
@@ -218,7 +221,7 @@ class AdminController extends Controller
     {
         $user->load('patient');
         $villages = Village::all();
-        
+
         $completedCount = $user->patient ? $user->patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
         $totalVaccines = Vaccine::count();
         $isCompleted = ($totalVaccines > 0 && $completedCount >= $totalVaccines) || ($user->patient && $user->patient->certificate_number);
@@ -352,9 +355,9 @@ class AdminController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('mother_name', 'like', '%' . $search . '%');
+                    ->orWhere('mother_name', 'like', '%' . $search . '%');
             });
         }
 
@@ -373,7 +376,7 @@ class AdminController extends Controller
                 // Done
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
-                    $done->push((object)[
+                    $done->push((object) [
                         'id' => $record->id,
                         'patient' => $patient,
                         'vaccine' => $vaccine,
@@ -398,7 +401,7 @@ class AdminController extends Controller
                 // Current Age
                 $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';
 
-                $data = (object)[
+                $data = (object) [
                     'patient' => $patient,
                     'vaccine' => $vaccine,
                     'start_date' => $startDate,
@@ -452,54 +455,54 @@ class AdminController extends Controller
         // Send "Approved" Notification
         $patient = \App\Models\Patient::with('vaccinePatients', 'village')->find($request->patient_id);
         $vaccine = \App\Models\Vaccine::find($request->vaccine_id);
-        
-        if ($patient->phone) {
-             $approvedTemplate = \App\Models\NotificationTemplate::where('slug', 'vaccine_approved')->first();
-             if ($approvedTemplate) {
-                 try {
-                     $posyandu = \App\Models\Posyandu::find($request->posyandu_id);
-                     $posyanduName = $posyandu ? $posyandu->name : 'Posyandu';
 
-                     $msg = \App\Models\NotificationTemplate::parse($approvedTemplate->content, $patient, [
+        if ($patient->phone) {
+            $approvedTemplate = \App\Models\NotificationTemplate::where('slug', 'vaccine_approved')->first();
+            if ($approvedTemplate) {
+                try {
+                    $posyandu = \App\Models\Posyandu::find($request->posyandu_id);
+                    $posyanduName = $posyandu ? $posyandu->name : 'Posyandu';
+
+                    $msg = \App\Models\NotificationTemplate::parse($approvedTemplate->content, $patient, [
                         'parent_name' => $patient->mother_name, // Changed from patient_name (and explicit mapping)
                         'child_name' => $patient->name,
                         'vaccine_name' => $vaccine->name,
                         'vaccinated_at' => \Carbon\Carbon::parse($request->vaccinated_at)->format('d-m-Y'),
                         'posyandu_name' => $posyanduName,
-                     ]);
-                     
-                     // Send via Waha
-                     $waha = app(\App\Services\WahaService::class);
-                     $response = $waha->sendMessage($patient->phone, $msg);
-                     $body = $response->json();
+                    ]);
 
-                     if ($response->successful() && isset($body['id']['fromMe'])) {
-                         \App\Models\NotificationLog::create([
+                    // Send via Waha
+                    $waha = app(\App\Services\WahaService::class);
+                    $response = $waha->sendMessage($patient->phone, $msg);
+                    $body = $response->json();
+
+                    if ($response->successful() && isset($body['id']['fromMe'])) {
+                        \App\Models\NotificationLog::create([
                             'to' => $patient->phone,
                             'message' => $msg,
                             'status' => 'sent',
                             'response' => $response->body(),
                             'sent_at' => now(),
                         ]);
-                     } else {
-                         \App\Models\NotificationLog::create([
+                    } else {
+                        \App\Models\NotificationLog::create([
                             'to' => $patient->phone,
                             'message' => $msg,
                             'status' => 'failed',
                             'response' => $response->body()
                         ]);
-                     }
-                 } catch (\Exception $e) {
-                     // Log silent error
-                 }
-             }
+                    }
+                } catch (\Exception $e) {
+                    // Log silent error
+                }
+            }
         }
 
         // Check Completion
         $patient = \App\Models\Patient::with('vaccinePatients')->find($request->patient_id);
         $allVaccines = \App\Models\Vaccine::all();
         $completedIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
-        
+
         // If count matches (User has done ALL vaccines)
         // If count matches (User has done ALL vaccines)
         if ($allVaccines->count() === count($completedIds)) {
@@ -510,7 +513,7 @@ class AdminController extends Controller
             if ($template && $patient->phone) {
                 try {
                     $link = route('admin.certificate', ['patient' => $patient->id]); // Using the public/admin route for download
-                    
+
                     $message = \App\Models\NotificationTemplate::parse($template->content, $patient, [
                         'parent_name' => $patient->mother_name,
                         'child_name' => $patient->name,
@@ -563,7 +566,7 @@ class AdminController extends Controller
             ->where('vaccine_id', $request->vaccine_id)
             ->where('status', 'selesai')
             ->firstOrFail();
-            
+
         $data = [
             'record' => $record,
             'patient' => $record->patient,
@@ -580,7 +583,7 @@ class AdminController extends Controller
     {
         $record = \App\Models\VaccinePatient::findOrFail($id);
         $patient = $record->patient;
-        
+
         $record->delete();
 
         // Check if patient is still complete?
@@ -613,7 +616,7 @@ class AdminController extends Controller
 
         if ($totalVaccines > 0 && $completedCount >= $totalVaccines) {
             $this->generateCertificate($patient);
-            
+
             // Trigger completion notification (reuse logic from storeHistory or call here?)
             // For now, let's keep it simple. If we want notification, we should extract that logic.
             // But user only asked for "Data update" and "Certificate Field".
@@ -634,30 +637,31 @@ class AdminController extends Controller
     private function generateCertificate($patient)
     {
         // Avoid regenerating if already exists (as per user implication "simpan nomor")
-        if ($patient->certificate_number) return;
+        if ($patient->certificate_number)
+            return;
 
         $lastRecord = $patient->vaccinePatients()->where('status', 'selesai')->latest('updated_at')->first();
         $completionDate = $lastRecord ? $lastRecord->updated_at : now();
         $month = $completionDate->month;
         $year = $completionDate->year;
-        
+
         $startOfMonth = $completionDate->copy()->startOfMonth();
-        
+
         // Sequence Logic: Count COMPLETED patients in this month up to this date
         $previousCount = \App\Models\Patient::whereNotNull('completed_vaccination_at')
             ->whereBetween('completed_vaccination_at', [$startOfMonth, $completionDate])
             ->count();
-            
+
         $sequence = $previousCount + 1;
-        
-        $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+
+        $romanMonths = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         $romanMonth = $romanMonths[$month] ?? 'I';
-        
+
         $certNum = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
-        
+
         // Get current certificate settings and snapshot to patient
         $settings = \App\Models\CertificateSetting::current();
-        
+
         $patient->update([
             'completed_vaccination_at' => $completionDate,
             'certificate_number' => $certNum,
@@ -752,11 +756,11 @@ class AdminController extends Controller
 
         $admin->name = $request->name;
         $admin->email = $request->email;
-        
+
         if ($request->filled('password')) {
             $admin->password = \Illuminate\Support\Facades\Hash::make($request->password);
         }
-        
+
         $admin->save();
 
         return back()->with('success', 'Administrator berhasil diperbarui');
@@ -767,7 +771,7 @@ class AdminController extends Controller
         if ($admin->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun sendiri');
         }
-        
+
         $admin->delete();
         return back()->with('success', 'Administrator berhasil dihapus');
     }
