@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
 
         // foreach ($villages as $villageName => $posyandus) {
         //     $village = Village::create(['name' => $villageName]);
-            
+
         //     foreach ($posyandus as $p) {
         //         \App\Models\Posyandu::create([
         //             'village_id' => $village->id,
@@ -44,31 +44,31 @@ class DatabaseSeeder extends Seeder
         // 2. Vaccines
         $vaccines = [
             'Hepatitis B 0' => 0,
-            
+
             'DPT/Hib 1' => 2,
             'Polio 1' => 2,
             'PCV 1' => 2,
             'Rotavirus 1' => 2,
-            
+
             'DPT 2' => 3,
             'Polio 2' => 3,
             'Hib 2' => 3,
             'PCV 2' => 3,
-            
+
             'DPT 3' => 4,
             'Polio 3' => 4,
             'Hib 3' => 4,
             'Rotavirus 3' => 4, // "Rotavirus 3" inferred from 4 month list
-            
+
             'Influenza 1' => 6,
             'Hepatitis B 3' => 6,
-            
+
             'Campak/MR 1' => 9,
-            
+
             'Varisela' => 12,
             'Hepatitis A' => 12,
             'Influenza 2' => 12,
-            
+
             'Booster DPT' => 24,
             'Booster Polio' => 24,
             'Booster Influenza' => 24,
