@@ -458,17 +458,21 @@ class AdminController extends Controller
         // Check if it's an AJAX request for DataTables
         if ($request->ajax()) {
             $status = $request->get('status', 'jadwal');
-            $data = $this->getVaccinationData($request);
+            
+            // Pass status to only fetch the data we need
+            $data = $this->getVaccinationData($request, $status);
 
-            // Select the collection based on status
-            $collection = match ($status) {
-                'jadwal' => $data['active'],
-                'akan' => $data['upcoming'],
-                'sudah' => $data['done'],
-                'terlewat' => $data['overdue'],
-                'schedule' => $data['schedule'],
-                default => collect([]),
-            };
+            // Map frontend status names to internal collection names
+            $statusMap = [
+                'jadwal' => 'active',
+                'akan' => 'upcoming',
+                'sudah' => 'done',
+                'terlewat' => 'overdue',
+                'schedule' => 'schedule'
+            ];
+            
+            $internalStatus = $statusMap[$status] ?? $status;
+            $collection = $data[$internalStatus] ?? collect([]);
 
             return \Yajra\DataTables\Facades\DataTables::of($collection)
                 ->addIndexColumn()
@@ -673,9 +677,9 @@ class AdminController extends Controller
     }
 
 
-    private function getVaccinationData($request)
+    private function getVaccinationData($request, $status = null)
     {
-        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'village', 'posyandu']);
+        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'vaccinePatients.posyandu', 'village', 'posyandu']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -703,97 +707,132 @@ class AdminController extends Controller
         
         $vaccines = $vaccineQuery->get();
 
-        $active = collect();
-        $upcoming = collect();
-        $done = collect();
-        $overdue = collect();
-        $schedule = collect();
+        // Map frontend status names to internal names
+        $statusMap = [
+            'jadwal' => 'active',
+            'akan' => 'upcoming', 
+            'sudah' => 'done',
+            'terlewat' => 'overdue',
+            'schedule' => 'schedule'
+        ];
+        
+        $internalStatus = $status ? ($statusMap[$status] ?? $status) : null;
+
+        // Initialize collections based on what's needed (using INTERNAL names)
+        $result = [
+            'active' => collect(),
+            'upcoming' => collect(),
+            'done' => collect(),
+            'overdue' => collect(),
+            'schedule' => collect()
+        ];
 
         foreach ($patients as $patient) {
             $doneVaccineIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
 
             foreach ($vaccines as $vaccine) {
-                // Check if Scheduled
-                $scheduledRecord = $patient->vaccinePatients
-                    ->where('vaccine_id', $vaccine->id)
-                    ->where('status', '!=', 'selesai')
-                    ->whereNotNull('schedule_at')
-                    ->first();
-                
-                if ($scheduledRecord) {
-                    $schedule->push((object) [
-                        'patient' => $patient,
-                        'vaccine' => $vaccine,
-                        'schedule_at' => $scheduledRecord->schedule_at,
-                        'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan',
-                        'mother_name' => $patient->mother_name
-                    ]);
-                    // If scheduled, do we trigger continue? 
-                    // Let's assume yes, it shouldn't allow requesting another or showing up in Akan if already scheduled.
-                    continue; 
+                // ========== SCHEDULE STATUS ==========
+                if (!$status || $internalStatus === 'schedule') {
+                    $scheduledRecord = $patient->vaccinePatients
+                        ->where('vaccine_id', $vaccine->id)
+                        ->where('status', '!=', 'selesai')
+                        ->filter(fn($r) => $r->schedule_at !== null)
+                        ->first();
+                    
+                    if ($scheduledRecord) {
+                        if (!$status || $internalStatus === 'schedule') {
+                            $result['schedule']->push((object) [
+                                'patient' => $patient,
+                                'vaccine' => $vaccine,
+                                'schedule_at' => $scheduledRecord->schedule_at,
+                                'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan',
+                                'mother_name' => $patient->mother_name
+                            ]);
+                        }
+                        if ($status === 'schedule') continue; // Only skip if specifically requesting schedule
+                    }
                 }
 
+                // ========== DONE STATUS ==========
                 if (in_array($vaccine->id, $doneVaccineIds)) {
-                    $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
-                    
-                    // Filter Done Date
-                    if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date) continue;
-                    if ($request->filled('end_date') && $record->vaccinated_at > $request->end_date . ' 23:59:59') continue;
+                    if (!$status || $internalStatus === 'done') {
+                        $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
+                        
+                        // Filter Done Date
+                        if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date) continue;
+                        if ($request->filled('end_date') && $record->vaccinated_at > $request->end_date . ' 23:59:59') continue;
 
-                    $done->push((object) [
-                        'id' => $record->id,
-                        'patient' => $patient,
-                        'vaccine' => $vaccine,
-                        'date' => $record->vaccinated_at,
-                        'status' => 'Selesai',
-                        'posyandu' => $record->posyandu->name ?? '-',
-                        'mother_name' => $patient->mother_name,
-                        'dob' => \Carbon\Carbon::parse($patient->date_birth)->format('d M Y'),
-                        'gender' => $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan',
-                        'address' => $patient->address,
-                        'kipi' => $record->kipi,
-                        // Age at the time of vaccination
-                        'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths($record->vaccinated_at), 1) . ' Bulan'
-                    ]);
+                        $result['done']->push((object) [
+                            'id' => $record->id,
+                            'patient' => $patient,
+                            'vaccine' => $vaccine,
+                            'date' => $record->vaccinated_at,
+                            'status' => 'Selesai',
+                            'posyandu' => $record->posyandu->name ?? '-',
+                            'mother_name' => $patient->mother_name,
+                            'dob' => \Carbon\Carbon::parse($patient->date_birth)->format('d M Y'),
+                            'gender' => $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan',
+                            'address' => $patient->address,
+                            'kipi' => $record->kipi,
+                            'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths($record->vaccinated_at), 1) . ' Bulan'
+                        ]);
+                    }
                     continue;
                 }
 
-                // Calculate Window
-                $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths((int) $vaccine->minimum_age);
-                $duration = (int) ($vaccine->duration_days ?? 7);
-                $endDate = $startDate->copy()->addDays($duration);
+                // ========== ACTIVE / UPCOMING / OVERDUE ==========
+                if (!$status || in_array($internalStatus, ['active', 'upcoming', 'overdue'])) {
+                    // Check if already scheduled (skip for active/upcoming/overdue)
+                    $isScheduled = $patient->vaccinePatients
+                        ->where('vaccine_id', $vaccine->id)
+                        ->where('status', '!=', 'selesai')
+                        ->filter(fn($r) => $r->schedule_at !== null)
+                        ->isNotEmpty();
+                    
+                    if ($isScheduled) continue;
 
-                // Filter Active/Upcoming/Overdue Ranges
-                // Logic: Show if the window overlaps with the requested range
-                if ($request->filled('start_date') && $endDate < \Carbon\Carbon::parse($request->start_date)) continue;
-                if ($request->filled('end_date') && $startDate > \Carbon\Carbon::parse($request->end_date)->endOfDay()) continue;
+                    // Calculate Window
+                    $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths((int) $vaccine->minimum_age);
+                    $duration = (int) ($vaccine->duration_days ?? 7);
+                    $endDate = $startDate->copy()->addDays($duration);
 
-                // Current Age
-                $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';
+                    // Filter Active/Upcoming/Overdue Ranges
+                    if ($request->filled('start_date') && $endDate < \Carbon\Carbon::parse($request->start_date)) continue;
+                    if ($request->filled('end_date') && $startDate > \Carbon\Carbon::parse($request->end_date)->endOfDay()) continue;
 
-                $data = (object) [
-                    'patient' => $patient,
-                    'vaccine' => $vaccine,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'age' => $currentAge,
-                    'mother_name' => $patient->mother_name
-                ];
+                    // Current Age
+                    $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';
 
-                if (now()->between($startDate, $endDate)) {
-                    // Active (Jadwal Vaksin)
-                    $active->push($data);
-                } elseif (now()->greaterThan($endDate)) {
-                    // Overdue (Terlewat)
-                    $overdue->push($data);
-                } else {
-                    // Upcoming (Akan Vaksin)
-                    $upcoming->push($data);
+                    $data = (object) [
+                        'patient' => $patient,
+                        'vaccine' => $vaccine,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'age' => $currentAge,
+                        'mother_name' => $patient->mother_name
+                    ];
+
+                    $isActive = now()->between($startDate, $endDate);
+                    $isOverdue = now()->greaterThan($endDate);
+
+                    if ($isActive) {
+                        if (!$status || $internalStatus === 'active') {
+                            $result['active']->push($data);
+                        }
+                    } elseif ($isOverdue) {
+                        if (!$status || $internalStatus === 'overdue') {
+                            $result['overdue']->push($data);
+                        }
+                    } else {
+                        if (!$status || $internalStatus === 'upcoming') {
+                            $result['upcoming']->push($data);
+                        }
+                    }
                 }
             }
         }
 
-        return compact('active', 'upcoming', 'done', 'overdue', 'schedule');
+        return $result;
     }
 
     public function storePatientSchedule(Request $request)
