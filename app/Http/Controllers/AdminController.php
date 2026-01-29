@@ -553,8 +553,8 @@ class AdminController extends Controller
                                     Approve
                                 </button>';
                     }
-                    // Schedule Button (Akan, Terlewat)
-                    if (in_array($status, ['akan', 'terlewat'])) {
+                    // Schedule Button (Jadwal, Akan, Terlewat)
+                    if (in_array($status, ['jadwal', 'akan', 'terlewat'])) {
                          $params = sprintf(
                             "'%s', '%s', '%s', '%s'",
                             $row->patient->id,
@@ -618,6 +618,60 @@ class AdminController extends Controller
             'vaccines' => $vaccines
         ]);
     }
+
+    public function exportHistoryExcel(Request $request, $status)
+    {
+        $data = $this->getVaccinationData($request);
+        
+        $collection = match ($status) {
+            'jadwal' => $data['active'],
+            'akan' => $data['upcoming'],
+            'sudah' => $data['done'],
+            'terlewat' => $data['overdue'],
+            'schedule' => $data['schedule'],
+            default => collect([]),
+        };
+
+        $filename = 'riwayat_vaksin_' . $status . '_' . date('Y-m-d_His') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\HistoryExport($collection, $status),
+            $filename
+        );
+    }
+
+    public function exportHistoryPdf(Request $request, $status)
+    {
+        $data = $this->getVaccinationData($request);
+        
+        $collection = match ($status) {
+            'jadwal' => $data['active'],
+            'akan' => $data['upcoming'],
+            'sudah' => $data['done'],
+            'terlewat' => $data['overdue'],
+            'schedule' => $data['schedule'],
+            default => collect([]),
+        };
+
+        $statusLabels = [
+            'schedule' => 'Schedule',
+            'jadwal' => 'Jadwal Vaksin (Active)',
+            'akan' => 'Akan Vaksin (Upcoming)',
+            'sudah' => 'Sudah Vaksin (Done)',
+            'terlewat' => 'Terlewat (Overdue)',
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.history-pdf', [
+            'data' => $collection,
+            'status' => $status,
+            'statusLabel' => $statusLabels[$status] ?? $status,
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'riwayat_vaksin_' . $status . '_' . date('Y-m-d_His') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
 
     private function getVaccinationData($request)
     {
@@ -750,6 +804,9 @@ class AdminController extends Controller
             'schedule_at' => 'required|date',
         ]);
 
+        // Fetch patient to get their village_id and posyandu_id
+        $patient = \App\Models\Patient::findOrFail($request->patient_id);
+
         \App\Models\VaccinePatient::updateOrCreate(
             [
                 'patient_id' => $request->patient_id,
@@ -757,8 +814,9 @@ class AdminController extends Controller
             ],
             [
                 'schedule_at' => $request->schedule_at,
-                // Do not set status to 'selesai'. Maybe 'scheduled' or NULL is fine as long as we filter '!= selesai'.
-                // If we want to be explicit, we could add 'scheduled' to status enum, but checks are mainly for 'selesai'.
+                'village_id' => $patient->village_id,
+                'posyandu_id' => $patient->posyandu_id,
+                'request_date' => now(),
             ]
         );
 

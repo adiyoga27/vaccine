@@ -96,44 +96,53 @@
     <div x-data="approvalData">
         <!-- Tabs Header -->
         <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 overflow-x-auto">
-            <button @click="tab = 'jadwal'"
+            <button @click="tab = 'schedule'; $dispatch('init-table', { status: 'schedule' })"
+                :class="tab === 'schedule' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
+                Schedule
+                <span class="ml-2 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs">{{ $schedule_count ?? 0 }}</span>
+            </button>
+            <button @click="tab = 'jadwal'; $dispatch('init-table', { status: 'jadwal' })"
                 :class="tab === 'jadwal' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Jadwal Vaksin (Active)
                 <span class="ml-2 bg-green-100 text-green-700 py-0.5 px-2 rounded-full text-xs">{{ $active_count }}</span>
             </button>
-            <button @click="tab = 'akan'"
+            <button @click="tab = 'akan'; $dispatch('init-table', { status: 'akan' })"
                 :class="tab === 'akan' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Akan Vaksin (Upcoming)
                 <span class="ml-2 bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs">{{ $upcoming_count }}</span>
             </button>
-            <button @click="tab = 'sudah'"
+            <button @click="tab = 'sudah'; $dispatch('init-table', { status: 'sudah' })"
                 :class="tab === 'sudah' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Sudah Vaksin (Done)
                 <span class="ml-2 bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-xs">{{ $done_count }}</span>
             </button>
-            <button @click="tab = 'terlewat'"
+            <button @click="tab = 'terlewat'; $dispatch('init-table', { status: 'terlewat' })"
                 :class="tab === 'terlewat' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Terlewat (Overdue)
                 <span class="ml-2 bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-xs">{{ $overdue_count }}</span>
             </button>
-            <button @click="tab = 'schedule'"
-                :class="tab === 'schedule' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
-                Jadwal
-                <span class="ml-2 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs">{{ $schedule_count ?? 0 }}</span>
-            </button>
         </div>
 
         <!-- Tab Contents -->
 
-        <!-- 1. Jadwal (Active) -->
         <div x-show="tab === 'jadwal'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-green-50">
+            <div class="px-6 py-4 border-b border-gray-100 bg-green-50 flex justify-between items-center">
                 <h3 class="font-bold text-green-800">Sedang Berlangsung (Wajib Vaksin Sekarang)</h3>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.history.export-excel', 'jadwal') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('admin.history.export-pdf', 'jadwal') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </a>
+                </div>
             </div>
             <div class="p-4">
                 <table id="table-jadwal" class="w-full text-sm text-left" style="width: 100%">
@@ -156,8 +165,18 @@
         <!-- 2. Akan (Upcoming) -->
         <div x-show="tab === 'akan'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             style="display: none;">
-            <div class="px-6 py-4 border-b border-gray-100 bg-blue-50">
+            <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 flex justify-between items-center">
                 <h3 class="font-bold text-blue-800">Akan Datang</h3>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.history.export-excel', 'akan') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('admin.history.export-pdf', 'akan') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </a>
+                </div>
             </div>
             <div class="p-4">
                 <table id="table-akan" class="w-full text-sm text-left" style="width: 100%">
@@ -180,8 +199,18 @@
         <!-- 3. Sudah (Done) -->
         <div x-show="tab === 'sudah'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             style="display: none;">
-            <div class="px-6 py-4 border-b border-gray-100 bg-emerald-50">
+            <div class="px-6 py-4 border-b border-gray-100 bg-emerald-50 flex justify-between items-center">
                 <h3 class="font-bold text-emerald-800">Selesai Vaksinasi</h3>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.history.export-excel', 'sudah') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('admin.history.export-pdf', 'sudah') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </a>
+                </div>
             </div>
             <div class="p-4">
                 <table id="table-sudah" class="w-full text-sm text-left" style="width: 100%">
@@ -205,8 +234,18 @@
         <!-- 4. Terlewat (Overdue) -->
         <div x-show="tab === 'terlewat'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             style="display: none;">
-            <div class="px-6 py-4 border-b border-gray-100 bg-red-50">
+            <div class="px-6 py-4 border-b border-gray-100 bg-red-50 flex justify-between items-center">
                 <h3 class="font-bold text-red-800">Terlewat (Overdue)</h3>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.history.export-excel', 'terlewat') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('admin.history.export-pdf', 'terlewat') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </a>
+                </div>
             </div>
             <div class="p-4">
                 <table id="table-terlewat" class="w-full text-sm text-left" style="width: 100%">
@@ -230,8 +269,18 @@
         <!-- 5. Schedule (Jadwal) -->
         <div x-show="tab === 'schedule'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             style="display: none;">
-            <div class="px-6 py-4 border-b border-gray-100 bg-indigo-50">
+            <div class="px-6 py-4 border-b border-gray-100 bg-indigo-50 flex justify-between items-center">
                 <h3 class="font-bold text-indigo-800">Jadwal Vaksinasi (Scheduled)</h3>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.history.export-excel', 'schedule') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('admin.history.export-pdf', 'schedule') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        PDF
+                    </a>
+                </div>
             </div>
             <div class="p-4">
                 <table id="table-schedule" class="w-full text-sm text-left" style="width: 100%">
@@ -603,81 +652,100 @@
                 };
             }
 
-            // 1. Jadwal Table
-            $('#table-jadwal').DataTable({
-                ...commonConfig,
-                ajax: getAjax('jadwal'),
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'peserta', name: 'patient.name' },
-                    { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
-                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
-                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
-            });
+            // Table configurations by status
+            const tableConfigs = {
+                jadwal: {
+                    selector: '#table-jadwal',
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'peserta', name: 'patient.name' },
+                        { data: 'vaccine.name', name: 'vaccine.name' },
+                        { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                        { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                        { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ]
+                },
+                akan: {
+                    selector: '#table-akan',
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'peserta', name: 'patient.name' },
+                        { data: 'vaccine.name', name: 'vaccine.name' },
+                        { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                        { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                        { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ]
+                },
+                sudah: {
+                    selector: '#table-sudah',
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'peserta', name: 'patient.name' },
+                        { data: 'vaccine.name', name: 'vaccine.name' },
+                        { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                        { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
+                        { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                        { data: 'kipi', name: 'kipi', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ]
+                },
+                terlewat: {
+                    selector: '#table-terlewat',
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'peserta', name: 'patient.name' },
+                        { data: 'vaccine.name', name: 'vaccine.name' },
+                        { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                        { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                        { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
+                        { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ]
+                },
+                schedule: {
+                    selector: '#table-schedule',
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'peserta', name: 'patient.name' },
+                        { data: 'vaccine.name', name: 'vaccine.name' },
+                        { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                        { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                        { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ]
+                }
+            };
 
-            // 2. Akan Table
-            $('#table-akan').DataTable({
-                ...commonConfig,
-                ajax: getAjax('akan'),
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'peserta', name: 'patient.name' },
-                    { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
-                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
-                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
-            });
+            // Track initialized tables
+            const initializedTables = {};
 
-            // 3. Sudah Table
-            $('#table-sudah').DataTable({
-                ...commonConfig,
-                ajax: getAjax('sudah'),
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'peserta', name: 'patient.name' },
-                    { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false }, // date
-                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
-                    { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
-                    { data: 'kipi', name: 'kipi', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
-            });
+            // Function to initialize a table lazily
+            function initTable(status) {
+                if (initializedTables[status]) return; // Already initialized
+                
+                const config = tableConfigs[status];
+                if (!config) return;
+                
+                $(config.selector).DataTable({
+                    ...commonConfig,
+                    ajax: getAjax(status),
+                    columns: config.columns
+                });
+                
+                initializedTables[status] = true;
+            }
 
-            // 4. Terlewat Table
-            $('#table-terlewat').DataTable({
-                ...commonConfig,
-                ajax: getAjax('terlewat'),
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'peserta', name: 'patient.name' },
-                    { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'seharusnya', name: 'seharusnya', orderable: false, searchable: false },
-                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
-                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
-                    { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
-            });
+            // Initialize only the default tab (jadwal) on page load
+            initTable('jadwal');
 
-            // 5. Schedule Table
-            $('#table-schedule').DataTable({
-                ...commonConfig,
-                ajax: getAjax('schedule'),
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'peserta', name: 'patient.name' },
-                    { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
-                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
-                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
+            // Listen for tab changes and initialize tables lazily
+            window.addEventListener('init-table', function(e) {
+                const status = e.detail?.status;
+                if (status) {
+                    initTable(status);
+                }
             });
         });
 

@@ -340,6 +340,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/history/kipi', [\App\Http\Controllers\AdminController::class, 'storeKipi'])->name('admin.history.kipi');
     Route::post('/history/certification', [\App\Http\Controllers\AdminController::class, 'certification'])->name('admin.history.certification');
     Route::delete('/history/rollback/{id}', [\App\Http\Controllers\AdminController::class, 'rollbackHistory'])->name('admin.history.rollback');
+    Route::get('/history/export-excel/{status}', [\App\Http\Controllers\AdminController::class, 'exportHistoryExcel'])->name('admin.history.export-excel');
+    Route::get('/history/export-pdf/{status}', [\App\Http\Controllers\AdminController::class, 'exportHistoryPdf'])->name('admin.history.export-pdf');
 
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
 
