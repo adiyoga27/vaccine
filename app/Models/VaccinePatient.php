@@ -10,7 +10,7 @@ class VaccinePatient extends Model
     use \Spatie\Activitylog\Traits\LogsActivity;
 
     protected $fillable = [
-        'village_id', 'posyandu_id', 'patient_id', 'vaccine_id', 'request_date', 'vaccinated_at', 'status'
+        'village_id', 'posyandu_id', 'patient_id', 'vaccine_id', 'request_date', 'vaccinated_at', 'status', 'kipi'
     ];
 
     protected $casts = [

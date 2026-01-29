@@ -187,6 +187,7 @@
                             <th class="px-6 py-3">Tanggal Vaksin</th>
                             <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3">KIPI</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
@@ -400,7 +401,54 @@
                 </div>
             </div>
         </div>
-    </div>
+        <!-- KIPI Modal -->
+        <div x-show="kipiModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="kipiModalOpen = false">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                </div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <form action="{{ route('admin.history.kipi') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="id" x-model="kipiId">
+                        
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                Laporan KIPI (Kejadiaan Ikutan Pasca Imunisasi)
+                            </h3>
+                            
+                            <div class="space-y-2">
+                                <template x-for="option in kipiOptions" :key="option">
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" name="kipi[]" :value="option" x-model="selectedKipi" class="form-checkbox h-5 w-5 text-blue-600">
+                                        <span class="text-gray-700 font-medium" x-text="option"></span>
+                                    </label>
+                                </template>
+                            </div>
+
+                            <!-- Other Input -->
+                            <div class="mt-4" x-show="selectedKipi.includes('Lainnya')">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Keluhan Lainnya</label>
+                                <input type="text" name="kipi_other" x-model="kipiOther" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Tuliskan keluhan...">
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Simpan Laporan
+                            </button>
+                            <button type="button" @click="kipiModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Closing approvalData data scope -->
 
     <!-- jQuery & DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
@@ -439,6 +487,12 @@
         window.openDetailModal = function (item) {
             const event = new CustomEvent('open-detail', {
                 detail: item
+            });
+            window.dispatchEvent(event);
+        };
+        window.openKipiModal = function (item) {
+            const event = new CustomEvent('open-kipi', {
+                detail: { item }
             });
             window.dispatchEvent(event);
         };
@@ -514,6 +568,7 @@
                     { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false }, // date
                     { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                    { data: 'kipi', name: 'kipi', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });
@@ -574,6 +629,9 @@
                     window.addEventListener('open-detail', (event) => {
                         this.openDetailModal(event.detail);
                     });
+                    window.addEventListener('open-kipi', (event) => {
+                        this.openKipiModal(event.detail.item);
+                    });
                 },
 
                 openApproveModal(patientId, vaccineId, patientName, vaccineName, villageId) {
@@ -606,6 +664,43 @@
                     if (!dateString) return '-';
                     const date = new Date(dateString);
                     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                },
+
+                // KIPI Logic
+                kipiModalOpen: false,
+                kipiId: '',
+                kipiOptions: ['Demam', 'Bengkak', 'Merah', 'Muntah', 'Lainnya'],
+                selectedKipi: [],
+                kipiOther: '',
+
+                openKipiModal(item) {
+                    this.kipiId = item.id;
+                    this.selectedKipi = [];
+                    this.kipiOther = '';
+
+                    // Logic to populate choices
+                    if (item.kipi) {
+                         try {
+                            const kipiData = JSON.parse(item.kipi);
+                            if (Array.isArray(kipiData)) {
+                                kipiData.forEach(k => {
+                                    if (this.kipiOptions.includes(k)) {
+                                        this.selectedKipi.push(k);
+                                    } else {
+                                        // Treat as "Lainnya"
+                                        if (!this.selectedKipi.includes('Lainnya')) {
+                                            this.selectedKipi.push('Lainnya');
+                                        }
+                                        this.kipiOther = k;
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse KIPI data', e);
+                        }
+                    }
+
+                    this.kipiModalOpen = true;
                 }
             }))
         })

@@ -519,6 +519,17 @@ class AdminController extends Controller
                         return '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Terlewat</span>';
                     return '-';
                 })
+                ->addColumn('kipi', function ($row) {
+                    if (empty($row->kipi)) return '-';
+                    $kipi = json_decode($row->kipi, true);
+                    if (!is_array($kipi)) return '-';
+                    
+                    $badges = '';
+                    foreach ($kipi as $k) {
+                        $badges .= '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs mr-1 mb-1 inline-block">' . htmlspecialchars($k) . '</span>';
+                    }
+                    return $badges;
+                })
                 ->addColumn('action', function ($row) use ($status) {
                     $btn = '';
                     // Approve Button (Active, Upcoming, Overdue)
@@ -540,11 +551,18 @@ class AdminController extends Controller
                     // Detail & Rollback (Done)
                     if ($status === 'sudah') {
                         $json = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                        // Encode kipi explicitly to avoid issues if needed, but row has it.
+                        // We will pass the full row to openKipiModal as well.
+                        
                         $rollbackUrl = route('admin.history.rollback', $row->id);
                         $csrf = csrf_field();
                         $method = method_field('DELETE');
 
                         $btn .= '<div class="flex items-center gap-2">
+                                <button onclick=\'openKipiModal(' . $json . ')\' class="px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 transition flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    KIPI
+                                </button>
                                 <button onclick=\'openDetailModal(' . $json . ')\' class="px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     Detail
@@ -560,7 +578,7 @@ class AdminController extends Controller
                     }
                     return $btn;
                 })
-                ->rawColumns(['peserta', 'jadwal_range', 'status_badge', 'action'])
+                ->rawColumns(['peserta', 'jadwal_range', 'status_badge', 'kipi', 'action'])
                 ->make(true);
         }
 
@@ -637,6 +655,7 @@ class AdminController extends Controller
                         'dob' => \Carbon\Carbon::parse($patient->date_birth)->format('d M Y'),
                         'gender' => $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan',
                         'address' => $patient->address,
+                        'kipi' => $record->kipi,
                         // Age at the time of vaccination
                         'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths($record->vaccinated_at), 1) . ' Bulan'
                     ]);
@@ -806,6 +825,31 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Data vaksinasi berhasil disimpan');
+    }
+
+    public function storeKipi(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:vaccine_patients,id',
+            'kipi' => 'required|array',
+            'kipi_other' => 'nullable|string'
+        ]);
+
+        $record = \App\Models\VaccinePatient::findOrFail($request->id);
+
+        $kipiData = $request->kipi;
+        if (($key = array_search('Lainnya', $kipiData)) !== false) {
+            unset($kipiData[$key]);
+            if ($request->filled('kipi_other')) {
+                $kipiData[] = $request->kipi_other; // Save custom input
+            }
+        }
+
+        $record->update([
+            'kipi' => json_encode(array_values($kipiData)) // Re-index array
+        ]);
+
+        return back()->with('success', 'Data KIPI berhasil disimpan');
     }
 
     public function certification(Request $request)

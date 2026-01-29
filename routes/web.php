@@ -336,6 +336,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     Route::get('/history', [\App\Http\Controllers\AdminController::class, 'history'])->name('admin.history');
     Route::post('/history/store', [\App\Http\Controllers\AdminController::class, 'storeHistory'])->name('admin.history.store');
+    Route::post('/history/kipi', [\App\Http\Controllers\AdminController::class, 'storeKipi'])->name('admin.history.kipi');
     Route::post('/history/certification', [\App\Http\Controllers\AdminController::class, 'certification'])->name('admin.history.certification');
     Route::delete('/history/rollback/{id}', [\App\Http\Controllers\AdminController::class, 'rollbackHistory'])->name('admin.history.rollback');
 
