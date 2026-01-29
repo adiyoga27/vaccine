@@ -466,6 +466,7 @@ class AdminController extends Controller
                 'akan' => $data['upcoming'],
                 'sudah' => $data['done'],
                 'terlewat' => $data['overdue'],
+                'schedule' => $data['schedule'],
                 default => collect([]),
             };
 
@@ -479,6 +480,10 @@ class AdminController extends Controller
                     return $row->vaccine->name;
                 })
                 ->addColumn('jadwal_range', function ($row) {
+                    // For Schedule
+                    if (isset($row->schedule_at)) {
+                         return '<span class="text-blue-600 font-bold">' . $row->schedule_at->format('d M Y') . '</span>';
+                    }
                     // For Active, Overdue
                     if (isset($row->start_date) && isset($row->end_date)) {
                         $start = $row->start_date->format('d M Y');
@@ -532,8 +537,8 @@ class AdminController extends Controller
                 })
                 ->addColumn('action', function ($row) use ($status) {
                     $btn = '';
-                    // Approve Button (Active, Upcoming, Overdue)
-                    if (in_array($status, ['jadwal', 'akan', 'terlewat'])) {
+                    // Approve Button (Active, Upcoming, Overdue, Schedule)
+                    if (in_array($status, ['jadwal', 'akan', 'terlewat', 'schedule'])) {
                         $villageId = $row->patient->village_id;
                         $params = sprintf(
                             "'%s', '%s', '%s', '%s', '%s'",
@@ -543,11 +548,26 @@ class AdminController extends Controller
                             addslashes($row->vaccine->name),
                             $villageId
                         );
-                        $btn .= '<button onclick="openApproveModal(' . $params . ')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                        $btn .= '<button onclick="openApproveModal(' . $params . ')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center mr-1 mb-1">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     Approve
                                 </button>';
                     }
+                    // Schedule Button (Akan, Terlewat)
+                    if (in_array($status, ['akan', 'terlewat'])) {
+                         $params = sprintf(
+                            "'%s', '%s', '%s', '%s'",
+                            $row->patient->id,
+                            $row->vaccine->id,
+                            addslashes($row->patient->name),
+                            addslashes($row->vaccine->name)
+                        );
+                        $btn .= '<button onclick="openScheduleModal(' . $params . ')" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 transition flex items-center mr-1 mb-1">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Schedule
+                                </button>';
+                    }
+                    
                     // Detail & Rollback (Done)
                     if ($status === 'sudah') {
                         $json = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
@@ -593,6 +613,7 @@ class AdminController extends Controller
             'upcoming_count' => $data['upcoming']->count(),
             'done_count' => $data['done']->count(),
             'overdue_count' => $data['overdue']->count(),
+            'schedule_count' => $data['schedule']->count(),
             'villages' => $villages,
             'vaccines' => $vaccines
         ]);
@@ -632,11 +653,32 @@ class AdminController extends Controller
         $upcoming = collect();
         $done = collect();
         $overdue = collect();
+        $schedule = collect();
 
         foreach ($patients as $patient) {
             $doneVaccineIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
 
             foreach ($vaccines as $vaccine) {
+                // Check if Scheduled
+                $scheduledRecord = $patient->vaccinePatients
+                    ->where('vaccine_id', $vaccine->id)
+                    ->where('status', '!=', 'selesai')
+                    ->whereNotNull('schedule_at')
+                    ->first();
+                
+                if ($scheduledRecord) {
+                    $schedule->push((object) [
+                        'patient' => $patient,
+                        'vaccine' => $vaccine,
+                        'schedule_at' => $scheduledRecord->schedule_at,
+                        'age' => number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan',
+                        'mother_name' => $patient->mother_name
+                    ]);
+                    // If scheduled, do we trigger continue? 
+                    // Let's assume yes, it shouldn't allow requesting another or showing up in Akan if already scheduled.
+                    continue; 
+                }
+
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
                     
@@ -697,7 +739,30 @@ class AdminController extends Controller
             }
         }
 
-        return compact('active', 'upcoming', 'done', 'overdue');
+        return compact('active', 'upcoming', 'done', 'overdue', 'schedule');
+    }
+
+    public function storePatientSchedule(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'vaccine_id' => 'required|exists:vaccines,id',
+            'schedule_at' => 'required|date',
+        ]);
+
+        \App\Models\VaccinePatient::updateOrCreate(
+            [
+                'patient_id' => $request->patient_id,
+                'vaccine_id' => $request->vaccine_id,
+            ],
+            [
+                'schedule_at' => $request->schedule_at,
+                // Do not set status to 'selesai'. Maybe 'scheduled' or NULL is fine as long as we filter '!= selesai'.
+                // If we want to be explicit, we could add 'scheduled' to status enum, but checks are mainly for 'selesai'.
+            ]
+        );
+
+        return back()->with('success', 'Jadwal berhasil disimpan');
     }
 
     public function storeHistory(Request $request)

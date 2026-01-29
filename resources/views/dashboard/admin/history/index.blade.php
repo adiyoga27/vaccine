@@ -120,6 +120,12 @@
                 Terlewat (Overdue)
                 <span class="ml-2 bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-xs">{{ $overdue_count }}</span>
             </button>
+            <button @click="tab = 'schedule'"
+                :class="tab === 'schedule' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
+                Jadwal
+                <span class="ml-2 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs">{{ $schedule_count ?? 0 }}</span>
+            </button>
         </div>
 
         <!-- Tab Contents -->
@@ -213,6 +219,30 @@
                             <th class="px-6 py-3">Dusun</th>
                             <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. Schedule (Jadwal) -->
+        <div x-show="tab === 'schedule'" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            style="display: none;">
+            <div class="px-6 py-4 border-b border-gray-100 bg-indigo-50">
+                <h3 class="font-bold text-indigo-800">Jadwal Vaksinasi (Scheduled)</h3>
+            </div>
+            <div class="p-4">
+                <table id="table-schedule" class="w-full text-sm text-left" style="width: 100%">
+                    <thead class="bg-gray-50 text-gray-500 font-medium">
+                        <tr>
+                            <th class="px-6 py-3">#</th>
+                            <th class="px-6 py-3">Peserta</th>
+                            <th class="px-6 py-3">Vaksin</th>
+                            <th class="px-6 py-3">Jadwal Tanggal</th>
+                            <th class="px-6 py-3">Dusun</th>
+                            <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
@@ -448,6 +478,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Schedule Modal -->
+        <div x-show="scheduleModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                 <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="scheduleModalOpen = false">
+                     <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                 </div>
+                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                 <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                     <form action="{{ route('admin.history.schedule') }}" method="POST">
+                         @csrf
+                         <input type="hidden" name="patient_id" x-model="selectedPatientId">
+                         <input type="hidden" name="vaccine_id" x-model="selectedVaccineId">
+
+                         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                 Atur Jadwal Vaksinasi
+                             </h3>
+                             <p class="text-sm text-gray-500 mb-4">
+                                 Atur jadwal untuk <span class="font-bold" x-text="selectedPatientName"></span> - <span class="font-bold" x-text="selectedVaccineName"></span>
+                             </p>
+                             <div>
+                                 <label class="block text-sm font-medium text-gray-700">Pilih Tanggal</label>
+                                 <input type="date" name="schedule_at" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                             </div>
+                         </div>
+                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                             <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                 Simpan Jadwal
+                             </button>
+                             <button type="button" @click="scheduleModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                 Batal
+                             </button>
+                         </div>
+                     </form>
+                 </div>
+             </div>
+        </div>
     </div> <!-- Closing approvalData data scope -->
 
     <!-- jQuery & DataTables -->
@@ -493,6 +561,14 @@
         window.openKipiModal = function (item) {
             const event = new CustomEvent('open-kipi', {
                 detail: { item }
+            });
+            window.dispatchEvent(event);
+        };
+        window.openScheduleModal = function (patientId, vaccineId, patientName, vaccineName) {
+            const event = new CustomEvent('open-schedule', {
+                detail: {
+                    patientId, vaccineId, patientName, vaccineName
+                }
             });
             window.dispatchEvent(event);
         };
@@ -581,10 +657,25 @@
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'peserta', name: 'patient.name' },
                     { data: 'vaccine.name', name: 'vaccine.name' },
-                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                    { data: 'seharusnya', name: 'seharusnya', orderable: false, searchable: false },
                     { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
                     { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ]
+            });
+
+            // 5. Schedule Table
+            $('#table-schedule').DataTable({
+                ...commonConfig,
+                ajax: getAjax('schedule'),
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'peserta', name: 'patient.name' },
+                    { data: 'vaccine.name', name: 'vaccine.name' },
+                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });
@@ -595,6 +686,7 @@
                 tab: 'jadwal',
                 approveModalOpen: false,
                 detailModalOpen: false,
+                scheduleModalOpen: false,
 
                 selectedPatientId: '',
                 selectedVaccineId: '',
@@ -632,6 +724,22 @@
                     window.addEventListener('open-kipi', (event) => {
                         this.openKipiModal(event.detail.item);
                     });
+                    window.addEventListener('open-schedule', (event) => {
+                        this.openScheduleModal(
+                            event.detail.patientId,
+                            event.detail.vaccineId,
+                            event.detail.patientName,
+                            event.detail.vaccineName
+                        );
+                    });
+                },
+
+                openScheduleModal(patientId, vaccineId, patientName, vaccineName) {
+                    this.selectedPatientId = patientId;
+                    this.selectedVaccineId = vaccineId;
+                    this.selectedPatientName = patientName;
+                    this.selectedVaccineName = vaccineName;
+                    this.scheduleModalOpen = true;
                 },
 
                 openApproveModal(patientId, vaccineId, patientName, vaccineName, villageId) {
