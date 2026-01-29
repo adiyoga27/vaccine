@@ -86,9 +86,12 @@ Route::get('/peserta/{dateBirth}/{slug}', function ($dateBirth, $slug) {
 
             if (!isset($groupedEvents[$key])) {
                 $color = '#3B82F6';
-                if ($vs->status == 'selesai') $color = '#059669';
-                elseif ($vs->status == 'bisa_diajukan') $color = '#d97706'; // Amber-600
-                elseif ($vs->status == 'terlewat') $color = '#EF4444';
+                if ($vs->status == 'selesai')
+                    $color = '#059669';
+                elseif ($vs->status == 'bisa_diajukan')
+                    $color = '#d97706'; // Amber-600
+                elseif ($vs->status == 'terlewat')
+                    $color = '#EF4444';
 
                 $groupedEvents[$key] = [
                     'titles' => [$vs->vaccine->name],
@@ -125,29 +128,29 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
         $patient = $user->patient;
-        
+
         $histories = $patient ? $patient->vaccinePatients()->with('vaccine')->get() : collect([]);
 
         // Get IDs of vaccines already done or in progress
         $doneVaccineIds = $patient ? $histories->where('status', 'selesai')->pluck('vaccine_id')->toArray() : [];
-        
+
         // Process all vaccines to determine Personalized Schedule
         $allVaccines = Vaccine::orderBy('minimum_age')->get();
         $vaccineSchedules = [];
-        
+
         // Calculate age in months accurately with 1 decimal
         $patientAgeMonths = $patient ? number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) : 0;
 
-        foreach($allVaccines as $vac) {
+        foreach ($allVaccines as $vac) {
             $isDone = in_array($vac->id, $doneVaccineIds);
-            
+
             // Calculate Schedule Window
             // Start Date = BirthDate + Minimum Age (Months)
             $startDate = $patient ? \Carbon\Carbon::parse($patient->date_birth)->addMonths($vac->minimum_age) : null;
             $endDate = $startDate ? $startDate->copy()->addDays($vac->duration_days ?? 7) : null;
-            
+
             $status = 'upcoming'; // Default
-            
+
             if ($isDone) {
                 $status = 'selesai';
             } elseif ($startDate && now()->between($startDate, $endDate)) {
@@ -168,12 +171,12 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
                 'event_end' => $endDate ? $endDate->format('Y-m-d') : null, // FullCalendar end date is exclusive, strictly it might need +1 day but keeping simple
             ];
         }
-        
+
         // Prepare events for FullCalendar with Grouping
         $calendarEvents = [];
         $groupedEvents = [];
 
-        foreach($vaccineSchedules as $vs) {
+        foreach ($vaccineSchedules as $vs) {
             if ($vs->start_date && $vs->end_date) {
                 // Create a unique key for grouping: StartDate_EndDate_Status
                 $key = $vs->event_start . '_' . $vs->event_end . '_' . $vs->status;
@@ -220,16 +223,16 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
 
         return view('dashboard.user.index', compact('user', 'patient', 'vaccineSchedules', 'calendarEvents', 'patientAgeMonths', 'allVaccinesCompleted'));
     })->name('user.dashboard');
-    
+
     // Certificate (Only if all completed)
     Route::get('/certificate', function () {
         $patient = Auth::user()->patient;
-        
+
         $totalVaccinesCount = Vaccine::count();
         $completedVaccinesCount = $patient ? $patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
-        
+
         if ($totalVaccinesCount === 0 || $completedVaccinesCount < $totalVaccinesCount) {
-             return redirect()->route('user.dashboard')->with('error', 'Anda belum menyelesaikan semua tahapan imunisasi.');
+            return redirect()->route('user.dashboard')->with('error', 'Anda belum menyelesaikan semua tahapan imunisasi.');
         }
 
         // Check if certificate number exists
@@ -239,23 +242,23 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
             $completionDate = $lastRecord ? $lastRecord->updated_at : now();
             $month = $completionDate->month;
             $year = $completionDate->year;
-            
+
             $startOfMonth = $completionDate->copy()->startOfMonth();
-            
+
             // Sequence logic
             $previousCount = \App\Models\Patient::whereNotNull('completed_vaccination_at')
                 ->whereBetween('completed_vaccination_at', [$startOfMonth, $completionDate])
                 ->count();
             $sequence = $previousCount + 1;
-    
-            $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+
+            $romanMonths = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
             $romanMonth = $romanMonths[$month] ?? 'I';
-            
+
             $certificateNumber = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
-            
+
             // Get current certificate settings and snapshot to patient
             $settings = \App\Models\CertificateSetting::current();
-            
+
             $patient->update([
                 'completed_vaccination_at' => $completionDate,
                 'certificate_number' => $certificateNumber,
@@ -283,12 +286,12 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
             'vaccines' => Vaccine::count(),
             'pending' => VaccinePatient::where('status', 'pengajuan')->count(),
         ];
-        
+
         $requests = VaccinePatient::with(['patient', 'vaccine', 'village'])
-                    ->where('status', 'pengajuan')
-                    ->latest()
-                    ->get();
-                    
+            ->where('status', 'pengajuan')
+            ->latest()
+            ->get();
+
         return view('dashboard.admin.index', compact('stats', 'requests'));
     })->name('admin.dashboard');
 
@@ -297,6 +300,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/villages', [\App\Http\Controllers\AdminController::class, 'storeVillage'])->name('admin.villages.store');
     Route::put('/villages/{village}', [\App\Http\Controllers\AdminController::class, 'updateVillage'])->name('admin.villages.update');
     Route::delete('/villages/{village}', [\App\Http\Controllers\AdminController::class, 'destroyVillage'])->name('admin.villages.destroy');
+    Route::get('/villages/{village}/patients', [\App\Http\Controllers\AdminController::class, 'getVillagePatients'])->name('admin.villages.patients');
 
     // Posyandus
     Route::post('/posyandus', [\App\Http\Controllers\AdminController::class, 'storePosyandu'])->name('admin.posyandus.store');
@@ -325,28 +329,29 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'updateUser'])->name('admin.users.update');
     Route::delete('/users/bulk-delete', [\App\Http\Controllers\AdminController::class, 'bulkDeleteUsers'])->name('admin.users.bulk-delete');
     Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->name('admin.users.destroy');
-    Route::get('/users/export', [\App\Http\Controllers\AdminController::class, 'exportUsers'])->name('admin.users.export');
+    Route::get('/users/export-excel', [\App\Http\Controllers\AdminController::class, 'exportUsers'])->name('admin.users.export');
+    Route::get('/users/export-pdf', [\App\Http\Controllers\AdminController::class, 'exportUsersPdf'])->name('admin.users.export-pdf');
     Route::post('/users/import', [\App\Http\Controllers\AdminController::class, 'importUsers'])->name('admin.users.import');
     Route::get('/users/import-template', [\App\Http\Controllers\AdminController::class, 'downloadImportTemplate'])->name('admin.users.import-template');
-    
+
     Route::get('/history', [\App\Http\Controllers\AdminController::class, 'history'])->name('admin.history');
     Route::post('/history/store', [\App\Http\Controllers\AdminController::class, 'storeHistory'])->name('admin.history.store');
     Route::post('/history/certification', [\App\Http\Controllers\AdminController::class, 'certification'])->name('admin.history.certification');
     Route::delete('/history/rollback/{id}', [\App\Http\Controllers\AdminController::class, 'rollbackHistory'])->name('admin.history.rollback');
-    
+
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
-    
+
     // Notifications
     Route::get('/notifications/config', [\App\Http\Controllers\NotificationController::class, 'configuration'])->name('admin.notifications.config'); // Renamed from index
     Route::get('/notifications/templates', [\App\Http\Controllers\NotificationController::class, 'templates'])->name('admin.notifications.templates');
     Route::put('/notifications/templates/{id}', [\App\Http\Controllers\NotificationController::class, 'updateTemplate'])->name('admin.notifications.templates.update');
     Route::get('/notifications/history', [\App\Http\Controllers\NotificationController::class, 'history'])->name('admin.notifications.history');
-    
+
     // AJAX for WAHA
     Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('admin.notifications.scan');
     Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('admin.notifications.status');
     Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('admin.notifications.logout');
-    
+
     Route::get('/certificate/{certificate_number}', function ($certificate_number) {
         $certificateNumber = urldecode($certificate_number);
         $patient = \App\Models\Patient::where('certificate_number', $certificateNumber)->firstOrFail();

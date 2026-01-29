@@ -40,28 +40,25 @@
                 :class="tab === 'jadwal' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Jadwal Vaksin (Active)
-                <span
-                    class="ml-2 bg-green-100 text-green-700 py-0.5 px-2 rounded-full text-xs">{{ $active->count() }}</span>
+                <span class="ml-2 bg-green-100 text-green-700 py-0.5 px-2 rounded-full text-xs">{{ $active_count }}</span>
             </button>
             <button @click="tab = 'akan'"
                 :class="tab === 'akan' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Akan Vaksin (Upcoming)
-                <span
-                    class="ml-2 bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs">{{ $upcoming->count() }}</span>
+                <span class="ml-2 bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs">{{ $upcoming_count }}</span>
             </button>
             <button @click="tab = 'sudah'"
                 :class="tab === 'sudah' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Sudah Vaksin (Done)
-                <span
-                    class="ml-2 bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-xs">{{ $done->count() }}</span>
+                <span class="ml-2 bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-xs">{{ $done_count }}</span>
             </button>
             <button @click="tab = 'terlewat'"
                 :class="tab === 'terlewat' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition whitespace-nowrap">
                 Terlewat (Overdue)
-                <span class="ml-2 bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-xs">{{ $overdue->count() }}</span>
+                <span class="ml-2 bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-xs">{{ $overdue_count }}</span>
             </button>
         </div>
 
@@ -72,10 +69,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-green-50">
                 <h3 class="font-bold text-green-800">Sedang Berlangsung (Wajib Vaksin Sekarang)</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
+            <div class="p-4">
+                <table id="table-jadwal" class="w-full text-sm text-left" style="width: 100%">
                     <thead class="bg-gray-50 text-gray-500 font-medium">
                         <tr>
+                            <th class="px-6 py-3">#</th>
                             <th class="px-6 py-3">Peserta</th>
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Jadwal (Mulai - Selesai)</th>
@@ -83,41 +81,7 @@
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($active as $item)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">
-                                    {{ $item->patient->name }}
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        Ibu: {{ $item->patient->mother_name }} <span class="mx-1">|</span> Umur:
-                                        {{ $item->age }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="text-green-600 font-bold">{{ $item->start_date->format('d M Y') }}</span> -
-                                    {{ $item->end_date->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
-                                <td class="px-6 py-4 flex items-center gap-2">
-                                    <button
-                                        @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')"
-                                        class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Approve
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada jadwal aktif saat ini.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
         </div>
@@ -128,10 +92,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-blue-50">
                 <h3 class="font-bold text-blue-800">Akan Datang</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
+            <div class="p-4">
+                <table id="table-akan" class="w-full text-sm text-left" style="width: 100%">
                     <thead class="bg-gray-50 text-gray-500 font-medium">
                         <tr>
+                            <th class="px-6 py-3">#</th>
                             <th class="px-6 py-3">Peserta</th>
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Rencana Jadwal</th>
@@ -139,36 +104,7 @@
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($upcoming as $item)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">
-                                    {{ $item->patient->name }}
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
-                                <td class="px-6 py-4 text-gray-500">{{ $item->start_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
-                                <td class="px-6 py-4">
-                                    <button
-                                        @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')"
-                                        class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Approve
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada data.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
         </div>
@@ -179,10 +115,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-emerald-50">
                 <h3 class="font-bold text-emerald-800">Selesai Vaksinasi</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
+            <div class="p-4">
+                <table id="table-sudah" class="w-full text-sm text-left" style="width: 100%">
                     <thead class="bg-gray-50 text-gray-500 font-medium">
                         <tr>
+                            <th class="px-6 py-3">#</th>
                             <th class="px-6 py-3">Peserta</th>
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Tanggal Vaksin</th>
@@ -190,57 +127,7 @@
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($done as $item)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">
-                                    {{ $item->patient->name }}
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
-                                <td class="px-6 py-4 text-emerald-600 font-medium">
-                                    {{ \Carbon\Carbon::parse($item->date)->format('d M Y H:i') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Selesai</span>
-                                </td>
-                                <td class="px-6 py-4 flex items-center gap-2">
-                                    <button @click='openDetailModal(@json($item))'
-                                        class="px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                            </path>
-                                        </svg>
-                                        Detail
-                                    </button>
-                                    <form action="{{ route('admin.history.rollback', $item->id) }}" method="POST"
-                                        onsubmit="return confirm('Apakah anda yakin akan mengembalikan data belum di approve?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                                            </svg>
-                                            Rollback
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">Belum ada data vaksinasi selesai.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
         </div>
@@ -251,10 +138,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-red-50">
                 <h3 class="font-bold text-red-800">Terlewat (Overdue)</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
+            <div class="p-4">
+                <table id="table-terlewat" class="w-full text-sm text-left" style="width: 100%">
                     <thead class="bg-gray-50 text-gray-500 font-medium">
                         <tr>
+                            <th class="px-6 py-3">#</th>
                             <th class="px-6 py-3">Peserta</th>
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Seharusnya</th>
@@ -263,42 +151,7 @@
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($overdue as $item)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">
-                                    {{ $item->patient->name }}
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        Ibu: {{ $item->mother_name }} <span class="mx-1">|</span> Umur: {{ $item->age }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">{{ $item->vaccine->name }}</td>
-                                <td class="px-6 py-4 text-red-600 font-bold">
-                                    {{ $item->start_date->format('d M Y') }} - {{ $item->end_date->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4">{{ $item->patient->village->name ?? '-' }}</td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Terlewat</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <button
-                                        @click="openApproveModal('{{ $item->patient->id }}', '{{ $item->vaccine->id }}', '{{ $item->patient->name }}', '{{ $item->vaccine->name }}', '{{ $item->patient->village_id }}')"
-                                        class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Approve
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">Tidak ada jadwal terlewat.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
         </div>
@@ -306,7 +159,7 @@
         <!-- Approve Modal -->
         <div x-show="approveModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="approveModalOpen = false">
                     <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                 </div>
 
@@ -340,8 +193,9 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700">Lokasi Dusun</label>
-                                            <select name="village_id" x-model="selectedVillageId" required
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <select name="village_id" x-model="selectedVillageId" required readonly
+                                                tabindex="-1"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-gray-100 pointer-events-none">
                                                 <option value="">Pilih Dusun</option>
                                                 @foreach($villages as $v)
                                                     <option value="{{ $v->id }}">{{ $v->name }}</option>
@@ -351,13 +205,15 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700">Lokasi Posyandu</label>
-                                            <select name="posyandu_id"
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <select name="posyandu_id" x-model="selectedPosyanduId" required readonly
+                                                tabindex="-1"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-gray-100 pointer-events-none">
                                                 <option value="">Pilih Posyandu</option>
                                                 <!-- Logic to filter posyandu based on village using Alpine or JS -->
                                                 @foreach($villages as $v)
                                                     @foreach($v->posyandus as $p)
-                                                        <option x-show="selectedVillageId == '{{ $v->id }}'" value="{{ $p->id }}">
+                                                        <option x-show="selectedVillageId == '{{ $v->id }}'" value="{{ $p->id }}"
+                                                            data-village="{{ $v->id }}">
                                                             {{ $p->name }}
                                                         </option>
                                                     @endforeach
@@ -386,7 +242,7 @@
         <!-- Detail Modal -->
         <div x-show="detailModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="detailModalOpen = false">
                     <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                 </div>
 
@@ -482,7 +338,130 @@
         </div>
     </div>
 
+    <!-- jQuery & DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: 0.375rem;
+            padding: 0.25rem 2rem 0.25rem 0.5rem;
+            border: 1px solid #d1d5db;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border: 1px solid #d1d5db;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+    </style>
+
     <script>
+        // Global Functions for Action Buttons
+        window.openApproveModal = function (patientId, vaccineId, patientName, vaccineName, villageId) {
+            const event = new CustomEvent('open-approve', {
+                detail: {
+                    patientId, vaccineId, patientName, vaccineName, villageId
+                }
+            });
+            window.dispatchEvent(event);
+        };
+        window.openDetailModal = function (item) {
+            const event = new CustomEvent('open-detail', {
+                detail: item
+            });
+            window.dispatchEvent(event);
+        };
+
+        $(document).ready(function () {
+            // Common Config
+            const commonConfig = {
+                processing: true,
+                serverSide: true,
+                searching: false, // Drop DataTables search, use Global Search
+                autoWidth: false, // Ensure full width
+                scrollX: true, // Enable horizontal scrolling
+                scrollY: '500px', // Enable vertical scrolling
+                scrollCollapse: true, // Allow height to shrink if few rows
+                lengthMenu: [10, 20, 50, 100, -1], // -1 is All
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' }
+            };
+
+            // Helper to get AJAX config
+            function getAjax(status) {
+                return {
+                    url: '{{ route("admin.history") }}',
+                    data: function (d) {
+                        d.status = status;
+                        d.search = '{{ request("search") }}';
+                    }
+                };
+            }
+
+            // 1. Jadwal Table
+            $('#table-jadwal').DataTable({
+                ...commonConfig,
+                ajax: getAjax('jadwal'),
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'peserta', name: 'patient.name' },
+                    { data: 'vaccine.name', name: 'vaccine.name' },
+                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ]
+            });
+
+            // 2. Akan Table
+            $('#table-akan').DataTable({
+                ...commonConfig,
+                ajax: getAjax('akan'),
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'peserta', name: 'patient.name' },
+                    { data: 'vaccine.name', name: 'vaccine.name' },
+                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ]
+            });
+
+            // 3. Sudah Table
+            $('#table-sudah').DataTable({
+                ...commonConfig,
+                ajax: getAjax('sudah'),
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'peserta', name: 'patient.name' },
+                    { data: 'vaccine.name', name: 'vaccine.name' },
+                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false }, // date
+                    { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ]
+            });
+
+            // 4. Terlewat Table
+            $('#table-terlewat').DataTable({
+                ...commonConfig,
+                ajax: getAjax('terlewat'),
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'peserta', name: 'patient.name' },
+                    { data: 'vaccine.name', name: 'vaccine.name' },
+                    { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
+                    { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ]
+            });
+        });
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('approvalData', () => ({
                 tab: 'jadwal',
@@ -494,11 +473,34 @@
                 selectedPatientName: '',
                 selectedVaccineName: '',
                 selectedVillageId: '',
+                selectedPosyanduId: '',
 
                 // Detail Modal Data
                 detail: {
                     patient: {},
                     vaccine: {}
+                },
+
+                init() {
+                    // Watch for tab changes to resizing DataTables
+                    this.$watch('tab', (value) => {
+                        this.$nextTick(() => {
+                            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+                        });
+                    });
+
+                    window.addEventListener('open-approve', (event) => {
+                        this.openApproveModal(
+                            event.detail.patientId,
+                            event.detail.vaccineId,
+                            event.detail.patientName,
+                            event.detail.vaccineName,
+                            event.detail.villageId
+                        );
+                    });
+                    window.addEventListener('open-detail', (event) => {
+                        this.openDetailModal(event.detail);
+                    });
                 },
 
                 openApproveModal(patientId, vaccineId, patientName, vaccineName, villageId) {
@@ -507,6 +509,18 @@
                     this.selectedPatientName = patientName;
                     this.selectedVaccineName = vaccineName;
                     this.selectedVillageId = villageId; // Pre-select village
+
+                    // Auto-select first posyandu for this village
+                    this.$nextTick(() => {
+                        const selector = `select[name="posyandu_id"] option[data-village="${villageId}"]`;
+                        const firstOption = document.querySelector(selector);
+                        if (firstOption) {
+                            this.selectedPosyanduId = firstOption.value;
+                        } else {
+                            this.selectedPosyanduId = '';
+                        }
+                    });
+
                     this.approveModalOpen = true;
                 },
 

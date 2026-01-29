@@ -47,6 +47,14 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NIK Ibu Kandung</label>
+                    <input type="text" name="mother_nik" maxlength="16"
+                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        value="{{ old('mother_nik', $user->patient->mother_nik ?? '') }}" placeholder="16 digit NIK">
+                    @error('mother_nik') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir Anak</label>
                     <input type="date" name="date_birth"
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required

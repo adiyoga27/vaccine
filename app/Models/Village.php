@@ -21,6 +21,11 @@ class Village extends Model
         return $this->hasMany(VaccineSchedule::class);
     }
 
+    public function patients()
+    {
+        return $this->hasMany(Patient::class);
+    }
+
     public function vaccinePatients()
     {
         return $this->hasMany(VaccinePatient::class);

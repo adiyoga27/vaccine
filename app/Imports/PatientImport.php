@@ -62,6 +62,7 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
             'village_id' => $village->id ?? null,
             'name' => $row['nama_anak'],
             'mother_name' => $row['nama_ibu'],
+            'mother_nik' => $row['nik_ibu'] ?? null,
             'date_birth' => $dob,
             'gender' => $gender,
             'address' => $row['alamat'],
@@ -76,6 +77,7 @@ class PatientImport implements ToModel, WithHeadingRow, WithValidation
         return [
             'nama_anak' => 'required|string',
             'nama_ibu' => 'required|string',
+            'nik_ibu' => 'nullable|string|max:16',
             'tanggal_lahir' => 'required',
             'jenis_kelamin' => 'required',
             'alamat' => 'required',

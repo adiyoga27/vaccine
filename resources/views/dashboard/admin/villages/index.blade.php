@@ -47,8 +47,12 @@
                                 -
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $village->vaccine_patients_count }}
-                            Riwayat</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button onclick="openPatientsModal({{ $village->id }}, '{{ $village->name }}')"
+                                class="text-blue-600 hover:text-blue-800 hover:underline font-medium focus:outline-none">
+                                {{ $village->patients_count }} Peserta
+                            </button>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end gap-2">
                                 <button onclick='openPosyanduModal(@json($village))'
@@ -175,6 +179,58 @@
         </div>
     </div>
 
+    <!-- Patients List Modal -->
+    <div id="patientsModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900" id="patientsModalTitle">Daftar Peserta</h3>
+                    <p class="text-sm text-gray-500" id="patientsModalSubtitle">Dusun ...</p>
+                </div>
+                <button onclick="document.getElementById('patientsModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="patientsLoading" class="hidden py-8 text-center">
+                <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                    </circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                <p class="text-gray-500 mt-2">Memuat data peserta...</p>
+            </div>
+
+            <!-- Patients Table -->
+            <div class="overflow-y-auto max-h-[60vh] relative">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Peserta</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ibu</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">JK</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. HP</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="patientsListBody">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+                <p id="noPatientsMsg" class="text-center text-gray-500 py-8 hidden">Belum ada peserta di dusun ini.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         function openEditModal(id, name) {
             document.getElementById('editForm').action = '/admin/villages/' + id;
@@ -195,21 +251,69 @@
                 village.posyandus.forEach(posyandu => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                                                <td class="px-4 py-3 text-sm text-gray-900">${posyandu.name}</td>
-                                                <td class="px-4 py-3 text-sm text-gray-500">${posyandu.address || '-'}</td>
-                                                <td class="px-4 py-3 text-right text-sm font-medium flex justify-end gap-2">
-                                                     <form action="/admin/posyandus/${posyandu.id}" method="POST" onsubmit="return confirm('Hapus posyandu ini?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
-                                                    </form>
-                                                </td>
-                                            `;
+                                                    <td class="px-4 py-3 text-sm text-gray-900">${posyandu.name}</td>
+                                                    <td class="px-4 py-3 text-sm text-gray-500">${posyandu.address || '-'}</td>
+                                                    <td class="px-4 py-3 text-right text-sm font-medium flex justify-end gap-2">
+                                                         <form action="/admin/posyandus/${posyandu.id}" method="POST" onsubmit="return confirm('Hapus posyandu ini?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                                        </form>
+                                                    </td>
+                                                `;
                     tbody.appendChild(tr);
                 });
             } else {
                 document.getElementById('noPosyanduMsg').classList.remove('hidden');
             }
+        }
+
+        function openPatientsModal(villageId, villageName) {
+            document.getElementById('patientsModalTitle').textContent = 'Daftar Peserta';
+            document.getElementById('patientsModalSubtitle').textContent = 'Dusun: ' + villageName;
+
+            const modal = document.getElementById('patientsModal');
+            const tbody = document.getElementById('patientsListBody');
+            const loading = document.getElementById('patientsLoading');
+            const noMsg = document.getElementById('noPatientsMsg');
+
+            modal.classList.remove('hidden');
+            tbody.innerHTML = '';
+            loading.classList.remove('hidden');
+            noMsg.classList.add('hidden');
+
+            fetch(`/admin/villages/${villageId}/patients`)
+                .then(response => response.json())
+                .then(data => {
+                    loading.classList.add('hidden');
+
+                    if (data.length > 0) {
+                        data.forEach(patient => {
+                            const tr = document.createElement('tr');
+                            const gender = patient.gender == 'male' ? 'L' : 'P';
+                            const genderClass = patient.gender == 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800';
+
+                            tr.innerHTML = `
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${patient.name}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500">${patient.mother_name || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500">
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${genderClass}">${gender}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-500">${patient.phone || '-'}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 truncate max-w-xs" title="${patient.address || ''}">${patient.address || '-'}</td>
+                                `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        noMsg.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loading.classList.add('hidden');
+                    alert('Gagal memuat data peserta.');
+                    modal.classList.add('hidden');
+                });
         }
     </script>
 @endsection

@@ -17,8 +17,17 @@ class AdminController extends Controller
     // Villages CRUD
     public function villages()
     {
-        $villages = Village::withCount('vaccinePatients')->with('posyandus')->get();
+        $villages = Village::withCount(['patients', 'vaccinePatients'])->with('posyandus')->get();
         return view('dashboard.admin.villages.index', compact('villages'));
+    }
+
+    public function getVillagePatients(Village $village)
+    {
+        $patients = $village->patients()
+            ->select('name', 'mother_name', 'gender', 'phone', 'address')
+            ->get();
+
+        return response()->json($patients);
     }
 
     public function storeVillage(Request $request)
@@ -156,23 +165,107 @@ class AdminController extends Controller
     // Monitoring
     public function users(Request $request)
     {
-        $search = $request->input('search');
+        if ($request->ajax()) {
+            $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
+                ->where('role', 'user')
+                ->select('users.*');
 
-        $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
-            ->where('role', 'user')
-            ->when($search, function ($query) use ($search) {
-                $query->whereHas('patient', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('mother_name', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(10)
-            ->appends(['search' => $search]);
+            return \Yajra\DataTables\Facades\DataTables::of($users)
+                ->addColumn('checkbox', function ($user) {
+                    return '<input type="checkbox" value="' . $user->id . '" class="user-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">';
+                })
+                ->addColumn('peserta', function ($user) {
+                    $gender = $user->patient && $user->patient->gender == 'male' ? 'Laki-laki' : 'Perempuan';
+                    $name = $user->patient->name ?? '-';
+                    return '<div class="text-sm font-bold text-gray-900">' . $name . '</div>
+                            <div class="text-xs text-gray-500">' . $gender . '</div>';
+                })
+                ->addColumn('orang_tua', function ($user) {
+                    return '<div class="text-sm text-gray-900">' . ($user->patient->mother_name ?? '-') . '</div>';
+                })
+                ->addColumn('nik_orang_tua', function ($user) {
+                    return '<div class="text-sm text-gray-500">' . ($user->patient->mother_nik ?? '-') . '</div>';
+                })
+                ->addColumn('usia', function ($user) {
+                    if (!$user->patient)
+                        return '<span class="text-gray-400">-</span>';
+                    return '<div class="text-sm text-gray-900">' . $user->patient->date_birth->format('d M Y') . '</div>
+                            <div class="text-xs text-gray-500">' . $user->patient->date_birth->age . ' Tahun</div>';
+                })
+                ->addColumn('alamat', function ($user) {
+                    $village = $user->patient->village->name ?? '';
+                    $address = $user->patient->address ?? '-';
+                    return '<div class="text-sm text-gray-900">' . $address . '</div>
+                            <div class="text-xs text-gray-600">' . $village . '</div>';
+                })
+                ->addColumn('riwayat', function ($user) {
+                    if (!$user->patient)
+                        return '-';
+                    $completed = $user->patient->vaccinePatients->where('status', 'selesai')->unique('vaccine_id');
+                    if ($completed->isEmpty())
+                        return '<span class="text-xs text-gray-400 italic">Belum ada vaksin selesai</span>';
+
+                    $html = '<div class="flex flex-wrap gap-1 mb-2">';
+                    foreach ($completed as $vp) {
+                        $html .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">' . $vp->vaccine->name . '</span>';
+                    }
+                    $html .= '</div>';
+                    return $html;
+                })
+                ->addColumn('sertifikat', function ($user) {
+                    $totalVaccines = Vaccine::count();
+                    $completedCount = $user->patient ? $user->patient->vaccinePatients->where('status', 'selesai')->unique('vaccine_id')->count() : 0;
+                    $isCompleted = ($totalVaccines > 0 && $completedCount >= $totalVaccines);
+
+                    if ($isCompleted) {
+                        $url = route('admin.certificate', urlencode($user->patient->certificate_number));
+                        return '<a href="' . $url . '" target="_blank" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">Unduh Sertifikat</a>';
+                    }
+                    return '<span class="text-xs text-gray-400">Belum Lengkap</span>';
+                })
+                ->addColumn('action', function ($user) {
+                    $editUrl = route('admin.users.edit', $user->id);
+                    $deleteUrl = route('admin.users.destroy', $user->id);
+                    $csrf = csrf_token();
+                    $method = method_field('DELETE');
+                    $userJson = htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8');
+
+                    return '
+                    <div class="flex justify-center gap-2">
+                        <a href="' . $editUrl . '" class="inline-flex items-center px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 transition">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Edit
+                        </a>
+                        <button onclick=\'openDetailModal(' . $userJson . ')\' class="inline-flex items-center px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            Detail
+                        </button>
+                        <form action="' . $deleteUrl . '" method="POST" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus data ini? Data akan diarsip (Soft Delete).\');" class="inline-block">
+                            ' . csrf_field() . $method . '
+                            <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus
+                            </button>
+                        </form>
+                    </div>';
+                })
+                ->rawColumns(['checkbox', 'peserta', 'orang_tua', 'nik_orang_tua', 'usia', 'alamat', 'riwayat', 'sertifikat', 'action'])
+                ->make(true);
+        }
 
         $totalVaccines = Vaccine::count();
-        return view('dashboard.admin.users.index', compact('users', 'totalVaccines', 'search'));
+        return view('dashboard.admin.users.index', compact('totalVaccines'));
+    }
+
+    public function exportUsersPdf()
+    {
+        $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
+            ->where('role', 'user')
+            ->get();
+        $totalVaccines = Vaccine::count();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.users', compact('users', 'totalVaccines'));
+        return $pdf->download('Data_Peserta_' . date('Y-m-d') . '.pdf');
     }
 
     public function createUser()
@@ -187,6 +280,7 @@ class AdminController extends Controller
             'name' => 'required',
             // Patient Data
             'mother_name' => 'required',
+            'mother_nik' => 'nullable|string|max:16',
             'date_birth' => 'required|date',
             'address' => 'required',
             'gender' => 'required|in:male,female',
@@ -207,6 +301,7 @@ class AdminController extends Controller
                 'village_id' => $request->village_id,
                 'name' => $request->name,
                 'mother_name' => $request->mother_name,
+                'mother_nik' => $request->mother_nik,
                 'date_birth' => $request->date_birth,
                 'address' => $request->address,
                 'gender' => $request->gender,
@@ -235,6 +330,7 @@ class AdminController extends Controller
             'name' => 'required',
             // Patient Data
             'mother_name' => 'required',
+            'mother_nik' => 'nullable|string|max:16',
             'date_birth' => 'required|date',
             'address' => 'required',
             'gender' => 'required|in:male,female',
@@ -254,6 +350,7 @@ class AdminController extends Controller
                     'village_id' => $request->village_id,
                     'name' => $request->name,
                     'mother_name' => $request->mother_name,
+                    'mother_nik' => $request->mother_nik,
                     'date_birth' => $request->date_birth,
                     'address' => $request->address,
                     'gender' => $request->gender,
@@ -332,13 +429,13 @@ class AdminController extends Controller
             public function array(): array
             {
                 return [
-                    ['Anak Contoh', 'Ibu Contoh', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
+                    ['Anak Contoh', 'Ibu Contoh', '1234567890123456', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
                 ];
             }
 
             public function headings(): array
             {
-                return ['nama_anak', 'nama_ibu', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
+                return ['nama_anak', 'nama_ibu', 'nik_ibu', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
             }
         }, 'template_import_peserta.xlsx');
     }
@@ -351,7 +448,121 @@ class AdminController extends Controller
 
     public function history(Request $request)
     {
-        $query = \App\Models\Patient::with(['vaccinePatients', 'village']);
+        // Check if it's an AJAX request for DataTables
+        if ($request->ajax()) {
+            $status = $request->get('status', 'jadwal');
+            $data = $this->getVaccinationData($request);
+
+            // Select the collection based on status
+            $collection = match ($status) {
+                'jadwal' => $data['active'],
+                'akan' => $data['upcoming'],
+                'sudah' => $data['done'],
+                'terlewat' => $data['overdue'],
+                default => collect([]),
+            };
+
+            return \Yajra\DataTables\Facades\DataTables::of($collection)
+                ->addIndexColumn()
+                ->addColumn('peserta', function ($row) {
+                    return '<div class="font-medium text-gray-900">' . $row->patient->name . '</div>
+                            <div class="text-xs text-gray-500 mt-1">Ibu: ' . $row->mother_name . ' <span class="mx-1">|</span> Umur: ' . $row->age . '</div>';
+                })
+                ->addColumn('vaccine_name', function ($row) {
+                    return $row->vaccine->name;
+                })
+                ->addColumn('jadwal_range', function ($row) {
+                    // For Active, Overdue
+                    if (isset($row->start_date) && isset($row->end_date)) {
+                        $start = $row->start_date->format('d M Y');
+                        $end = $row->end_date->format('d M Y');
+                        // Highlight logic could be here, but we keep it simple for now or match view
+                        if (now()->between($row->start_date, $row->end_date)) {
+                            return '<span class="text-green-600 font-bold">' . $start . '</span> - ' . $end;
+                        }
+                        if (now()->greaterThan($row->end_date)) {
+                            return '<span class="text-red-600 font-bold">' . $start . ' - ' . $end . '</span>';
+                        }
+                        return '<span class="text-gray-500">' . $start . '</span>';
+                    }
+                    // For Done
+                    if (isset($row->date)) {
+                        return \Carbon\Carbon::parse($row->date)->format('d M Y H:i');
+                    }
+                    return '-';
+                })
+                ->addColumn('village_name', function ($row) {
+                    return $row->patient->village->name ?? '-';
+                })
+                ->addColumn('status_badge', function ($row) use ($status) {
+                    if ($status === 'sudah')
+                        return '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Selesai</span>';
+                    if ($status === 'terlewat')
+                        return '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Terlewat</span>';
+                    return '-';
+                })
+                ->addColumn('action', function ($row) use ($status) {
+                    $btn = '';
+                    // Approve Button (Active, Upcoming, Overdue)
+                    if (in_array($status, ['jadwal', 'akan', 'terlewat'])) {
+                        $villageId = $row->patient->village_id;
+                        $params = sprintf(
+                            "'%s', '%s', '%s', '%s', '%s'",
+                            $row->patient->id,
+                            $row->vaccine->id,
+                            addslashes($row->patient->name),
+                            addslashes($row->vaccine->name),
+                            $villageId
+                        );
+                        $btn .= '<button onclick="openApproveModal(' . $params . ')" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    Approve
+                                </button>';
+                    }
+                    // Detail & Rollback (Done)
+                    if ($status === 'sudah') {
+                        $json = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                        $rollbackUrl = route('admin.history.rollback', $row->id);
+                        $csrf = csrf_field();
+                        $method = method_field('DELETE');
+
+                        $btn .= '<div class="flex items-center gap-2">
+                                <button onclick=\'openDetailModal(' . $json . ')\' class="px-3 py-1 bg-cyan-600 text-white rounded text-xs hover:bg-cyan-700 transition flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    Detail
+                                </button>
+                                <form action="' . $rollbackUrl . '" method="POST" onsubmit="return confirm(\'Apakah anda yakin akan mengembalikan data belum di approve?\');">
+                                    ' . $csrf . $method . '
+                                    <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                        Rollback
+                                    </button>
+                                </form>
+                                </div>';
+                    }
+                    return $btn;
+                })
+                ->rawColumns(['peserta', 'jadwal_range', 'status_badge', 'action'])
+                ->make(true);
+        }
+
+        // Standard GET request: Calculate counts only
+        // To be safe and mostly because filtering affects counts, we run the same logic.
+        $data = $this->getVaccinationData($request);
+        $villages = Village::with('posyandus')->get();
+
+        return view('dashboard.admin.history.index', [
+            'active_count' => $data['active']->count(),
+            'upcoming_count' => $data['upcoming']->count(),
+            'done_count' => $data['done']->count(),
+            'overdue_count' => $data['overdue']->count(),
+            'villages' => $villages
+        ]);
+    }
+
+    private function getVaccinationData($request)
+    {
+        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'village']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -423,9 +634,7 @@ class AdminController extends Controller
             }
         }
 
-        $villages = Village::with('posyandus')->get();
-
-        return view('dashboard.admin.history.index', compact('active', 'upcoming', 'done', 'overdue', 'villages'));
+        return compact('active', 'upcoming', 'done', 'overdue');
     }
 
     public function storeHistory(Request $request)

@@ -12,10 +12,21 @@ class Patient extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'village_id', 'name', 'mother_name', 'date_birth', 'address', 'gender', 'phone', 
-        'completed_vaccination_at', 'certificate_number',
-        'cert_kepala_upt_name', 'cert_kepala_upt_signature',
-        'cert_petugas_jurim_name', 'cert_petugas_jurim_signature',
+        'user_id',
+        'village_id',
+        'name',
+        'mother_name',
+        'mother_nik',
+        'date_birth',
+        'address',
+        'gender',
+        'phone',
+        'completed_vaccination_at',
+        'certificate_number',
+        'cert_kepala_upt_name',
+        'cert_kepala_upt_signature',
+        'cert_petugas_jurim_name',
+        'cert_petugas_jurim_signature',
         'cert_background_image'
     ];
 
