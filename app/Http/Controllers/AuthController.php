@@ -49,7 +49,7 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        $villages = Village::all();
+        $villages = Village::with('posyandus')->get();
         return view('auth.register', compact('villages'));
     }
 
@@ -61,6 +61,9 @@ class AuthController extends Controller
             'password' => 'required|confirmed|min:6',
             // Patient Data
             'mother_name' => 'required',
+            'nik' => 'nullable|string|max:16', // Add NIK validation
+            'village_id' => 'required|exists:villages,id',
+            'posyandu_id' => 'nullable|exists:posyandus,id', // Add Posyandu validation
             'date_birth' => 'required|date',
             'address' => 'required',
             'gender' => 'required|in:male,female',
@@ -78,7 +81,9 @@ class AuthController extends Controller
             Patient::create([
                 'user_id' => $user->id,
                 'village_id' => $request->village_id,
-                'name' => $request->name, // Patient name same as User name for now or add field
+                'posyandu_id' => $request->posyandu_id, // Save Posyandu ID
+                'nik' => $request->nik, // Save NIK
+                'name' => $request->name, 
                 'mother_name' => $request->mother_name,
                 'date_birth' => $request->date_birth,
                 'address' => $request->address,

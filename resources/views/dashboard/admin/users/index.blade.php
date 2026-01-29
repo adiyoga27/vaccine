@@ -177,13 +177,14 @@
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orang Tua
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK Orang
-                            Tua
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Lahir
                             / Usia</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Alamat/Dusun</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Posyandu</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Riwayat
                             Vaksin</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -414,9 +415,10 @@
                     { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false },
                     { data: 'peserta', name: 'patient.name' },
                     { data: 'orang_tua', name: 'patient.mother_name' },
-                    { data: 'nik_orang_tua', name: 'nik_orang_tua', orderable: false, searchable: false },
+                    { data: 'nik', name: 'nik', orderable: false, searchable: false },
                     { data: 'usia', name: 'patient.date_birth' },
                     { data: 'alamat', name: 'patient.village.name' },
+                    { data: 'posyandu', name: 'posyandu', orderable: false, searchable: false },
                     { data: 'riwayat', name: 'riwayat', orderable: false, searchable: false },
                     { data: 'sertifikat', name: 'sertifikat', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }

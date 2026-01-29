@@ -19,7 +19,19 @@
                     <p class="mt-2 text-gray-600">Isi data orang tua dan anak untuk memulai</p>
                 </div>
 
-                <form action="{{ route('register') }}" method="POST" x-data="{ step: 1 }" class="space-y-8">
+                <form action="{{ route('register') }}" method="POST" 
+                    x-data="{ 
+                        step: 1,
+                        villages: typeof villagesData !== 'undefined' ? villagesData : [],
+                        selectedVillage: null,
+                        availablePosyandus: [],
+                        
+                        updatePosyandus() {
+                            const village = this.villages.find(v => v.id == this.selectedVillage);
+                            this.availablePosyandus = village ? village.posyandus : [];
+                        }
+                    }" 
+                    class="space-y-8">
                     @csrf
 
                     @if ($errors->any())
@@ -111,6 +123,10 @@
                         <h3 class="text-xl font-bold text-gray-900 mb-6 border-b pb-3">Data Anak</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                             <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">NIK (Nomor Induk Kependudukan)</label>
+                                <input type="number" name="nik" class="w-full px-4 py-3 rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition border bg-gray-50 focus:bg-white" placeholder="16 digit NIK" value="{{ old('nik') }}">
+                            </div>
+                            <div class="space-y-2">
                                 <label class="block text-sm font-semibold text-gray-700">Tanggal Lahir</label>
                                 <input type="date" name="date_birth" required
                                     class="w-full px-4 py-3 rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition border bg-gray-50 focus:bg-white"
@@ -132,13 +148,23 @@
                                     placeholder="Contoh: 0812xxxxxxxx" value="{{ old('phone') }}">
                             </div>
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Dusun Domisili</label>
-                                <select name="village_id"
+                                <label class="block text-sm font-semibold text-gray-700">Desa Domisili</label>
+                                <select name="village_id" x-model="selectedVillage" @change="updatePosyandus()"
                                     class="w-full px-4 py-3 rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition border bg-gray-50 focus:bg-white">
-                                    <option value="" disabled selected>Pilih Dusun</option>
-                                    @foreach($villages as $v)
-                                        <option value="{{ $v->id }}">{{ $v->name }}</option>
-                                    @endforeach
+                                    <option value="" disabled selected>Pilih Desa</option>
+                                    <template x-for="village in villages" :key="village.id">
+                                        <option :value="village.id" x-text="village.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700">Posyandu</label>
+                                <select name="posyandu_id" :disabled="!selectedVillage"
+                                    class="w-full px-4 py-3 rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition border bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-400">
+                                    <option value="" selected>Pilih Posyandu</option>
+                                    <template x-for="posyandu in availablePosyandus" :key="posyandu.id">
+                                        <option :value="posyandu.id" x-text="posyandu.name"></option>
+                                    </template>
                                 </select>
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
@@ -174,6 +200,9 @@
             </div>
         </div>
     </div>
+    <script>
+        const villagesData = @json($villages);
+    </script>
 </body>
 
 </html>

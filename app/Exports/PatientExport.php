@@ -20,12 +20,14 @@ class PatientExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'Nama Anak',
+            'NIK',
             'Nama Ibu',
             'Email',
             'Tanggal Lahir',
             'Jenis Kelamin',
             'Alamat',
-            'Desa',
+            'Dusun',
+            'Posyandu',
             'No. HP',
         ];
     }
@@ -34,12 +36,14 @@ class PatientExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $user->patient->name ?? '-',
+            $user->patient->nik ?? '-',
             $user->patient->mother_name ?? '-',
             $user->email,
             $user->patient->date_birth ? $user->patient->date_birth->format('Y-m-d') : '-',
             $user->patient->gender == 'male' ? 'Laki-laki' : 'Perempuan',
             $user->patient->address ?? '-',
             $user->patient->village->name ?? '-',
+            $user->patient->posyandu->name ?? '-',
             $user->patient->phone ?? '-',
         ];
     }

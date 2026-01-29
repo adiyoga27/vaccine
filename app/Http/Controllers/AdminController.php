@@ -183,8 +183,8 @@ class AdminController extends Controller
                 ->addColumn('orang_tua', function ($user) {
                     return '<div class="text-sm text-gray-900">' . ($user->patient->mother_name ?? '-') . '</div>';
                 })
-                ->addColumn('nik_orang_tua', function ($user) {
-                    return '<div class="text-sm text-gray-500">' . ($user->patient->mother_nik ?? '-') . '</div>';
+                ->addColumn('nik', function ($user) {
+                    return '<div class="text-sm text-gray-500">' . ($user->patient->nik ?? '-') . '</div>';
                 })
                 ->addColumn('usia', function ($user) {
                     if (!$user->patient)
@@ -193,10 +193,13 @@ class AdminController extends Controller
                             <div class="text-xs text-gray-500">' . $user->patient->date_birth->age . ' Tahun</div>';
                 })
                 ->addColumn('alamat', function ($user) {
-                    $village = $user->patient->village->name ?? '';
+                    $village = $user->patient->village->name ?? '-';
                     $address = $user->patient->address ?? '-';
                     return '<div class="text-sm text-gray-900">' . $address . '</div>
                             <div class="text-xs text-gray-600">' . $village . '</div>';
+                })
+                ->addColumn('posyandu', function ($user) {
+                    return '<div class="text-sm text-gray-900">' . ($user->patient->posyandu->name ?? '-') . '</div>';
                 })
                 ->addColumn('riwayat', function ($user) {
                     if (!$user->patient)
@@ -249,7 +252,7 @@ class AdminController extends Controller
                         </form>
                     </div>';
                 })
-                ->rawColumns(['checkbox', 'peserta', 'orang_tua', 'nik_orang_tua', 'usia', 'alamat', 'riwayat', 'sertifikat', 'action'])
+                ->rawColumns(['checkbox', 'peserta', 'orang_tua', 'nik', 'usia', 'alamat', 'posyandu', 'riwayat', 'sertifikat', 'action'])
                 ->make(true);
         }
 
@@ -270,7 +273,7 @@ class AdminController extends Controller
 
     public function createUser()
     {
-        $villages = Village::all();
+        $villages = Village::with('posyandus')->get();
         return view('dashboard.admin.users.create', compact('villages'));
     }
 
@@ -280,11 +283,12 @@ class AdminController extends Controller
             'name' => 'required',
             // Patient Data
             'mother_name' => 'required',
-            'mother_nik' => 'nullable|string|max:16',
+            'nik' => 'nullable|string|max:16',
             'date_birth' => 'required|date',
             'address' => 'required',
             'gender' => 'required|in:male,female',
             'village_id' => 'required|exists:villages,id',
+            'posyandu_id' => 'nullable|exists:posyandus,id',
             'phone' => 'required',
         ]);
 
@@ -299,9 +303,10 @@ class AdminController extends Controller
             \App\Models\Patient::create([
                 'user_id' => $user->id,
                 'village_id' => $request->village_id,
+                'posyandu_id' => $request->posyandu_id,
                 'name' => $request->name,
                 'mother_name' => $request->mother_name,
-                'mother_nik' => $request->mother_nik,
+                'nik' => $request->nik,
                 'date_birth' => $request->date_birth,
                 'address' => $request->address,
                 'gender' => $request->gender,
@@ -315,7 +320,7 @@ class AdminController extends Controller
     public function editUser(User $user)
     {
         $user->load('patient');
-        $villages = Village::all();
+        $villages = Village::with('posyandus')->get();
 
         $completedCount = $user->patient ? $user->patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
         $totalVaccines = Vaccine::count();
@@ -330,11 +335,12 @@ class AdminController extends Controller
             'name' => 'required',
             // Patient Data
             'mother_name' => 'required',
-            'mother_nik' => 'nullable|string|max:16',
+            'nik' => 'nullable|string|max:16',
             'date_birth' => 'required|date',
             'address' => 'required',
             'gender' => 'required|in:male,female',
             'village_id' => 'required|exists:villages,id',
+            'posyandu_id' => 'nullable|exists:posyandus,id',
             'phone' => 'required',
             'certificate_number' => 'nullable|string'
         ]);
@@ -348,9 +354,10 @@ class AdminController extends Controller
                 ['user_id' => $user->id],
                 [
                     'village_id' => $request->village_id,
+                    'posyandu_id' => $request->posyandu_id,
                     'name' => $request->name,
                     'mother_name' => $request->mother_name,
-                    'mother_nik' => $request->mother_nik,
+                    'nik' => $request->nik,
                     'date_birth' => $request->date_birth,
                     'address' => $request->address,
                     'gender' => $request->gender,
@@ -429,13 +436,13 @@ class AdminController extends Controller
             public function array(): array
             {
                 return [
-                    ['Anak Contoh', 'Ibu Contoh', '1234567890123456', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Desa Contoh', '08123456789'],
+                    ['Anak Contoh', '1234567890123456', 'Ibu Contoh', '2023-01-15', 'Laki-laki', 'Jl. Contoh No. 1', 'Dusun Contoh', 'Posyandu Melati', '08123456789'],
                 ];
             }
 
             public function headings(): array
             {
-                return ['nama_anak', 'nama_ibu', 'nik_ibu', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'desa', 'no_hp'];
+                return ['nama_anak', 'nik', 'nama_ibu', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'dusun', 'posyandu', 'no_hp'];
             }
         }, 'template_import_peserta.xlsx');
     }
@@ -492,9 +499,20 @@ class AdminController extends Controller
                     return '-';
                 })
                 ->addColumn('village_name', function ($row) {
-                    return $row->patient->village->name ?? '-';
-                })
-                ->addColumn('status_badge', function ($row) use ($status) {
+                return $row->patient->village->name ?? '-';
+            })
+            ->addColumn('posyandu_name', function ($row) {
+                // Check if posyandu exists on the row (Done status) or patient (others)
+                if (isset($row->patient->posyandu)) {
+                    return $row->patient->posyandu->name ?? '-';
+                }
+                // For 'done' rows, posyandu might be directly on the record or we fallback to patient's current
+                if (isset($row->status) && $row->status == 'Selesai') {
+                     return $row->posyandu ?? '-';
+                }
+                return '-';
+            })
+            ->addColumn('status_badge', function ($row) use ($status) {
                     if ($status === 'sudah')
                         return '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Selesai</span>';
                     if ($status === 'terlewat')
@@ -550,30 +568,47 @@ class AdminController extends Controller
         // To be safe and mostly because filtering affects counts, we run the same logic.
         $data = $this->getVaccinationData($request);
         $villages = Village::with('posyandus')->get();
+        $vaccines = Vaccine::orderBy('minimum_age')->get();
 
         return view('dashboard.admin.history.index', [
             'active_count' => $data['active']->count(),
             'upcoming_count' => $data['upcoming']->count(),
             'done_count' => $data['done']->count(),
             'overdue_count' => $data['overdue']->count(),
-            'villages' => $villages
+            'villages' => $villages,
+            'vaccines' => $vaccines
         ]);
     }
 
     private function getVaccinationData($request)
     {
-        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'village']);
+        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'village', 'posyandu']);
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
                     ->orWhere('mother_name', 'like', '%' . $search . '%');
             });
         }
+        
+        if ($request->filled('village_id')) {
+            $query->where('village_id', $request->village_id);
+        }
+
+        if ($request->filled('posyandu_id')) {
+            $query->where('posyandu_id', $request->posyandu_id);
+        }
 
         $patients = $query->get();
-        $vaccines = Vaccine::orderBy('minimum_age')->get();
+        
+        $vaccineQuery = Vaccine::orderBy('minimum_age');
+        
+        if ($request->filled('vaccine_id')) {
+            $vaccineQuery->where('id', $request->vaccine_id);
+        }
+        
+        $vaccines = $vaccineQuery->get();
 
         $active = collect();
         $upcoming = collect();
@@ -584,9 +619,13 @@ class AdminController extends Controller
             $doneVaccineIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
 
             foreach ($vaccines as $vaccine) {
-                // Done
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
+                    
+                    // Filter Done Date
+                    if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date) continue;
+                    if ($request->filled('end_date') && $record->vaccinated_at > $request->end_date . ' 23:59:59') continue;
+
                     $done->push((object) [
                         'id' => $record->id,
                         'patient' => $patient,
@@ -608,6 +647,11 @@ class AdminController extends Controller
                 $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths((int) $vaccine->minimum_age);
                 $duration = (int) ($vaccine->duration_days ?? 7);
                 $endDate = $startDate->copy()->addDays($duration);
+
+                // Filter Active/Upcoming/Overdue Ranges
+                // Logic: Show if the window overlaps with the requested range
+                if ($request->filled('start_date') && $endDate < \Carbon\Carbon::parse($request->start_date)) continue;
+                if ($request->filled('end_date') && $startDate > \Carbon\Carbon::parse($request->end_date)->endOfDay()) continue;
 
                 // Current Age
                 $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';

@@ -14,6 +14,8 @@ class Patient extends Model
     protected $fillable = [
         'user_id',
         'village_id',
+        'posyandu_id',
+        'nik',
         'name',
         'mother_name',
         'mother_nik',
@@ -34,6 +36,11 @@ class Patient extends Model
         'date_birth' => 'date',
         'completed_vaccination_at' => 'datetime',
     ];
+
+    public function posyandu()
+    {
+        return $this->belongsTo(Posyandu::class);
+    }
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {

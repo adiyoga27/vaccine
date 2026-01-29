@@ -29,6 +29,11 @@ class Posyandu extends Model
         return $this->belongsTo(Village::class);
     }
 
+    public function patients()
+    {
+        return $this->hasMany(Patient::class);
+    }
+
     public function vaccineSchedules()
     {
         return $this->hasMany(VaccineSchedule::class);

@@ -1,34 +1,94 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="mb-8">
+    <div class="mb-8" x-data="{
+            filterVillage: '{{ request('village_id') }}',
+            filterPosyandu: '{{ request('posyandu_id') }}'
+        }">
         <h1 class="text-2xl font-bold text-gray-900">Riwayat & Status Vaksinasi</h1>
         <p class="text-gray-500 mt-1">Monitoring status vaksinasi seluruh peserta.</p>
 
-        <!-- Search Box -->
-        <div class="mt-6">
-            <form action="{{ route('admin.history') }}" method="GET" class="flex gap-2 max-w-lg">
-                <div class="relative flex-1">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+        <!-- Search & Filter Box -->
+        <div class="mt-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <form action="{{ route('admin.history') }}" method="GET">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pencarian</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-200 sm:text-sm transition duration-150 ease-in-out"
+                                placeholder="Cari Nama Anak atau Nama Ibu...">
+                        </div>
                     </div>
-                    <input type="text" name="search" value="{{ request('search') }}"
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-200 sm:text-sm transition duration-150 ease-in-out"
-                        placeholder="Cari Nama Anak atau Nama Ibu...">
+
+                    <!-- Vaccine Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Vaksin</label>
+                        <select name="vaccine_id"
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">Semua Vaksin</option>
+                            @foreach($vaccines as $vac)
+                                <option value="{{ $vac->id }}" {{ request('vaccine_id') == $vac->id ? 'selected' : '' }}>{{ $vac->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Village Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dusun</label>
+                        <select name="village_id" x-model="filterVillage" @change="filterPosyandu = ''"
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">Semua Dusun</option>
+                            @foreach($villages as $village)
+                                <option value="{{ $village->id }}">{{ $village->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Posyandu Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Posyandu</label>
+                        <select name="posyandu_id" x-model="filterPosyandu"
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">Semua Posyandu</option>
+                            @foreach($villages as $village)
+                                @foreach($village->posyandus as $posyandu)
+                                    <option value="{{ $posyandu->id }}" x-show="filterVillage == '{{ $village->id }}'" style="display: none;">{{ $posyandu->name }}</option>
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rentang Jadwal</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="date" name="start_date" value="{{ request('start_date') }}" class="block w-full px-2 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" placeholder="Awal">
+                            <span class="text-gray-500 font-bold">-</span>
+                            <input type="date" name="end_date" value="{{ request('end_date') }}" class="block w-full px-2 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" placeholder="Akhir">
+                        </div>
+                    </div>
                 </div>
-                <button type="submit"
-                    class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:bg-blue-700 transition duration-150 ease-in-out">
-                    Cari
-                </button>
-                @if(request('search'))
-                    <a href="{{ route('admin.history') }}"
-                        class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:bg-gray-200 transition duration-150 ease-in-out flex items-center">
-                        Reset
-                    </a>
-                @endif
+
+                <div class="mt-4 flex justify-end gap-2">
+                     @if(request('search') || request('vaccine_id') || request('village_id') || request('posyandu_id') || request('start_date') || request('end_date'))
+                        <a href="{{ route('admin.history') }}"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:bg-gray-200 transition duration-150 ease-in-out flex items-center">
+                            Reset Filter
+                        </a>
+                    @endif
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:bg-blue-700 transition duration-150 ease-in-out shadow-sm">
+                        Terapkan Filter
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -78,6 +138,7 @@
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Jadwal (Mulai - Selesai)</th>
                             <th class="px-6 py-3">Dusun</th>
+                            <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
@@ -101,6 +162,7 @@
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Rencana Jadwal</th>
                             <th class="px-6 py-3">Dusun</th>
+                            <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
                     </thead>
@@ -123,6 +185,7 @@
                             <th class="px-6 py-3">Peserta</th>
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Tanggal Vaksin</th>
+                            <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -147,6 +210,7 @@
                             <th class="px-6 py-3">Vaksin</th>
                             <th class="px-6 py-3">Seharusnya</th>
                             <th class="px-6 py-3">Dusun</th>
+                            <th class="px-6 py-3">Posyandu</th>
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Aksi</th>
                         </tr>
@@ -400,6 +464,11 @@
                     data: function (d) {
                         d.status = status;
                         d.search = '{{ request("search") }}';
+                        d.vaccine_id = '{{ request("vaccine_id") }}';
+                        d.village_id = '{{ request("village_id") }}';
+                        d.posyandu_id = '{{ request("posyandu_id") }}';
+                        d.start_date = '{{ request("start_date") }}';
+                        d.end_date = '{{ request("end_date") }}';
                     }
                 };
             }
@@ -414,6 +483,7 @@
                     { data: 'vaccine.name', name: 'vaccine.name' },
                     { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
                     { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });
@@ -428,6 +498,7 @@
                     { data: 'vaccine.name', name: 'vaccine.name' },
                     { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
                     { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });
@@ -441,6 +512,7 @@
                     { data: 'peserta', name: 'patient.name' },
                     { data: 'vaccine.name', name: 'vaccine.name' },
                     { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false }, // date
+                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
@@ -456,6 +528,7 @@
                     { data: 'vaccine.name', name: 'vaccine.name' },
                     { data: 'jadwal_range', name: 'jadwal_range', orderable: false, searchable: false },
                     { data: 'village_name', name: 'village_name', orderable: false, searchable: false },
+                    { data: 'posyandu_name', name: 'posyandu_name', orderable: false, searchable: false },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]

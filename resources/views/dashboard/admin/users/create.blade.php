@@ -14,9 +14,30 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <form action="{{ route('admin.users.store') }}" method="POST">
-            @csrf
+        <form action="{{ route('admin.users.store') }}" method="POST"
+            x-data="{
+                villages: {{ \Illuminate\Support\Js::from($villages) }},
+                selectedVillage: '{{ old('village_id') }}',
+                selectedPosyandu: '{{ old('posyandu_id') }}', // Add this to track posyandu selection
+                availablePosyandus: [],
+                
+                init() {
+                    // Ensure string type for comparison
+                    this.selectedVillage = String(this.selectedVillage);
+                    
+                    if(this.selectedVillage) {
+                        this.updatePosyandus();
+                    }
+                },
 
+                updatePosyandus() {
+                    const village = this.villages.find(v => v.id == this.selectedVillage);
+                    this.availablePosyandus = village ? village.posyandus : [];
+                }
+            }"
+        >
+            @csrf
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Akun User -->
                 <div class="md:col-span-2">
@@ -46,11 +67,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">NIK Ibu Kandung</label>
-                    <input type="text" name="mother_nik" maxlength="16"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NIK (Nomor Induk Kependudukan)</label>
+                    <input type="text" name="nik" maxlength="16"
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        value="{{ old('mother_nik') }}" placeholder="16 digit NIK">
-                    @error('mother_nik') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        value="{{ old('nik') }}" placeholder="16 digit NIK">
+                    @error('nik') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -72,14 +93,23 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Dusun</label>
-                    <select name="village_id"
+                    <select name="village_id" x-model="selectedVillage" @change="updatePosyandus()"
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                         <option value="">-- Pilih Dusun --</option>
                         @foreach($villages as $village)
-                            <option value="{{ $village->id }}" {{ old('village_id') == $village->id ? 'selected' : '' }}>
-                                {{ $village->name }}
-                            </option>
+                        <option value="{{ $village->id }}">{{ $village->name }}</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Posyandu</label>
+                    <select name="posyandu_id" x-model="selectedPosyandu" :disabled="!selectedVillage"
+                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                        <option value="">-- Pilih Posyandu --</option>
+                        <template x-for="posyandu in availablePosyandus" :key="posyandu.id">
+                            <option :value="posyandu.id" x-text="posyandu.name"></option>
+                        </template>
                     </select>
                 </div>
 
