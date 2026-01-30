@@ -1314,32 +1314,47 @@ class AdminController extends Controller
         return view('dashboard.admin.kipi.index', compact('kipiList', 'villages'));
     }
 
-    public function getVillageChartData(Request $request)
+    public function getDashboardChartData(Request $request)
     {
         $year = $request->input('year', date('Y'));
-        $month = $request->input('month', date('m'));
+        
+        // 1. Monthly Trend (Line Chart)
+        $monthlyTrend = DB::table('patients')
+            ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+            ->whereYear('created_at', $year)
+            ->whereNull('deleted_at') // Exclude soft deleted records
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+            
+        $trendLabels = [];
+        $trendData = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthName = \Carbon\Carbon::create()->month($i)->translatedFormat('F');
+            $trendLabels[] = $monthName;
+            $found = $monthlyTrend->firstWhere('month', $i);
+            $trendData[] = $found ? $found->total : 0;
+        }
 
-        // Logic: Count patients created in that month/year grouped by Village
-        // OR Count total active patients? User said "Banyak pesertanya" (Number of participants)
-        // usually implies population size. But "per month/year" implies growth or registration.
-        // Let's go with: Total Registered Patients UP TO that month/year? 
-        // Or Patients Registered IN that month/year.
-        // Let's do: Patients Registered IN that month/year.
-
-        $data = DB::table('patients')
+        // 2. Participants per Village (Bar Chart) - Filtered by Year
+        $villageData = DB::table('patients')
             ->join('villages', 'patients.village_id', '=', 'villages.id')
             ->select('villages.name', DB::raw('count(patients.id) as total'))
+            //->whereYear('patients.created_at', $year) // Optional: restrict by year or show all-time? User asked for "Banyak pesertanya". Let's show All Time for Village but maybe offer filter? 
+            // The previous requirement was "per month/year". Let's stick to the current YEAR filter for consistency with the dashboard view.
             ->whereYear('patients.created_at', $year)
-            ->whereMonth('patients.created_at', $month)
+            ->whereNull('patients.deleted_at') // Exclude soft deleted records
             ->groupBy('villages.name')
+            ->orderByDesc('total')
+            ->limit(10) // Top 10
             ->get();
 
-        $labels = $data->pluck('name');
-        $counts = $data->pluck('total');
+        $villageLabels = $villageData->pluck('name');
+        $villageCounts = $villageData->pluck('total');
 
         return response()->json([
-            'labels' => $labels,
-            'data' => $counts
+            'trend' => ['labels' => $trendLabels, 'data' => $trendData],
+            'village' => ['labels' => $villageLabels, 'data' => $villageCounts],
         ]);
     }
 

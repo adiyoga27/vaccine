@@ -1,6 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
+    <!-- Greeting Section -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Halo, {{ Auth::user()->name }} 👋</h2>
+        <p class="text-gray-500">Selamat datang kembali di Dashboard Inovasi Sehat.</p>
+    </div>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -21,29 +27,34 @@
         </div>
     </div>
 
-    <!-- Analytics Chart -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h3 class="text-lg font-bold text-gray-900">Statistik Peserta Baru per Dusun</h3>
-            
-            <div class="flex gap-2">
-                <select id="chartMonth" class="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                    @foreach(range(1, 12) as $m)
-                        <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
-                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                        </option>
-                    @endforeach
-                </select>
-                <select id="chartYear" class="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-                    @foreach(range(date('Y'), date('Y') - 4) as $y)
-                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                    @endforeach
-                </select>
+
+
+    <!-- Analytics Charts -->
+    <div class="mb-8 space-y-6">
+        <!-- Filter Header -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+            <h3 class="text-gray-700 font-bold">Filter Analisis</h3>
+            <select id="chartYear" class="border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                @foreach(range(date('Y'), date('Y') - 4) as $y)
+                    <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Row 1: Trend Line Chart -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Tren Pendaftaran Peserta Bulanan</h3>
+            <div class="relative h-72 w-full">
+                <canvas id="trendChart"></canvas>
             </div>
         </div>
-        
-        <div class="relative h-80 w-full">
-            <canvas id="villageChart"></canvas>
+
+        <!-- Row 2: Village Bar Chart (Full Width) -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Peserta per Dusun (Top 10)</h3>
+            <div class="relative h-72 w-full">
+                <canvas id="villageChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -51,60 +62,85 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('villageChart').getContext('2d');
-            let villageChart;
+            let trendChart, villageChart;
 
             function loadChartData() {
-                const month = document.getElementById('chartMonth').value;
                 const year = document.getElementById('chartYear').value;
 
-                fetch(`{{ route('admin.chart.data') }}?month=${month}&year=${year}`)
+                fetch(`{{ route('admin.chart.data') }}?year=${year}`)
                     .then(response => response.json())
                     .then(data => {
-                        if (villageChart) {
-                            villageChart.destroy();
-                        }
-
-                        villageChart = new Chart(ctx, {
-                            type: 'bar', // Type of chart
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: 'Jumlah Peserta Baru',
-                                    data: data.data,
-                                    backgroundColor: 'rgba(59, 130, 246, 0.6)', // Blue-500
-                                    borderColor: 'rgba(59, 130, 246, 1)',
-                                    borderWidth: 1,
-                                    borderRadius: 4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            stepSize: 1
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    }
-                                }
-                            }
-                        });
+                        updateTrendChart(data.trend);
+                        updateVillageChart(data.village);
                     })
                     .catch(error => console.error('Error loading chart data:', error));
+            }
+
+            function updateTrendChart(data) {
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                if (trendChart) trendChart.destroy();
+
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Jumlah Peserta',
+                            data: data.data,
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#3B82F6',
+                            pointHoverBackgroundColor: '#3B82F6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+            }
+
+            function updateVillageChart(data) {
+                const ctx = document.getElementById('villageChart').getContext('2d');
+                if (villageChart) villageChart.destroy();
+
+                villageChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Jumlah Peserta',
+                            data: data.data,
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#10B981',
+                            pointHoverBackgroundColor: '#10B981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
             }
 
             // Initial Load
             loadChartData();
 
             // Event Listeners
-            document.getElementById('chartMonth').addEventListener('change', loadChartData);
             document.getElementById('chartYear').addEventListener('change', loadChartData);
         });
     </script>

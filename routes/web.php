@@ -295,7 +295,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         return view('dashboard.admin.index', compact('stats', 'requests'));
     })->name('admin.dashboard');
 
-    Route::get('/dashboard/chart-data', [\App\Http\Controllers\AdminController::class, 'getVillageChartData'])->name('admin.chart.data');
+    Route::get('/dashboard/chart-data', [\App\Http\Controllers\AdminController::class, 'getDashboardChartData'])->name('admin.chart.data');
 
     // Villages
     Route::get('/villages', [\App\Http\Controllers\AdminController::class, 'villages'])->name('admin.villages');
