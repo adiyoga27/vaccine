@@ -1314,6 +1314,36 @@ class AdminController extends Controller
         return view('dashboard.admin.kipi.index', compact('kipiList', 'villages'));
     }
 
+    public function getVillageChartData(Request $request)
+    {
+        $year = $request->input('year', date('Y'));
+        $month = $request->input('month', date('m'));
+
+        // Logic: Count patients created in that month/year grouped by Village
+        // OR Count total active patients? User said "Banyak pesertanya" (Number of participants)
+        // usually implies population size. But "per month/year" implies growth or registration.
+        // Let's go with: Total Registered Patients UP TO that month/year? 
+        // Or Patients Registered IN that month/year.
+        // Let's do: Patients Registered IN that month/year.
+
+        $data = DB::table('patients')
+            ->join('villages', 'patients.village_id', '=', 'villages.id')
+            ->select('villages.name', DB::raw('count(patients.id) as total'))
+            ->whereYear('patients.created_at', $year)
+            ->whereMonth('patients.created_at', $month)
+            ->groupBy('villages.name')
+            ->get();
+
+        $labels = $data->pluck('name');
+        $counts = $data->pluck('total');
+
+        return response()->json([
+            'labels' => $labels,
+            'data' => $counts
+        ]);
+    }
+
+
     public function exportKipiExcel(Request $request)
     {
         $filename = 'riwayat_kipi_' . date('Y-m-d_His') . '.xlsx';
