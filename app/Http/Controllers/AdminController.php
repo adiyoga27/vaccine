@@ -1234,5 +1234,90 @@ class AdminController extends Controller
         $admin->delete();
         return back()->with('success', 'Administrator berhasil dihapus');
     }
+
+
+
+
+
+    public function kipi(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = \App\Models\VaccinePatient::with(['patient', 'vaccine', 'village', 'posyandu'])
+                ->whereNotNull('kipi')
+                ->where('kipi', '!=', '[]')
+                ->where('kipi', '!=', 'null'); // Safety check
+
+            // Filter: Date Range
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $query->whereBetween('vaccinated_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+            }
+
+            // Filter: KIPI Type
+            if ($request->filled('kipi_filter')) {
+                $query->whereJsonContains('kipi', $request->kipi_filter);
+            }
+
+            // Filter: Village
+            if ($request->filled('village_id')) {
+                $query->where('village_id', $request->village_id);
+            }
+
+            return \Yajra\DataTables\Facades\DataTables::of($query)
+                ->addColumn('date', function ($row) {
+                    return $row->vaccinated_at ? $row->vaccinated_at->format('d M Y') : '-';
+                })
+                ->addColumn('patient_name', function ($row) {
+                    return $row->patient->name . '<br><span class="text-xs text-gray-500">Ibu: ' . $row->patient->mother_name . '</span>';
+                })
+                ->addColumn('vaccine', function ($row) {
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">' . $row->vaccine->name . '</span>';
+                })
+                ->addColumn('kipi_tags', function ($row) {
+                    $tags = '';
+                    if (is_array($row->kipi)) { // Since we cast it
+                        foreach ($row->kipi as $k) {
+                            $tags .= '<span class="px-2 py-0.5 mr-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">' . $k . '</span>';
+                        }
+                    }
+                    return $tags;
+                })
+                ->addColumn('location', function ($row) {
+                    return ($row->village->name ?? '-') . '<br><span class="text-xs text-gray-500">' . ($row->posyandu->name ?? '-') . '</span>';
+                })
+                ->rawColumns(['patient_name', 'vaccine', 'kipi_tags', 'location'])
+                ->make(true);
+        }
+
+        // Get Unique KIPI values for filter
+        $allKipi = \App\Models\VaccinePatient::whereNotNull('kipi')->pluck('kipi');
+        $kipiList = [];
+        foreach ($allKipi as $kArray) {
+            if (is_array($kArray)) {
+                foreach ($kArray as $k) {
+                    if (!in_array($k, $kipiList)) {
+                        $kipiList[] = $k;
+                    }
+                }
+            } else if (is_string($kArray)) {
+                 $decoded = json_decode($kArray);
+                 if (is_array($decoded)) {
+                     foreach ($decoded as $k) {
+                        if (!in_array($k, $kipiList)) $kipiList[] = $k;
+                     }
+                 }
+            }
+        }
+        sort($kipiList);
+
+        $villages = \App\Models\Village::all();
+
+        return view('dashboard.admin.kipi.index', compact('kipiList', 'villages'));
+    }
+
+    public function exportKipiExcel(Request $request)
+    {
+        $filename = 'riwayat_kipi_' . date('Y-m-d_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KipiExport($request), $filename);
+    }
 }
 

@@ -17,6 +17,7 @@ class VaccinePatient extends Model
         'request_date' => 'date',
         'vaccinated_at' => 'datetime',
         'schedule_at' => 'datetime',
+        'kipi' => 'array',
     ];
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions

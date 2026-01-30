@@ -345,7 +345,7 @@
     <script>
         function quickLoginModal() {
             return {
-                searchMode: 'nik',
+                searchMode: 'date',
                 nik: '',
                 dateBirth: '',
                 childName: '',

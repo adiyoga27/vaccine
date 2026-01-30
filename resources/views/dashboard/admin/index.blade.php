@@ -22,6 +22,7 @@
     </div>
 
     <!-- Main Section: Approval Queue -->
+    <!-- Main Section: Approval Queue (HIDDEN)
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
             <h3 class="text-lg font-bold text-gray-900">Permintaan Vaksinasi Masuk</h3>
@@ -95,4 +96,5 @@
             </div>
         @endif
     </div>
+    -->
 @endsection

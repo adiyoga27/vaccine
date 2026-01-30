@@ -343,6 +343,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/history/export-excel/{status}', [\App\Http\Controllers\AdminController::class, 'exportHistoryExcel'])->name('admin.history.export-excel');
     Route::get('/history/export-pdf/{status}', [\App\Http\Controllers\AdminController::class, 'exportHistoryPdf'])->name('admin.history.export-pdf');
 
+    // Riwayat KIPI
+    Route::get('/kipi', [\App\Http\Controllers\AdminController::class, 'kipi'])->name('admin.kipi');
+    Route::get('/kipi/export', [\App\Http\Controllers\AdminController::class, 'exportKipiExcel'])->name('admin.kipi.export');
+
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
 
     // Notifications
