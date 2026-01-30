@@ -16,64 +16,64 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nama Dusun</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nama Posyandu</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Total Peserta</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($villages as $village)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $village->name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
-                            @if($village->posyandus->count() > 0)
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($village->posyandus as $posyandu)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {{ $posyandu->name }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button onclick="openPatientsModal({{ $village->id }}, '{{ $village->name }}')"
-                                class="text-blue-600 hover:text-blue-800 hover:underline font-medium focus:outline-none">
-                                {{ $village->patients_count }} Peserta
-                            </button>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end gap-2">
-                                <button onclick='openPosyanduModal(@json($village))'
-                                    class="text-green-600 hover:text-green-900 text-sm bg-green-50 px-3 py-1 rounded-md border border-green-200">
-                                    Kelola Posyandu
-                                </button>
-                                <button onclick="openEditModal({{ $village->id }}, '{{ $village->name }}')"
-                                    class="text-indigo-600 hover:text-indigo-900 border border-indigo-200 px-3 py-1 rounded-md hover:bg-indigo-50">Edit</button>
-                                <form action="{{ route('admin.villages.destroy', $village->id) }}" method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus?');" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="text-red-600 hover:text-red-900 border border-red-200 px-3 py-1 rounded-md hover:bg-red-50">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
+        <div class="p-4">
+            <table id="dusunTable" class="w-full text-sm text-left" style="width: 100%">
+                <thead class="bg-gray-50 text-gray-500 font-medium">
+                    <tr>
+                        <th class="px-6 py-3">#</th>
+                        <th class="px-6 py-3">Nama Dusun</th>
+                        <th class="px-6 py-3">Nama Posyandu</th>
+                        <th class="px-6 py-3">Total Peserta</th>
+                        <th class="px-6 py-3 text-right">Aksi</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($villages as $village)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $loop->iteration }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $village->name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                @if($village->posyandus->count() > 0)
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($village->posyandus as $posyandu)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ $posyandu->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <button onclick="openPatientsModal({{ $village->id }}, '{{ $village->name }}')"
+                                    class="text-blue-600 hover:text-blue-800 hover:underline font-medium focus:outline-none">
+                                    {{ $village->patients_count }} Peserta
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex justify-end gap-2">
+                                    <button onclick='openPosyanduModal(@json($village))'
+                                        class="text-green-600 hover:text-green-900 text-sm bg-green-50 px-3 py-1 rounded-md border border-green-200">
+                                        Kelola Posyandu
+                                    </button>
+                                    <button onclick="openEditModal({{ $village->id }}, '{{ $village->name }}')"
+                                        class="text-indigo-600 hover:text-indigo-900 border border-indigo-200 px-3 py-1 rounded-md hover:bg-indigo-50">Edit</button>
+                                    <form action="{{ route('admin.villages.destroy', $village->id) }}" method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-red-600 hover:text-red-900 border border-red-200 px-3 py-1 rounded-md hover:bg-red-50">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Create Modal -->
@@ -231,7 +231,56 @@
         </div>
     </div>
 
+    <!-- jQuery & DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: 0.375rem;
+            padding: 0.25rem 2rem 0.25rem 0.5rem;
+            border: 1px solid #d1d5db;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border: 1px solid #d1d5db;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+        }
+    </style>
+
     <script>
+        $(document).ready(function() {
+            $('#dusunTable').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollCollapse: true,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+                },
+                columnDefs: [
+                    { orderable: false, targets: [2, 4] } // Disable sorting on Posyandu and Aksi columns
+                ]
+            });
+        });
+
         function openEditModal(id, name) {
             document.getElementById('editForm').action = '/admin/villages/' + id;
             document.getElementById('edit_name').value = name;
