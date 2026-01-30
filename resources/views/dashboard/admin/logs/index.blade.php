@@ -7,7 +7,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
+    <table id="logsTable" class="min-w-full divide-y divide-gray-200" style="width: 100%">
         <thead class="bg-gray-50">
             <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
@@ -38,8 +38,57 @@
             @endforeach
         </tbody>
     </table>
-    <div class="px-6 py-4 border-t border-gray-100">
-        {{ $logs->links() }}
-    </div>
+    <!-- Pagination removed for DataTables -->
 </div>
+
+<!-- DataTables & jQuery -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+<style>
+    .dataTables_wrapper .dataTables_length select {
+        border-radius: 0.375rem;
+        padding: 0.25rem 2rem 0.25rem 0.5rem;
+        border: 1px solid #d1d5db;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border-radius: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        margin-left: 0.5rem;
+        border: 1px solid #d1d5db;
+    }
+
+    table.dataTable.no-footer {
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1rem;
+        padding: 1rem 1.5rem 0 1.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1rem;
+        padding: 0 1.5rem 1rem 1.5rem;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#logsTable').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollCollapse: true,
+            order: [[ 3, "desc" ]], // Default sort by Waktu (index 3) desc
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            }
+        });
+    });
+</script>
 @endsection

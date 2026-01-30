@@ -107,88 +107,118 @@ class AuthController extends Controller
 
     public function quickLogin(Request $request)
     {
-        $request->validate([
-            'date_birth' => 'required|date',
-            'child_name' => 'required|string|min:2',
-        ]);
+        $searchMode = $request->input('search_mode', 'date');
 
-        // Find patients with matching date of birth
-        $patients = Patient::with('village')
-            ->whereDate('date_birth', $request->date_birth)
-            ->get();
+        if ($searchMode === 'nik') {
+            $request->validate([
+                'nik' => 'required|numeric|digits:16',
+            ]);
 
-        \Illuminate\Support\Facades\Log::info('QuickLogin Debug:', [
-            'date_birth' => $request->date_birth,
-            'found_count' => $patients->count(),
-            'search_term' => $request->child_name,
-            'patient_names' => $patients->pluck('name')->toArray()
-        ]);
+            $patient = Patient::with('village')->where('nik', $request->nik)->first();
 
-        if ($patients->isEmpty()) {
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Data tidak ditemukan. Pastikan tanggal lahir benar.']);
+            if (!$patient) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Data tidak ditemukan dengan NIK tersebut.']);
+                }
+                return back()->with('quick_login_error', 'Data tidak ditemukan dengan NIK tersebut.');
             }
-            return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
-        }
 
-        // Filter by child name (Improved Fuzzy Search)
-        $searchTerm = strtolower(trim($request->child_name));
-        $searchWords = explode(' ', $searchTerm);
-        $searchNoSpaces = str_replace(' ', '', $searchTerm);
-        
-        $matchedPatients = $patients->filter(function ($patient) use ($searchWords, $searchNoSpaces) {
-            $patientName = strtolower($patient->name);
-            $patientNameNoSpaces = str_replace(' ', '', $patientName);
+            // Direct login for NIK matched found (Single result guaranteed by unique NIK ideally, or first match)
+             if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Selamat datang, ' . $patient->name . '!',
+                    'redirect' => $patient->getAccessUrl()
+                ]);
+            }
+             // Should not happen for this use case usually if JS handles redirection
+            return redirect($patient->getAccessUrl());
 
-            // Check 1: ANY word from search term exists in patient name
-            foreach ($searchWords as $word) {
-                if (str_contains($patientName, $word)) {
+        } else {
+            // Existing Date + Name Search Logic
+            $request->validate([
+                'date_birth' => 'required|date',
+                'child_name' => 'required|string|min:2',
+            ]);
+
+            // Find patients with matching date of birth
+            $patients = Patient::with('village')
+                ->whereDate('date_birth', $request->date_birth)
+                ->get();
+
+            \Illuminate\Support\Facades\Log::info('QuickLogin Debug:', [
+                'date_birth' => $request->date_birth,
+                'found_count' => $patients->count(),
+                'search_term' => $request->child_name,
+                'patient_names' => $patients->pluck('name')->toArray()
+            ]);
+
+            if ($patients->isEmpty()) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Data tidak ditemukan. Pastikan tanggal lahir benar.']);
+                }
+                return back()->with('quick_login_error', 'Data tidak ditemukan. Pastikan tanggal lahir benar.');
+            }
+
+            // Filter by child name (Improved Fuzzy Search)
+            $searchTerm = strtolower(trim($request->child_name));
+            $searchWords = explode(' ', $searchTerm);
+            $searchNoSpaces = str_replace(' ', '', $searchTerm);
+            
+            $matchedPatients = $patients->filter(function ($patient) use ($searchWords, $searchNoSpaces) {
+                $patientName = strtolower($patient->name);
+                $patientNameNoSpaces = str_replace(' ', '', $patientName);
+
+                // Check 1: ANY word from search term exists in patient name
+                foreach ($searchWords as $word) {
+                    if (str_contains($patientName, $word)) {
+                        return true;
+                    }
+                }
+
+                // Check 2: Match if spaces are removed (e.g. "Su Artini" == "Suartini")
+                if (str_contains($patientNameNoSpaces, $searchNoSpaces) || str_contains($searchNoSpaces, $patientNameNoSpaces)) {
                     return true;
                 }
+
+                return false;
+            });
+
+            if ($matchedPatients->isEmpty()) {
+                // LOGGING FOR DEBUGGING
+                 \Illuminate\Support\Facades\Log::info('QuickLogin Failed Search:', [
+                    'date_birth' => $request->date_birth,
+                    'search_term' => $request->child_name,
+                    'available_names_for_dob' => $patients->pluck('name')->toArray()
+                ]);
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Nama Anak tidak cocok. Silahkan coba lagi.']);
+                }
+                return back()->with('quick_login_error', 'Nama Anak tidak cocok. Silahkan coba lagi.');
             }
 
-            // Check 2: Match if spaces are removed (e.g. "Su Artini" == "Suartini")
-            if (str_contains($patientNameNoSpaces, $searchNoSpaces) || str_contains($searchNoSpaces, $patientNameNoSpaces)) {
-                return true;
-            }
-
-            return false;
-        });
-
-        if ($matchedPatients->isEmpty()) {
-            // LOGGING FOR DEBUGGING
-             \Illuminate\Support\Facades\Log::info('QuickLogin Failed Search:', [
-                'date_birth' => $request->date_birth,
-                'search_term' => $request->child_name,
-                'available_names_for_dob' => $patients->pluck('name')->toArray()
-            ]);
-
+            // Return the list of matched patients for selection
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Nama Anak tidak cocok. Silahkan coba lagi.']);
+                return response()->json([
+                    'success' => true,
+                    'multiple' => true, // Always show selection modal even for 1 result
+                    'message' => 'Ditemukan ' . $matchedPatients->count() . ' data. Silahkan pilih:',
+                    'patients' => $matchedPatients->map(function ($patient) {
+                        return [
+                            'id' => $patient->id,
+                            'name' => $patient->name,
+                            'mother_name' => $patient->mother_name,
+                            'date_birth' => $patient->date_birth->format('d M Y'),
+                            'village' => $patient->village->name ?? '-',
+                        ];
+                    })->values()
+                ]);
             }
-            return back()->with('quick_login_error', 'Nama Anak tidak cocok. Silahkan coba lagi.');
-        }
 
-        // Return the list of matched patients for selection
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'multiple' => true, // Always show selection modal even for 1 result
-                'message' => 'Ditemukan ' . $matchedPatients->count() . ' data. Silahkan pilih:',
-                'patients' => $matchedPatients->map(function ($patient) {
-                    return [
-                        'id' => $patient->id,
-                        'name' => $patient->name,
-                        'mother_name' => $patient->mother_name,
-                        'date_birth' => $patient->date_birth->format('d M Y'),
-                        'village' => $patient->village->name ?? '-',
-                    ];
-                })->values()
-            ]);
+            // Fallback for non-AJAX
+            return back()->with('quick_login_error', 'Silahkan gunakan form pencarian.');
         }
-
-        // Fallback for non-AJAX
-        return back()->with('quick_login_error', 'Silahkan gunakan form pencarian.');
     }
 
     public function confirmQuickLogin(Request $request)

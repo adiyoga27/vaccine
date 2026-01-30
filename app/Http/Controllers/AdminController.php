@@ -449,7 +449,7 @@ class AdminController extends Controller
 
     public function logs()
     {
-        $logs = Activity::latest()->paginate(20);
+        $logs = Activity::latest()->get();
         return view('dashboard.admin.logs.index', compact('logs'));
     }
 
