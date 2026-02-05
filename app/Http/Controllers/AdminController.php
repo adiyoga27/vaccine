@@ -1390,5 +1390,61 @@ class AdminController extends Controller
         $filename = 'riwayat_kipi_' . date('Y-m-d_His') . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KipiExport($request), $filename);
     }
+
+    public function immunizationReport(Request $request)
+    {
+        $month = (int) $request->input('month', date('n'));
+        $year = (int) $request->input('year', date('Y'));
+        $search = $request->input('search');
+
+        // Get All Vaccines for columns
+        $vaccines = Vaccine::orderBy('minimum_age')->get();
+
+        // Get Villages
+        $villages = Village::query();
+        if ($search) {
+            $villages->where('name', 'like', "%{$search}%");
+        }
+        $villages = $villages->get();
+
+        // Aggregate Data
+        // We want to count VaccinePatient where status = 'selesai'
+        // Group by village_id, vaccine_id, patient.gender
+
+        $data = [];
+
+        foreach ($villages as $village) {
+            // Get completed vaccinations for this village in the selected month/year
+            $records = \App\Models\VaccinePatient::where('village_id', $village->id)
+                ->where('status', 'selesai')
+                ->whereMonth('vaccinated_at', $month)
+                ->whereYear('vaccinated_at', $year)
+                ->with('patient') // Need patient for gender
+                ->get();
+
+            $villageData = [];
+            foreach ($vaccines as $vaccine) {
+                // Filter records for this vaccine
+                $vaccineRecords = $records->where('vaccine_id', $vaccine->id);
+
+                $male = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'male')->count();
+                $female = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'female')->count();
+
+                $villageData[$vaccine->id] = [
+                    'L' => $male,
+                    'P' => $female
+                ];
+            }
+            $data[$village->id] = $villageData;
+        }
+
+        return view('dashboard.admin.reports.immunization', compact('villages', 'vaccines', 'data', 'month', 'year'));
+    }
+
+    public function exportImmunization(Request $request)
+    {
+        $filename = 'laporan_capaian_vaksinasi_' . date('Y-m-d_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ImmunizationExport($request), $filename);
+    }
 }
 
