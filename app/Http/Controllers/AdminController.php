@@ -458,7 +458,7 @@ class AdminController extends Controller
         // Check if it's an AJAX request for DataTables
         if ($request->ajax()) {
             $status = $request->get('status', 'jadwal');
-            
+
             // Pass status to only fetch the data we need
             $data = $this->getVaccinationData($request, $status);
 
@@ -470,7 +470,7 @@ class AdminController extends Controller
                 'terlewat' => 'overdue',
                 'schedule' => 'schedule'
             ];
-            
+
             $internalStatus = $statusMap[$status] ?? $status;
             $collection = $data[$internalStatus] ?? collect([]);
 
@@ -486,7 +486,7 @@ class AdminController extends Controller
                 ->addColumn('jadwal_range', function ($row) {
                     // For Schedule
                     if (isset($row->schedule_at)) {
-                         return '<span class="text-blue-600 font-bold">' . $row->schedule_at->format('d M Y') . '</span>';
+                        return '<span class="text-blue-600 font-bold">' . $row->schedule_at->format('d M Y') . '</span>';
                     }
                     // For Active, Overdue
                     if (isset($row->start_date) && isset($row->end_date)) {
@@ -508,20 +508,20 @@ class AdminController extends Controller
                     return '-';
                 })
                 ->addColumn('village_name', function ($row) {
-                return $row->patient->village->name ?? '-';
-            })
-            ->addColumn('posyandu_name', function ($row) {
-                // Check if posyandu exists on the row (Done status) or patient (others)
-                if (isset($row->patient->posyandu)) {
-                    return $row->patient->posyandu->name ?? '-';
-                }
-                // For 'done' rows, posyandu might be directly on the record or we fallback to patient's current
-                if (isset($row->status) && $row->status == 'Selesai') {
-                     return $row->posyandu ?? '-';
-                }
-                return '-';
-            })
-            ->addColumn('status_badge', function ($row) use ($status) {
+                    return $row->patient->village->name ?? '-';
+                })
+                ->addColumn('posyandu_name', function ($row) {
+                    // Check if posyandu exists on the row (Done status) or patient (others)
+                    if (isset($row->patient->posyandu)) {
+                        return $row->patient->posyandu->name ?? '-';
+                    }
+                    // For 'done' rows, posyandu might be directly on the record or we fallback to patient's current
+                    if (isset($row->status) && $row->status == 'Selesai') {
+                        return $row->posyandu ?? '-';
+                    }
+                    return '-';
+                })
+                ->addColumn('status_badge', function ($row) use ($status) {
                     if ($status === 'sudah')
                         return '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Selesai</span>';
                     if ($status === 'terlewat')
@@ -529,10 +529,12 @@ class AdminController extends Controller
                     return '-';
                 })
                 ->addColumn('kipi', function ($row) {
-                    if (empty($row->kipi)) return '-';
+                    if (empty($row->kipi))
+                        return '-';
                     $kipi = json_decode($row->kipi, true);
-                    if (!is_array($kipi)) return '-';
-                    
+                    if (!is_array($kipi))
+                        return '-';
+
                     $badges = '';
                     foreach ($kipi as $k) {
                         $badges .= '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs mr-1 mb-1 inline-block">' . htmlspecialchars($k) . '</span>';
@@ -559,7 +561,7 @@ class AdminController extends Controller
                     }
                     // Schedule Button (Jadwal, Akan, Terlewat)
                     if (in_array($status, ['jadwal', 'akan', 'terlewat'])) {
-                         $params = sprintf(
+                        $params = sprintf(
                             "'%s', '%s', '%s', '%s'",
                             $row->patient->id,
                             $row->vaccine->id,
@@ -571,13 +573,29 @@ class AdminController extends Controller
                                     Schedule
                                 </button>';
                     }
-                    
+
+                    // Rollback for Schedule
+                    if ($status === 'schedule') {
+                        $msg = 'Apakah Anda yakin ingin membatalkan jadwal ini?';
+                        $rollbackUrl = route('admin.history.rollback', $row->id);
+                        $csrf = csrf_field();
+                        $method = method_field('DELETE');
+
+                        $btn .= '<form action="' . $rollbackUrl . '" method="POST" onsubmit="return confirm(\'' . $msg . '\');" class="inline-block">
+                                    ' . $csrf . $method . '
+                                    <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Rollback
+                                    </button>
+                                </form>';
+                    }
+
                     // Detail & Rollback (Done)
                     if ($status === 'sudah') {
                         $json = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                         // Encode kipi explicitly to avoid issues if needed, but row has it.
                         // We will pass the full row to openKipiModal as well.
-                        
+    
                         $rollbackUrl = route('admin.history.rollback', $row->id);
                         $csrf = csrf_field();
                         $method = method_field('DELETE');
@@ -626,7 +644,7 @@ class AdminController extends Controller
     public function exportHistoryExcel(Request $request, $status)
     {
         $data = $this->getVaccinationData($request);
-        
+
         $collection = match ($status) {
             'jadwal' => $data['active'],
             'akan' => $data['upcoming'],
@@ -637,7 +655,7 @@ class AdminController extends Controller
         };
 
         $filename = 'riwayat_vaksin_' . $status . '_' . date('Y-m-d_His') . '.xlsx';
-        
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\HistoryExport($collection, $status),
             $filename
@@ -647,7 +665,7 @@ class AdminController extends Controller
     public function exportHistoryPdf(Request $request, $status)
     {
         $data = $this->getVaccinationData($request);
-        
+
         $collection = match ($status) {
             'jadwal' => $data['active'],
             'akan' => $data['upcoming'],
@@ -672,7 +690,7 @@ class AdminController extends Controller
         ])->setPaper('a4', 'landscape');
 
         $filename = 'riwayat_vaksin_' . $status . '_' . date('Y-m-d_His') . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 
@@ -688,7 +706,7 @@ class AdminController extends Controller
                     ->orWhere('mother_name', 'like', '%' . $search . '%');
             });
         }
-        
+
         if ($request->filled('village_id')) {
             $query->where('village_id', $request->village_id);
         }
@@ -698,24 +716,24 @@ class AdminController extends Controller
         }
 
         $patients = $query->get();
-        
+
         $vaccineQuery = Vaccine::orderBy('minimum_age');
-        
+
         if ($request->filled('vaccine_id')) {
             $vaccineQuery->where('id', $request->vaccine_id);
         }
-        
+
         $vaccines = $vaccineQuery->get();
 
         // Map frontend status names to internal names
         $statusMap = [
             'jadwal' => 'active',
-            'akan' => 'upcoming', 
+            'akan' => 'upcoming',
             'sudah' => 'done',
             'terlewat' => 'overdue',
             'schedule' => 'schedule'
         ];
-        
+
         $internalStatus = $status ? ($statusMap[$status] ?? $status) : null;
 
         // Initialize collections based on what's needed (using INTERNAL names)
@@ -738,10 +756,11 @@ class AdminController extends Controller
                         ->where('status', '!=', 'selesai')
                         ->filter(fn($r) => $r->schedule_at !== null)
                         ->first();
-                    
+
                     if ($scheduledRecord) {
                         if (!$status || $internalStatus === 'schedule') {
                             $result['schedule']->push((object) [
+                                'id' => $scheduledRecord->id,
                                 'patient' => $patient,
                                 'vaccine' => $vaccine,
                                 'schedule_at' => $scheduledRecord->schedule_at,
@@ -749,7 +768,8 @@ class AdminController extends Controller
                                 'mother_name' => $patient->mother_name
                             ]);
                         }
-                        if ($status === 'schedule') continue; // Only skip if specifically requesting schedule
+                        if ($status === 'schedule')
+                            continue; // Only skip if specifically requesting schedule
                     }
                 }
 
@@ -757,10 +777,12 @@ class AdminController extends Controller
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     if (!$status || $internalStatus === 'done') {
                         $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
-                        
+
                         // Filter Done Date
-                        if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date) continue;
-                        if ($request->filled('end_date') && $record->vaccinated_at > $request->end_date . ' 23:59:59') continue;
+                        if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date)
+                            continue;
+                        if ($request->filled('end_date') && $record->vaccinated_at > $request->end_date . ' 23:59:59')
+                            continue;
 
                         $result['done']->push((object) [
                             'id' => $record->id,
@@ -788,8 +810,9 @@ class AdminController extends Controller
                         ->where('status', '!=', 'selesai')
                         ->filter(fn($r) => $r->schedule_at !== null)
                         ->isNotEmpty();
-                    
-                    if ($isScheduled) continue;
+
+                    if ($isScheduled)
+                        continue;
 
                     // Calculate Window
                     $startDate = \Carbon\Carbon::parse($patient->date_birth)->addMonths((int) $vaccine->minimum_age);
@@ -797,8 +820,10 @@ class AdminController extends Controller
                     $endDate = $startDate->copy()->addDays($duration);
 
                     // Filter Active/Upcoming/Overdue Ranges
-                    if ($request->filled('start_date') && $endDate < \Carbon\Carbon::parse($request->start_date)) continue;
-                    if ($request->filled('end_date') && $startDate > \Carbon\Carbon::parse($request->end_date)->endOfDay()) continue;
+                    if ($request->filled('start_date') && $endDate < \Carbon\Carbon::parse($request->start_date))
+                        continue;
+                    if ($request->filled('end_date') && $startDate > \Carbon\Carbon::parse($request->end_date)->endOfDay())
+                        continue;
 
                     // Current Age
                     $currentAge = number_format(\Carbon\Carbon::parse($patient->date_birth)->floatDiffInMonths(now()), 1) . ' Bulan';
@@ -1299,12 +1324,13 @@ class AdminController extends Controller
                     }
                 }
             } else if (is_string($kArray)) {
-                 $decoded = json_decode($kArray);
-                 if (is_array($decoded)) {
-                     foreach ($decoded as $k) {
-                        if (!in_array($k, $kipiList)) $kipiList[] = $k;
-                     }
-                 }
+                $decoded = json_decode($kArray);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $k) {
+                        if (!in_array($k, $kipiList))
+                            $kipiList[] = $k;
+                    }
+                }
             }
         }
         sort($kipiList);
@@ -1317,7 +1343,7 @@ class AdminController extends Controller
     public function getDashboardChartData(Request $request)
     {
         $year = $request->input('year', date('Y'));
-        
+
         // 1. Monthly Trend (Line Chart)
         $monthlyTrend = DB::table('patients')
             ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
@@ -1326,7 +1352,7 @@ class AdminController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-            
+
         $trendLabels = [];
         $trendData = [];
         for ($i = 1; $i <= 12; $i++) {
