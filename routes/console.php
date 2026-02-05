@@ -8,4 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule Vaccine Notification
-\Illuminate\Support\Facades\Schedule::command('vaccine:send-daily-reminders')->dailyAt('08:00');
+\Illuminate\Support\Facades\Schedule::command('vaccine:send-daily-reminders')->dailyAt('21:00');
