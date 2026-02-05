@@ -379,6 +379,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::delete('/admins/{admin}', [\App\Http\Controllers\AdminController::class, 'destroyAdminUser'])->name('admin.admins.destroy');
 
     // Requests Approval
+    Route::post('/request/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveRequest'])->name('admin.approve');
     Route::delete('/request/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectRequest'])->name('admin.reject');
 
     // Reports
