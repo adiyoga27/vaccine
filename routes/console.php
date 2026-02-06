@@ -8,4 +8,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule Vaccine Notification
-\Illuminate\Support\Facades\Schedule::command('vaccine:send-daily-reminders')->dailyAt('11:25');
+\Illuminate\Support\Facades\Schedule::command('vaccine:send-daily-reminders')
+    ->dailyAt('11:30')
+    ->timezone('Asia/Makassar');
