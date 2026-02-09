@@ -402,6 +402,26 @@
             window.dispatchEvent(event);
         };
 
+        // Dropdown toggle for action menu
+        window.toggleDropdown = function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Close all other dropdowns first
+            document.querySelectorAll('[id^="dd-"]').forEach(function (dd) {
+                if (dd.id !== id) dd.classList.add('hidden');
+            });
+            el.classList.toggle('hidden');
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('[id^="dd-"]') && !e.target.closest('button[onclick*="toggleDropdown"]')) {
+                document.querySelectorAll('[id^="dd-"]').forEach(function (dd) {
+                    dd.classList.add('hidden');
+                });
+            }
+        });
+
         $(document).ready(function () {
             var table = $('#usersTable').DataTable({
                 processing: true,
