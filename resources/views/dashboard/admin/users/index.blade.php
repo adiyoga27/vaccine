@@ -443,10 +443,10 @@
                     { data: 'sertifikat', name: 'sertifikat', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
-                order: [[1, 'asc']],
+                order: [[8, 'desc']],
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
                 lengthMenu: [10, 20, 50, 100, 200, 500],
-                pageLength: 10,
+                pageLength: 100,
                 drawCallback: function () {
                     // After table redraws, ensure Alpine.js state for checkboxes is consistent
                     const selectedItems = window.patientData && window.patientData.selectedItems ? window.patientData.selectedItems : [];

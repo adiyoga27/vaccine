@@ -53,17 +53,21 @@ class CertificateService
         $month = $completionDate->month;
         $year = $completionDate->year;
 
-        $startOfMonth = $completionDate->copy()->startOfMonth();
-
-        // Sequence Logic: Count COMPLETED patients in this month up to this date
-        $previousCount = Patient::whereNotNull('completed_vaccination_at')
-            ->whereBetween('completed_vaccination_at', [$startOfMonth, $completionDate])
-            ->count();
-
-        $sequence = $previousCount + 1;
-
         $romanMonths = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         $romanMonth = $romanMonths[$month] ?? 'I';
+
+        // Find the highest sequence number for this month/year
+        $suffix = "/{$romanMonth}/ISTG/{$year}";
+        $lastCert = Patient::whereNotNull('certificate_number')
+            ->where('certificate_number', 'like', '%' . $suffix)
+            ->orderByRaw("CAST(SUBSTRING_INDEX(certificate_number, '/', 1) AS UNSIGNED) DESC")
+            ->value('certificate_number');
+
+        $sequence = 1;
+        if ($lastCert) {
+            $parts = explode('/', $lastCert);
+            $sequence = intval($parts[0]) + 1;
+        }
 
         $certNum = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
 
