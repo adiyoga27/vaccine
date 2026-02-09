@@ -164,7 +164,7 @@
         </div>
 
         <!-- DataTables Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible p-4">
             <table id="usersTable" class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -393,6 +393,19 @@
         table.dataTable.no-footer {
             border-bottom: 1px solid #e5e7eb !important;
         }
+
+        #usersTable tbody {
+            min-height: 600px;
+        }
+
+        #usersTable_wrapper .dataTables_scrollBody {
+            min-height: 600px;
+        }
+
+        /* Ensure table container has minimum height */
+        #usersTable_wrapper {
+            min-height: 700px;
+        }
     </style>
 
     <script>
@@ -427,8 +440,6 @@
                 processing: true,
                 serverSide: true,
                 scrollX: true,
-                scrollY: '500px',
-                scrollCollapse: true,
                 autoWidth: false,
                 ajax: '{{ route("admin.users") }}',
                 columns: [
