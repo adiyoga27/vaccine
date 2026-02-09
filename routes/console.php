@@ -13,3 +13,10 @@ Artisan::command('inspire', function () {
 })
 ->dailyAt('12:03')
 ->timezone('Asia/Makassar');
+
+// Auto-generate certificates for eligible patients every 10 minutes
+\Illuminate\Support\Facades\Schedule::call(function () {
+    \Illuminate\Support\Facades\Artisan::call('certificate:generate');
+})
+->everyTenMinutes()
+->timezone('Asia/Makassar');

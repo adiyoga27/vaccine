@@ -21,7 +21,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openEditModal({{ $vaccine->id }}, '{{ $vaccine->name }}', {{ $vaccine->minimum_age }}, {{ $vaccine->duration_days ?? 7 }})" class="text-gray-400 hover:text-blue-600 transition">
+                    <button onclick="openEditModal({{ $vaccine->id }}, '{{ $vaccine->name }}', {{ $vaccine->minimum_age }}, {{ $vaccine->duration_days ?? 7 }}, {{ $vaccine->is_required ? 'true' : 'false' }})" class="text-gray-400 hover:text-blue-600 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
                     <form action="{{ route('admin.vaccines.destroy', $vaccine->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus?');">
@@ -36,6 +36,18 @@
             <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $vaccine->name }}</h3>
             <p class="text-sm text-gray-500">Usia Min: <span class="font-semibold text-gray-700">{{ $vaccine->minimum_age }} Bulan</span></p>
             <p class="text-sm text-gray-500">Durasi: <span class="font-semibold text-gray-700">{{ $vaccine->duration_days ?? 7 }} Hari</span></p>
+            <div class="mt-2">
+                @if($vaccine->is_required)
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Wajib
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                        Opsional
+                    </span>
+                @endif
+            </div>
         </div>
     </div>
     @endforeach
@@ -60,6 +72,11 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
                     <input type="number" name="duration_days" value="7" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <p class="text-xs text-gray-500 mt-1">Default: 7 Hari (1 Minggu)</p>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_required" id="create_is_required" value="1" checked class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="create_is_required" class="ml-2 block text-sm font-medium text-gray-700">Wajib untuk Sertifikat</label>
+                    <p class="text-xs text-gray-400 ml-2">(Vaksin ini harus diselesaikan untuk generate sertifikat)</p>
                 </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
@@ -90,6 +107,10 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Durasi (Hari)</label>
                     <input type="number" name="duration_days" id="edit_duration_days" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_required" id="edit_is_required" value="1" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="edit_is_required" class="ml-2 block text-sm font-medium text-gray-700">Wajib untuk Sertifikat</label>
+                </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
                 <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
@@ -100,11 +121,12 @@
 </div>
 
 <script>
-    function openEditModal(id, name, age, duration) {
+    function openEditModal(id, name, age, duration, isRequired) {
         document.getElementById('editForm').action = '/admin/vaccines/' + id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_minimum_age').value = age;
         document.getElementById('edit_duration_days').value = duration || 7;
+        document.getElementById('edit_is_required').checked = isRequired;
         document.getElementById('editModal').classList.remove('hidden');
     }
 </script>

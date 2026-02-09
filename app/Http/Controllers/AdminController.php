@@ -11,6 +11,7 @@ use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Services\CertificateService;
 
 class AdminController extends Controller
 {
@@ -86,9 +87,12 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required',
             'minimum_age' => 'required|integer',
-            'duration_days' => 'required|integer|min:1'
+            'duration_days' => 'required|integer|min:1',
+            'is_required' => 'nullable|boolean'
         ]);
-        Vaccine::create($request->all());
+        $data = $request->all();
+        $data['is_required'] = $request->has('is_required') ? true : false;
+        Vaccine::create($data);
         return back()->with('success', 'Vaksin berhasil ditambahkan');
     }
 
@@ -97,9 +101,12 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required',
             'minimum_age' => 'required|integer',
-            'duration_days' => 'required|integer|min:1'
+            'duration_days' => 'required|integer|min:1',
+            'is_required' => 'nullable|boolean'
         ]);
-        $vaccine->update($request->all());
+        $data = $request->all();
+        $data['is_required'] = $request->has('is_required') ? true : false;
+        $vaccine->update($data);
         return back()->with('success', 'Vaksin berhasil diperbarui');
     }
 
@@ -957,16 +964,18 @@ class AdminController extends Controller
             }
         }
 
-        // Check Completion
+        // Check Completion (only required vaccines)
         $patient = \App\Models\Patient::with('vaccinePatients')->find($request->patient_id);
-        $allVaccines = \App\Models\Vaccine::all();
-        $completedIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
+        $requiredVaccineIds = \App\Models\Vaccine::where('is_required', true)->pluck('id');
+        $completedRequiredCount = $patient->vaccinePatients
+            ->where('status', 'selesai')
+            ->whereIn('vaccine_id', $requiredVaccineIds->toArray())
+            ->count();
 
-        // If count matches (User has done ALL vaccines)
-        // If count matches (User has done ALL vaccines)
-        if ($allVaccines->count() === count($completedIds)) {
+        // If all required vaccines are completed
+        if ($requiredVaccineIds->count() > 0 && $completedRequiredCount >= $requiredVaccineIds->count()) {
             // Generate Certificate (Number & Date)
-            $this->generateCertificate($patient);
+            CertificateService::generate($patient);
 
             $template = \App\Models\NotificationTemplate::where('slug', 'vaccine_completed')->first();
             if ($template && $patient->phone) {
@@ -1070,18 +1079,8 @@ class AdminController extends Controller
 
         $record->delete();
 
-        // Check if patient is still complete?
-        // If we remove a record, likely they are not complete anymore (unless they had dupes).
-        // Safest is to check counts.
-        $totalVaccines = Vaccine::count();
-        $completedCount = $patient->vaccinePatients()->where('status', 'selesai')->count();
-
-        if ($completedCount < $totalVaccines) {
-            $patient->update([
-                'certificate_number' => null,
-                'completed_vaccination_at' => null
-            ]);
-        }
+        // Check if patient should lose their certificate (based on required vaccines)
+        CertificateService::checkAndRevoke($patient);
 
         return back()->with('success', 'Data vaksinasi berhasil dikembalikan (rollback)');
     }
@@ -1093,18 +1092,9 @@ class AdminController extends Controller
             'vaccinated_at' => now() // Set to now upon approval
         ]);
 
-        // Check for completion
+        // Check for completion (only required vaccines)
         $patient = $record->patient;
-        $totalVaccines = Vaccine::count();
-        $completedCount = $patient->vaccinePatients()->where('status', 'selesai')->count();
-
-        if ($totalVaccines > 0 && $completedCount >= $totalVaccines) {
-            $this->generateCertificate($patient);
-
-            // Trigger completion notification (reuse logic from storeHistory or call here?)
-            // For now, let's keep it simple. If we want notification, we should extract that logic.
-            // But user only asked for "Data update" and "Certificate Field".
-        }
+        CertificateService::checkAndGenerate($patient);
 
         return back()->with('success', 'Permintaan vaksinasi disetujui.');
     }
@@ -1118,44 +1108,7 @@ class AdminController extends Controller
         return back()->with('success', 'Permintaan vaksinasi ditolak.');
     }
 
-    private function generateCertificate($patient)
-    {
-        // Avoid regenerating if already exists (as per user implication "simpan nomor")
-        if ($patient->certificate_number)
-            return;
-
-        $lastRecord = $patient->vaccinePatients()->where('status', 'selesai')->latest('updated_at')->first();
-        $completionDate = $lastRecord ? $lastRecord->updated_at : now();
-        $month = $completionDate->month;
-        $year = $completionDate->year;
-
-        $startOfMonth = $completionDate->copy()->startOfMonth();
-
-        // Sequence Logic: Count COMPLETED patients in this month up to this date
-        $previousCount = \App\Models\Patient::whereNotNull('completed_vaccination_at')
-            ->whereBetween('completed_vaccination_at', [$startOfMonth, $completionDate])
-            ->count();
-
-        $sequence = $previousCount + 1;
-
-        $romanMonths = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
-        $romanMonth = $romanMonths[$month] ?? 'I';
-
-        $certNum = sprintf("%03d/%s/ISTG/%s", $sequence, $romanMonth, $year);
-
-        // Get current certificate settings and snapshot to patient
-        $settings = \App\Models\CertificateSetting::current();
-
-        $patient->update([
-            'completed_vaccination_at' => $completionDate,
-            'certificate_number' => $certNum,
-            'cert_kepala_upt_name' => $settings->kepala_upt_name,
-            'cert_kepala_upt_signature' => $settings->kepala_upt_signature,
-            'cert_petugas_jurim_name' => $settings->petugas_jurim_name,
-            'cert_petugas_jurim_signature' => $settings->petugas_jurim_signature,
-            'cert_background_image' => $settings->background_image,
-        ]);
-    }
+    // generateCertificate logic has been moved to App\Services\CertificateService
 
     // Certificate Settings
     public function certificateSettings()
