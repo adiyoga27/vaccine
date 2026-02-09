@@ -223,9 +223,7 @@ class AdminController extends Controller
                     return $html;
                 })
                 ->addColumn('sertifikat', function ($user) {
-                    $totalVaccines = Vaccine::count();
-                    $completedCount = $user->patient ? $user->patient->vaccinePatients->where('status', 'selesai')->unique('vaccine_id')->count() : 0;
-                    $isCompleted = ($totalVaccines > 0 && $completedCount >= $totalVaccines);
+                    $isCompleted = $user->patient && $user->patient->certificate_number;
 
                     if ($isCompleted) {
                         $url = route('admin.certificate', urlencode($user->patient->certificate_number));
