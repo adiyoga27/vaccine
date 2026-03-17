@@ -455,7 +455,28 @@
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
                 order: [[8, 'desc']],
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+                language: {
+                    processing: "Sedang memproses...",
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                    infoFiltered: "(disaring dari _MAX_ entri keseluruhan)",
+                    infoPostFix: "",
+                    loadingRecords: "Sedang memuat...",
+                    zeroRecords: "Tidak ditemukan data yang sesuai",
+                    emptyTable: "Tidak ada data yang tersedia pada tabel ini",
+                    paginate: {
+                        first: "Pertama",
+                        previous: "Sebelumnya",
+                        next: "Selanjutnya",
+                        last: "Terakhir"
+                    },
+                    aria: {
+                        sortAscending: ": aktifkan untuk mengurutkan kolom secara asending",
+                        sortDescending: ": aktifkan untuk mengurutkan kolom secara desending"
+                    }
+                },
                 lengthMenu: [10, 20, 50, 100, 200, 500],
                 pageLength: 100,
                 drawCallback: function () {

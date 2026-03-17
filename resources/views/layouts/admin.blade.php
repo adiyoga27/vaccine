@@ -76,6 +76,17 @@
                         </svg>
                         Jenis Vaksin
                     </a>
+                    @if(auth()->user()->isSuperAdmin())
+                    <a href="{{ route('superadmin.dashboard') }}"
+                        class="flex items-center px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Ke Superadmin
+                    </a>
+                    @endif
+
                     <a href="{{ route('admin.certificate-settings') }}"
                         class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('admin.certificate-settings') ? 'bg-slate-800 text-blue-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,6 +96,7 @@
                         </svg>
                         Sertifikat
                     </a>
+                    @if(auth()->user()->isSuperAdmin())
                     <a href="{{ route('admin.admins') }}"
                         class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('admin.admins') ? 'bg-slate-800 text-blue-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,6 +106,7 @@
                         </svg>
                         Administrator
                     </a>
+                    @endif
 
                     <div class="pt-4 pb-2">
                         <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Notifikasi</p>

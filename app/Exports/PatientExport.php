@@ -9,10 +9,20 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class PatientExport implements FromCollection, WithHeadings, WithMapping
 {
+    protected $villageIds;
+
+    public function __construct(array $villageIds)
+    {
+        $this->villageIds = $villageIds;
+    }
+
     public function collection()
     {
-        return User::with(['patient.village'])
+        return User::with(['patient.village', 'patient.posyandu'])
             ->where('role', 'user')
+            ->whereHas('patient', function ($q) {
+                $q->whereIn('village_id', $this->villageIds);
+            })
             ->get();
     }
 

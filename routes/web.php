@@ -276,18 +276,43 @@ Route::middleware(['auth'])->prefix('user')->group(function () {
     })->name('user.certificate');
 });
 
+// Superadmin Dashboard
+Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
+
+    // Office CRUD
+    Route::get('/offices', [\App\Http\Controllers\SuperAdminController::class, 'offices'])->name('superadmin.offices');
+    Route::post('/offices', [\App\Http\Controllers\SuperAdminController::class, 'storeOffice'])->name('superadmin.offices.store');
+    Route::put('/offices/{office}', [\App\Http\Controllers\SuperAdminController::class, 'updateOffice'])->name('superadmin.offices.update');
+    Route::delete('/offices/{office}', [\App\Http\Controllers\SuperAdminController::class, 'destroyOffice'])->name('superadmin.offices.destroy');
+
+    // Office-Village Assignment
+    Route::get('/offices/{office}/villages', [\App\Http\Controllers\SuperAdminController::class, 'manageOfficeVillages'])->name('superadmin.offices.villages');
+    Route::put('/offices/{office}/villages', [\App\Http\Controllers\SuperAdminController::class, 'updateOfficeVillages'])->name('superadmin.offices.villages.update');
+
+    // Admin Management
+    Route::get('/admins', [\App\Http\Controllers\SuperAdminController::class, 'admins'])->name('superadmin.admins');
+    Route::post('/admins', [\App\Http\Controllers\SuperAdminController::class, 'storeAdmin'])->name('superadmin.admins.store');
+    Route::put('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'updateAdmin'])->name('superadmin.admins.update');
+    Route::put('/admins/{admin}/office', [\App\Http\Controllers\SuperAdminController::class, 'updateAdminOffice'])->name('superadmin.admins.office');
+    Route::delete('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'destroyAdmin'])->name('superadmin.admins.destroy');
+});
+
 // Admin Dashboard
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin_or_superadmin'])->prefix('admin')->group(function () {
     // Dashboard Home
     Route::get('/dashboard', function () {
+        $villageIds = auth()->user()->managedVillageIds();
+
         $stats = [
-            'users' => Patient::count(),
-            'villages' => Village::count(),
+            'users' => Patient::whereIn('village_id', $villageIds)->count(),
+            'villages' => Village::whereIn('id', $villageIds)->count(),
             'vaccines' => Vaccine::count(),
-            'pending' => VaccinePatient::where('status', 'pengajuan')->count(),
+            'pending' => VaccinePatient::whereIn('village_id', $villageIds)->where('status', 'pengajuan')->count(),
         ];
 
         $requests = VaccinePatient::with(['patient', 'vaccine', 'village'])
+            ->whereIn('village_id', $villageIds)
             ->where('status', 'pengajuan')
             ->latest()
             ->get();

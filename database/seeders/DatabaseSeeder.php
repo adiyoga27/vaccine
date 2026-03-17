@@ -89,6 +89,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // 4. Superadmin
+        User::firstOrCreate(
+            ['email' => 'superadmin@inovasisehat.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => 'SuperAdmin2026',
+                'role' => 'superadmin',
+            ]
+        );
+
         $this->call(NotificationTemplateSeeder::class);
 
         // 4. Dummy Users
