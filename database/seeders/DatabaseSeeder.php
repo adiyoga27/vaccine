@@ -99,7 +99,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->call(NotificationTemplateSeeder::class);
+        $this->call([
+            NotificationTemplateSeeder::class,
+        ]);
 
         // 4. Dummy Users
         // 4. Dummy Users
