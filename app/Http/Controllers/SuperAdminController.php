@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use App\Models\User;
 use App\Models\Village;
+use App\Models\Vaccine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -198,5 +199,58 @@ class SuperAdminController extends Controller
 
         $village->delete();
         return back()->with('success', 'Dusun berhasil dihapus');
+    }
+
+    // ==============================
+    // Vaccine (Jenis Vaksin) CRUD
+    // ==============================
+
+    public function vaccines()
+    {
+        $vaccines = Vaccine::orderBy('minimum_age')->get();
+        return view('dashboard.superadmin.vaccines.index', compact('vaccines'));
+    }
+
+    public function storeVaccine(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'minimum_age' => 'required|integer|min:0',
+            'duration_days' => 'required|integer|min:1',
+            'is_required' => 'nullable|boolean'
+        ]);
+
+        $data = $request->all();
+        $data['is_required'] = $request->has('is_required');
+
+        Vaccine::create($data);
+        return back()->with('success', 'Jenis vaksin berhasil ditambahkan');
+    }
+
+    public function updateVaccine(Request $request, Vaccine $vaccine)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'minimum_age' => 'required|integer|min:0',
+            'duration_days' => 'required|integer|min:1',
+            'is_required' => 'nullable|boolean'
+        ]);
+
+        $data = $request->all();
+        $data['is_required'] = $request->has('is_required');
+
+        $vaccine->update($data);
+        return back()->with('success', 'Jenis vaksin berhasil diperbarui');
+    }
+
+    public function destroyVaccine(Vaccine $vaccine)
+    {
+        // Check if there are patient records using this vaccine
+        if ($vaccine->vaccinePatients()->count() > 0) {
+            return back()->with('error', 'Tidak dapat menghapus jenis vaksin yang sudah digunakan dalam riwayat peserta');
+        }
+
+        $vaccine->delete();
+        return back()->with('success', 'Jenis vaksin berhasil dihapus');
     }
 }

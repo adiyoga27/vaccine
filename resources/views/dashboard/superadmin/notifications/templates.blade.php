@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.superadmin')
 
 @section('content')
 <div class="mb-6">
@@ -14,21 +14,21 @@
             <span class="text-xs text-gray-500 font-mono mt-1 block">ID: {{ $template->slug }}</span>
         </div>
         
-        <form action="{{ route('admin.notifications.templates.update', $template->id) }}" method="POST" class="flex-1 flex flex-col p-6">
+        <form action="{{ route('superadmin.notifications.templates.update', $template->id) }}" method="POST" class="flex-1 flex flex-col p-6">
             @csrf
             @method('PUT')
             
             <div class="mb-4 flex-1">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Konten Pesan</label>
-                <textarea name="content" rows="6" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm font-sans">{{ $template->content }}</textarea>
+                <textarea name="content" rows="6" class="w-full rounded-lg border-gray-300 focus:ring-purple-500 focus:border-purple-500 text-sm font-sans">{{ $template->content }}</textarea>
                 <p class="text-xs text-gray-500 mt-2">
-                    Variabel Pasien: <span class="font-mono text-blue-600">[name], [mother_name], [date_birth], [address], [gender], [phone], [village_name]</span><br>
-                    Variabel Lain: <span class="font-mono text-blue-600">{{ $template->variables }}</span>
+                    Variabel Pasien: <span class="font-mono text-purple-600">[name], [mother_name], [date_birth], [address], [gender], [phone], [village_name]</span><br>
+                    Variabel Lain: <span class="font-mono text-purple-600">{{ $template->variables }}</span>
                 </p>
             </div>
             
             <div class="flex justify-end">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+                <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition">
                     Simpan Perubahan
                 </button>
             </div>

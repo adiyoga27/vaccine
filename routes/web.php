@@ -302,6 +302,23 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::post('/villages', [\App\Http\Controllers\SuperAdminController::class, 'storeVillage'])->name('superadmin.villages.store');
     Route::put('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'updateVillage'])->name('superadmin.villages.update');
     Route::delete('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'destroyVillage'])->name('superadmin.villages.destroy');
+
+    // Vaccine CRUD
+    Route::get('/vaccines', [\App\Http\Controllers\SuperAdminController::class, 'vaccines'])->name('superadmin.vaccines');
+    Route::post('/vaccines', [\App\Http\Controllers\SuperAdminController::class, 'storeVaccine'])->name('superadmin.vaccines.store');
+    Route::put('/vaccines/{vaccine}', [\App\Http\Controllers\SuperAdminController::class, 'updateVaccine'])->name('superadmin.vaccines.update');
+    Route::delete('/vaccines/{vaccine}', [\App\Http\Controllers\SuperAdminController::class, 'destroyVaccine'])->name('superadmin.vaccines.destroy');
+
+    // Notifications
+    Route::get('/notifications/config', [\App\Http\Controllers\NotificationController::class, 'configuration'])->name('superadmin.notifications.config');
+    Route::get('/notifications/templates', [\App\Http\Controllers\NotificationController::class, 'templates'])->name('superadmin.notifications.templates');
+    Route::put('/notifications/templates/{id}', [\App\Http\Controllers\NotificationController::class, 'updateTemplate'])->name('superadmin.notifications.templates.update');
+    Route::get('/notifications/history', [\App\Http\Controllers\NotificationController::class, 'history'])->name('superadmin.notifications.history');
+
+    // AJAX for WAHA
+    Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('superadmin.notifications.scan');
+    Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('superadmin.notifications.status');
+    Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('superadmin.notifications.logout');
 });
 
 // Admin Dashboard
@@ -382,16 +399,6 @@ Route::middleware(['auth', 'admin_or_superadmin'])->prefix('admin')->group(funct
 
     Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'logs'])->name('admin.logs');
 
-    // Notifications
-    Route::get('/notifications/config', [\App\Http\Controllers\NotificationController::class, 'configuration'])->name('admin.notifications.config'); // Renamed from index
-    Route::get('/notifications/templates', [\App\Http\Controllers\NotificationController::class, 'templates'])->name('admin.notifications.templates');
-    Route::put('/notifications/templates/{id}', [\App\Http\Controllers\NotificationController::class, 'updateTemplate'])->name('admin.notifications.templates.update');
-    Route::get('/notifications/history', [\App\Http\Controllers\NotificationController::class, 'history'])->name('admin.notifications.history');
-
-    // AJAX for WAHA
-    Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('admin.notifications.scan');
-    Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('admin.notifications.status');
-    Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('admin.notifications.logout');
 
     Route::get('/certificate/{certificate_number}', function ($certificate_number) {
         $certificateNumber = urldecode($certificate_number);

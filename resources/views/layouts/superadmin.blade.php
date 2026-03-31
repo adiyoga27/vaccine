@@ -78,14 +78,52 @@
                         </svg>
                         Kelola Kantor
                     </a>
+                    <a href="{{ route('superadmin.vaccines') }}"
+                        class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('superadmin.vaccines*') ? 'bg-slate-800 text-purple-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                            </path>
+                        </svg>
+                        Kelola Vaksin
+                    </a>
                     <a href="{{ route('superadmin.admins') }}"
                         class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('superadmin.admins*') ? 'bg-slate-800 text-purple-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m9-10a4 4 0 014-4ZM18 8a3 3 0 110-6 3 3 0 010 6zm3 13v-2a4 4 0 00-3-3.87m-4-12a3 3 0 110-6 3 3 0 010 6z">
                             </path>
                         </svg>
-                        Kelola Admin
+                        Manajemen User
+                    </a>
+
+                    <div class="pt-4 pb-2">
+                        <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Notifikasi</p>
+                    </div>
+                    <a href="{{ route('superadmin.notifications.config') }}"
+                        class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('superadmin.notifications.config*') ? 'bg-slate-800 text-purple-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Konfigurasi
+                    </a>
+                    <a href="{{ route('superadmin.notifications.templates') }}"
+                        class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('superadmin.notifications.templates*') ? 'bg-slate-800 text-purple-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        Template
+                    </a>
+                    <a href="{{ route('superadmin.notifications.history') }}"
+                        class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('superadmin.notifications.history*') ? 'bg-slate-800 text-purple-400' : 'text-gray-400 hover:bg-slate-800 hover:text-white' }} transition">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Riwayat Notifikasi
                     </a>
                 </nav>
 

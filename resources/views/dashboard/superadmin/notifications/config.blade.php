@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.superadmin')
 
 @section('content')
 <div class="mb-6">
@@ -22,20 +22,20 @@
 
         <!-- Not Connected / QR -->
         <div x-show="!loading && status !== 'WORKING'" class="text-center">
-             <div x-show="qrCode" class="mb-4">
+            <div x-show="qrCode" class="mb-4">
                 <img :src="qrCode" alt="Scan QR" class="mx-auto border p-2 rounded-lg w-48 h-48 object-contain">
                 <p class="text-xs text-gray-500 mt-2">Scan QR Code dengan WhatsApp</p>
-             </div>
-             <div x-show="!qrCode" class="py-4">
-                 <p class="text-sm text-red-500">Menunggu QR Code...</p>
-                 <button @click="fetchStatus" class="mt-2 text-blue-600 hover:underline text-xs">Refresh</button>
-             </div>
+            </div>
+            <div x-show="!qrCode" class="py-4">
+                <p class="text-sm text-red-500">Menunggu QR Code...</p>
+                <button @click="fetchStatus" class="mt-2 text-blue-600 hover:underline text-xs">Refresh</button>
+            </div>
         </div>
 
         <!-- Connected -->
         <div x-show="!loading && status === 'WORKING'" class="text-center">
             <div class="w-20 h-20 rounded-full bg-green-100 mx-auto flex items-center justify-center text-green-600 mb-3">
-                 <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
             </div>
             <h4 class="font-bold text-gray-900" x-text="me?.pushName || 'WhatsApp User'"></h4>
             <p class="text-sm text-gray-500 mb-4" x-text="me?.id ? '+' + me.id.split('@')[0] : ''"></p>
@@ -45,7 +45,7 @@
                 Terhubung
             </div>
 
-            <form action="{{ route('admin.notifications.logout') }}" method="POST">
+            <form action="{{ route('superadmin.notifications.logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg text-sm font-medium transition">
                     Logout
@@ -72,12 +72,12 @@
         </div>
         
         <div class="bg-blue-50 border border-blue-100 rounded-xl p-6">
-             <h3 class="font-bold text-blue-800 mb-2">Informasi API</h3>
-             <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
-                 <li>Sesi: <strong>adiyoga</strong></li>
-                 <li>URL: <strong>https://waha.galkasoft.id</strong></li>
-                 <li>Gunakan halaman 'Template' untuk mengatur pesan otomatis.</li>
-             </ul>
+            <h3 class="font-bold text-blue-800 mb-2">Informasi API</h3>
+            <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
+                <li>Sesi: <strong>adiyoga</strong></li>
+                <li>URL: <strong>https://waha.galkasoft.id</strong></li>
+                <li>Gunakan halaman 'Template' untuk mengatur pesan otomatis.</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -101,7 +101,7 @@
             async fetchStatus(showLoading = true) {
                 if (showLoading) this.loading = true;
                 try {
-                    const res = await fetch('{{ route("admin.notifications.status") }}');
+                    const res = await fetch('{{ route("superadmin.notifications.status") }}');
                     const data = await res.json();
                     
                     if (data.status) {
@@ -113,7 +113,7 @@
                             this.qrCode = null;
                         }
                     } else {
-                         this.status = 'STOPPED';
+                        this.status = 'STOPPED';
                     }
                 } catch (e) {
                     console.error(e);
@@ -124,7 +124,7 @@
 
             async fetchQR() {
                 try {
-                    const res = await fetch('{{ route("admin.notifications.scan") }}');
+                    const res = await fetch('{{ route("superadmin.notifications.scan") }}');
                     const data = await res.json();
                     if(data.qr) {
                         this.qrCode = data.qr;
