@@ -1,0 +1,242 @@
+@extends('layouts.superadmin')
+
+@section('content')
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Data Master Dusun</h1>
+            <p class="text-gray-500 mt-1">Kelola semua data Dusun (wilayah) dalam sistem.</p>
+        </div>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Tambah Dusun
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4">
+            <table id="dusunTable" class="w-full text-sm text-left" style="width: 100%">
+                <thead class="bg-gray-50 text-gray-500 font-medium">
+                    <tr>
+                        <th class="px-6 py-3">#</th>
+                        <th class="px-6 py-3">Nama Dusun</th>
+                        <th class="px-6 py-3">Total Posyandu</th>
+                        <th class="px-6 py-3">Total Peserta</th>
+                        <th class="px-6 py-3 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($villages as $village)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $loop->iteration }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $village->name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ $village->posyandus->count() }} Posyandu
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <button onclick="openPatientsModal({{ $village->id }}, '{{ $village->name }}')"
+                                    class="text-emerald-600 hover:text-emerald-800 hover:underline font-medium focus:outline-none">
+                                    {{ $village->patients_count }} Peserta
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex justify-end gap-2">
+                                    <button onclick="openEditModal({{ $village->id }}, '{{ $village->name }}')"
+                                        class="text-indigo-600 hover:text-indigo-900 border border-indigo-200 px-3 py-1 rounded-md hover:bg-indigo-50">Edit</button>
+                                    <form action="{{ route('superadmin.villages.destroy', $village->id) }}" method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-red-600 hover:text-red-900 border border-red-200 px-3 py-1 rounded-md hover:bg-red-50">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div id="createModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Tambah Dusun Baru</h3>
+                <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form action="{{ route('superadmin.villages.store') }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Dusun</label>
+                        <input type="text" name="name" required
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+                        class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Edit Data Dusun</h3>
+                <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="editForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Dusun</label>
+                        <input type="text" name="name" id="edit_name" required
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
+                        class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Patients List Modal (Optional but nice to have) -->
+    <div id="patientsModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900" id="patientsModalTitle">Daftar Peserta</h3>
+                    <p class="text-sm text-gray-500" id="patientsModalSubtitle">Dusun ...</p>
+                </div>
+                <button onclick="document.getElementById('patientsModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="patientsLoading" class="hidden py-8 text-center">
+                <svg class="animate-spin h-8 w-8 text-purple-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-gray-500 mt-2">Memuat data peserta...</p>
+            </div>
+
+            <div class="overflow-y-auto max-h-[60vh] relative">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Peserta</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ibu</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">JK</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. HP</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="patientsListBody"></tbody>
+                </table>
+                <p id="noPatientsMsg" class="text-center text-gray-500 py-8 hidden">Belum ada peserta di dusun ini.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery & DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        .dataTables_wrapper .dataTables_length select { border-radius: 0.375rem; padding: 0.25rem 2rem 0.25rem 0.5rem; border: 1px solid #d1d5db; }
+        .dataTables_wrapper .dataTables_filter input { border-radius: 0.375rem; padding: 0.25rem 0.5rem; margin-left: 0.5rem; border: 1px solid #d1d5db; }
+        table.dataTable.no-footer { border-bottom: 1px solid #e5e7eb !important; }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { margin-bottom: 1rem; }
+        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { margin-top: 1rem; }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('#dusunTable').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollCollapse: true,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+                columnDefs: [{ orderable: false, targets: [4] }]
+            });
+        });
+
+        function openEditModal(id, name) {
+            document.getElementById('editForm').action = '/superadmin/villages/' + id;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function openPatientsModal(villageId, villageName) {
+            document.getElementById('patientsModalTitle').textContent = 'Daftar Peserta';
+            document.getElementById('patientsModalSubtitle').textContent = 'Dusun: ' + villageName;
+
+            const modal = document.getElementById('patientsModal');
+            const tbody = document.getElementById('patientsListBody');
+            const loading = document.getElementById('patientsLoading');
+            const noMsg = document.getElementById('noPatientsMsg');
+
+            modal.classList.remove('hidden');
+            tbody.innerHTML = '';
+            loading.classList.remove('hidden');
+            noMsg.classList.add('hidden');
+
+            fetch(`/admin/villages/${villageId}/patients`)
+                .then(response => response.json())
+                .then(data => {
+                    loading.classList.add('hidden');
+                    if (data.length > 0) {
+                        data.forEach(patient => {
+                            const tr = document.createElement('tr');
+                            const genderClass = patient.gender == 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800';
+                            tr.innerHTML = `
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">${patient.name}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500">${patient.mother_name || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${genderClass}">${patient.gender == 'male' ? 'L' : 'P'}</span></td>
+                                <td class="px-4 py-3 text-sm text-gray-500">${patient.phone || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">${patient.address || '-'}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else { noMsg.classList.remove('hidden'); }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loading.classList.add('hidden');
+                    alert('Gagal memuat data peserta.');
+                    modal.classList.add('hidden');
+                });
+        }
+    </script>
+@endsection

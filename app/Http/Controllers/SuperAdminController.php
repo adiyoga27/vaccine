@@ -162,4 +162,41 @@ class SuperAdminController extends Controller
         $admin->delete();
         return back()->with('success', 'Administrator berhasil dihapus');
     }
+
+    // ==============================
+    // Village (Dusun) CRUD
+    // ==============================
+
+    public function villages()
+    {
+        $villages = Village::withCount(['patients', 'vaccinePatients'])->with('posyandus')
+            ->orderBy('name')
+            ->get();
+        return view('dashboard.superadmin.villages.index', compact('villages'));
+    }
+
+    public function storeVillage(Request $request)
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+        Village::create($request->only(['name']));
+        return back()->with('success', 'Dusun berhasil ditambahkan');
+    }
+
+    public function updateVillage(Request $request, Village $village)
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+        $village->update($request->only(['name']));
+        return back()->with('success', 'Dusun berhasil diperbarui');
+    }
+
+    public function destroyVillage(Village $village)
+    {
+        // Check if there are patients in this village
+        if ($village->patients()->count() > 0) {
+            return back()->with('error', 'Tidak dapat menghapus dusun yang masih memiliki data peserta');
+        }
+
+        $village->delete();
+        return back()->with('success', 'Dusun berhasil dihapus');
+    }
 }

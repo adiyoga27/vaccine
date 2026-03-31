@@ -296,6 +296,12 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::put('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'updateAdmin'])->name('superadmin.admins.update');
     Route::put('/admins/{admin}/office', [\App\Http\Controllers\SuperAdminController::class, 'updateAdminOffice'])->name('superadmin.admins.office');
     Route::delete('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'destroyAdmin'])->name('superadmin.admins.destroy');
+
+    // Village CRUD
+    Route::get('/villages', [\App\Http\Controllers\SuperAdminController::class, 'villages'])->name('superadmin.villages');
+    Route::post('/villages', [\App\Http\Controllers\SuperAdminController::class, 'storeVillage'])->name('superadmin.villages.store');
+    Route::put('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'updateVillage'])->name('superadmin.villages.update');
+    Route::delete('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'destroyVillage'])->name('superadmin.villages.destroy');
 });
 
 // Admin Dashboard
