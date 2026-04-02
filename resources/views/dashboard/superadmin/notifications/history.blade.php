@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.superadmin')
 
 @section('content')
 <div x-data="{ 
@@ -21,18 +21,18 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <!-- Filters -->
         <div class="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <form action="{{ route('admin.notifications.history') }}" method="GET" class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+            <form action="{{ route('superadmin.notifications.history') }}" method="GET" class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-300 text-sm focus:ring-purple-500 focus:border-purple-500">
                     <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Semua Status</option>
                     <option value="sent" {{ request('status') == 'sent' ? 'selected' : '' }}>Terkirim</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Gagal</option>
                 </select>
                 <div class="relative">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor atau pesan..." class="rounded-lg border-gray-300 text-sm pl-10 focus:ring-blue-500 focus:border-blue-500 w-full md:w-64">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor atau pesan..." class="rounded-lg border-gray-300 text-sm pl-10 focus:ring-purple-500 focus:border-purple-500 w-full md:w-64">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">Cari</button>
+                <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition">Cari</button>
             </form>
         </div>
 
@@ -64,7 +64,7 @@
                             {{ $log->created_at->format('d M Y H:i') }}
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button @click="activeLog = {{ json_encode($log) }}; showModal = true" class="inline-flex items-center text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                            <button @click="activeLog = {{ json_encode($log) }}; showModal = true" class="inline-flex items-center text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">
                                 Detail
                             </button>
                         </td>
@@ -151,16 +151,16 @@
                             <!-- Message Content -->
                             <div>
                                 <h4 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                    <svg class="w-4 h-4 mr-1.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                                     Isi Pesan
                                 </h4>
-                                <div class="bg-blue-50 rounded-lg p-3 text-gray-800 whitespace-pre-wrap font-sans text-sm border border-blue-100" x-text="activeLog.message"></div>
+                                <div class="bg-purple-50 rounded-lg p-3 text-gray-800 whitespace-pre-wrap font-sans text-sm border border-purple-100" x-text="activeLog.message"></div>
                             </div>
 
                             <!-- Payload -->
                             <div x-data="{ expanded: false }">
-                                <h4 @click="expanded = !expanded" class="text-sm font-bold text-gray-700 mb-2 flex items-center cursor-pointer hover:text-blue-600 transition">
-                                    <svg class="w-4 h-4 mr-1.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                <h4 @click="expanded = !expanded" class="text-sm font-bold text-gray-700 mb-2 flex items-center cursor-pointer hover:text-purple-600 transition">
+                                    <svg class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                                     Data Respons API
                                     <svg class="w-4 h-4 ml-1 transform transition-transform" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </h4>
@@ -173,7 +173,7 @@
                 </div>
                 
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="showModal = false">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="showModal = false">
                         Tutup
                     </button>
                 </div>

@@ -35,4 +35,9 @@ class Village extends Model
     {
         return $this->hasMany(Posyandu::class);
     }
+
+    public function offices()
+    {
+        return $this->belongsToMany(Office::class, 'office_village');
+    }
 }

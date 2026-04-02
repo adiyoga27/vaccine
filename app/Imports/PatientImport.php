@@ -13,10 +13,23 @@ use Illuminate\Support\Str;
 
 class PatientImport implements ToModel, WithHeadingRow, WithValidation
 {
+    protected $villageIds;
+
+    public function __construct(array $villageIds)
+    {
+        $this->villageIds = $villageIds;
+    }
+
     public function model(array $row)
     {
-        // Find village by name
-        $village = Village::where('name', 'LIKE', '%' . trim($row['dusun']) . '%')->first();
+        // Find village by name within managed scope
+        $village = Village::whereIn('id', $this->villageIds)
+            ->where('name', 'LIKE', '%' . trim($row['dusun']) . '%')
+            ->first();
+
+        if (!$village) {
+            return null; // Skip if village not in scope
+        }
 
         // Find Posyandu
         $posyandu = null;

@@ -18,7 +18,10 @@ class AdminController extends Controller
     // Villages CRUD
     public function villages()
     {
-        $villages = Village::withCount(['patients', 'vaccinePatients'])->with('posyandus')->get();
+        $villageIds = auth()->user()->managedVillageIds();
+        $villages = Village::withCount(['patients', 'vaccinePatients'])->with('posyandus')
+            ->whereIn('id', $villageIds)
+            ->get();
         return view('dashboard.admin.villages.index', compact('villages'));
     }
 
@@ -58,12 +61,16 @@ class AdminController extends Controller
             'village_id' => 'required|exists:villages,id',
             'name' => 'required'
         ]);
+
+        abort_unless(in_array($request->village_id, auth()->user()->managedVillageIds()), 403);
+
         \App\Models\Posyandu::create($request->except(['_token', '_method']));
         return back()->with('success', 'Posyandu berhasil ditambahkan');
     }
 
     public function updatePosyandu(Request $request, \App\Models\Posyandu $posyandu)
     {
+        abort_unless(in_array($posyandu->village_id, auth()->user()->managedVillageIds()), 403);
         $request->validate(['name' => 'required']);
         $posyandu->update($request->except(['_token', '_method']));
         return back()->with('success', 'Posyandu berhasil diperbarui');
@@ -71,6 +78,7 @@ class AdminController extends Controller
 
     public function destroyPosyandu(\App\Models\Posyandu $posyandu)
     {
+        abort_unless(in_array($posyandu->village_id, auth()->user()->managedVillageIds()), 403);
         $posyandu->delete();
         return back()->with('success', 'Posyandu berhasil dihapus');
     }
@@ -119,8 +127,11 @@ class AdminController extends Controller
     // Schedules
     public function schedules()
     {
-        $schedules = VaccineSchedule::with(['village', 'vaccines'])->latest()->get();
-        $villages = Village::all();
+        $villageIds = auth()->user()->managedVillageIds();
+        $schedules = VaccineSchedule::with(['village', 'vaccines'])
+            ->whereIn('village_id', $villageIds)
+            ->latest()->get();
+        $villages = Village::whereIn('id', $villageIds)->get();
         $vaccines = Vaccine::all();
         return view('dashboard.admin.schedules.index', compact('schedules', 'villages', 'vaccines'));
     }
@@ -173,8 +184,12 @@ class AdminController extends Controller
     public function users(Request $request)
     {
         if ($request->ajax()) {
+            $villageIds = auth()->user()->managedVillageIds();
             $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
                 ->where('role', 'user')
+                ->whereHas('patient', function ($q) use ($villageIds) {
+                    $q->whereIn('village_id', $villageIds);
+                })
                 ->select('users.*');
 
             return \Yajra\DataTables\Facades\DataTables::of($users)
@@ -183,15 +198,15 @@ class AdminController extends Controller
                 })
                 ->addColumn('peserta', function ($user) {
                     $gender = $user->patient && $user->patient->gender == 'male' ? 'Laki-laki' : 'Perempuan';
-                    $name = $user->patient->name ?? '-';
+                    $name = $user->patient?->name ?? '-';
                     return '<div class="text-sm font-bold text-gray-900">' . $name . '</div>
                             <div class="text-xs text-gray-500">' . $gender . '</div>';
                 })
                 ->addColumn('orang_tua', function ($user) {
-                    return '<div class="text-sm text-gray-900">' . ($user->patient->mother_name ?? '-') . '</div>';
+                    return '<div class="text-sm text-gray-900">' . ($user->patient?->mother_name ?? '-') . '</div>';
                 })
                 ->addColumn('nik', function ($user) {
-                    return '<div class="text-sm text-gray-500">' . ($user->patient->nik ?? '-') . '</div>';
+                    return '<div class="text-sm text-gray-500">' . ($user->patient?->nik ?? '-') . '</div>';
                 })
                 ->addColumn('usia', function ($user) {
                     if (!$user->patient)
@@ -200,13 +215,13 @@ class AdminController extends Controller
                             <div class="text-xs text-gray-500">' . $user->patient->date_birth->age . ' Tahun</div>';
                 })
                 ->addColumn('alamat', function ($user) {
-                    $village = $user->patient->village->name ?? '-';
-                    $address = $user->patient->address ?? '-';
+                    $village = $user->patient?->village?->name ?? '-';
+                    $address = $user->patient?->address ?? '-';
                     return '<div class="text-sm text-gray-900">' . $address . '</div>
                             <div class="text-xs text-gray-600">' . $village . '</div>';
                 })
                 ->addColumn('posyandu', function ($user) {
-                    return '<div class="text-sm text-gray-900">' . ($user->patient->posyandu->name ?? '-') . '</div>';
+                    return '<div class="text-sm text-gray-900">' . ($user->patient?->posyandu?->name ?? '-') . '</div>';
                 })
                 ->addColumn('riwayat', function ($user) {
                     if (!$user->patient)
@@ -285,18 +300,23 @@ class AdminController extends Controller
 
     public function exportUsersPdf()
     {
+        $villageIds = auth()->user()->managedVillageIds();
         $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
             ->where('role', 'user')
+            ->whereHas('patient', function ($q) use ($villageIds) {
+                $q->whereIn('village_id', $villageIds);
+            })
             ->get();
         $totalVaccines = Vaccine::count();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.users', compact('users', 'totalVaccines'));
+        $pdf = Pdf::loadView('pdf.users', compact('users', 'totalVaccines'));
         return $pdf->download('Data_Peserta_' . date('Y-m-d') . '.pdf');
     }
 
     public function createUser()
     {
-        $villages = Village::with('posyandus')->get();
+        $villageIds = auth()->user()->managedVillageIds();
+        $villages = Village::with('posyandus')->whereIn('id', $villageIds)->get();
         return view('dashboard.admin.users.create', compact('villages'));
     }
 
@@ -314,6 +334,8 @@ class AdminController extends Controller
             'posyandu_id' => 'nullable|exists:posyandus,id',
             'phone' => 'required',
         ]);
+
+        abort_unless(in_array($request->village_id, auth()->user()->managedVillageIds()), 403);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
             $user = User::create([
@@ -343,7 +365,10 @@ class AdminController extends Controller
     public function editUser(User $user)
     {
         $user->load('patient');
-        $villages = Village::with('posyandus')->get();
+        if ($user->patient) {
+            abort_unless(in_array($user->patient->village_id, auth()->user()->managedVillageIds()), 403);
+        }
+        $villages = Village::with('posyandus')->whereIn('id', auth()->user()->managedVillageIds())->get();
 
         $completedCount = $user->patient ? $user->patient->vaccinePatients()->where('status', 'selesai')->count() : 0;
         $totalVaccines = Vaccine::count();
@@ -354,6 +379,11 @@ class AdminController extends Controller
 
     public function updateUser(Request $request, User $user)
     {
+        $user->load('patient');
+        if ($user->patient) {
+            abort_unless(in_array($user->patient->village_id, auth()->user()->managedVillageIds()), 403);
+        }
+
         $request->validate([
             'name' => 'required',
             // Patient Data
@@ -367,6 +397,8 @@ class AdminController extends Controller
             'phone' => 'required',
             'certificate_number' => 'nullable|string'
         ]);
+
+        abort_unless(in_array($request->village_id, auth()->user()->managedVillageIds()), 403);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
             $user->update([
@@ -398,6 +430,11 @@ class AdminController extends Controller
 
     public function destroyUser(User $user)
     {
+        $user->load('patient');
+        if ($user->patient) {
+            abort_unless(in_array($user->patient->village_id, auth()->user()->managedVillageIds()), 403);
+        }
+
         DB::transaction(function () use ($user) {
             if ($user->patient) {
                 $user->patient()->delete(); // Soft delete patient
@@ -415,8 +452,13 @@ class AdminController extends Controller
             'ids.*' => 'exists:users,id',
         ]);
 
-        DB::transaction(function () use ($request) {
-            User::whereIn('id', $request->ids)->each(function ($user) {
+        $villageIds = auth()->user()->managedVillageIds();
+
+        DB::transaction(function () use ($request, $villageIds) {
+            User::whereIn('id', $request->ids)->each(function ($user) use ($villageIds) {
+                if ($user->patient && !in_array($user->patient->village_id, $villageIds)) {
+                    return; // Skip unauthorized
+                }
                 if ($user->patient) {
                     $user->patient()->delete();
                 }
@@ -429,7 +471,8 @@ class AdminController extends Controller
 
     public function exportUsers()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\PatientExport, 'data_peserta_' . date('Y-m-d') . '.xlsx');
+        $villageIds = auth()->user()->managedVillageIds();
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\PatientExport($villageIds), 'data_peserta_' . date('Y-m-d') . '.xlsx');
     }
 
     public function importUsers(Request $request)
@@ -439,7 +482,8 @@ class AdminController extends Controller
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\PatientImport, $request->file('file'));
+            $villageIds = auth()->user()->managedVillageIds();
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\PatientImport($villageIds), $request->file('file'));
             return redirect()->route('admin.users')->with('success', 'Data peserta berhasil diimport!');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
@@ -472,7 +516,23 @@ class AdminController extends Controller
 
     public function logs()
     {
-        $logs = Activity::latest()->get();
+        $query = Activity::latest();
+
+        if (!auth()->user()->isSuperAdmin()) {
+            $villageIds = auth()->user()->managedVillageIds();
+            $query->where(function ($q) use ($villageIds) {
+                $q->where('causer_id', auth()->id())
+                  ->orWhere(function ($sq) use ($villageIds) {
+                      $sq->whereIn('subject_id', $villageIds)
+                         ->where('subject_type', Village::class);
+                  })
+                  ->orWhereHasMorph('subject', [\App\Models\Patient::class, \App\Models\Posyandu::class, \App\Models\VaccinePatient::class], function ($sq) use ($villageIds) {
+                      $sq->whereIn('village_id', $villageIds);
+                  });
+            });
+        }
+
+        $logs = $query->get();
         return view('dashboard.admin.logs.index', compact('logs'));
     }
 
@@ -650,7 +710,8 @@ class AdminController extends Controller
         // Standard GET request: Calculate counts only
         // To be safe and mostly because filtering affects counts, we run the same logic.
         $data = $this->getVaccinationData($request);
-        $villages = Village::with('posyandus')->get();
+        $villageIds = auth()->user()->managedVillageIds();
+        $villages = Village::with('posyandus')->whereIn('id', $villageIds)->get();
         $vaccines = Vaccine::orderBy('minimum_age')->get();
 
         return view('dashboard.admin.history.index', [
@@ -706,7 +767,7 @@ class AdminController extends Controller
             'terlewat' => 'Terlewat (Overdue)',
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.history-pdf', [
+        $pdf = Pdf::loadView('exports.history-pdf', [
             'data' => $collection,
             'status' => $status,
             'statusLabel' => $statusLabels[$status] ?? $status,
@@ -720,7 +781,9 @@ class AdminController extends Controller
 
     private function getVaccinationData($request, $status = null)
     {
-        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'vaccinePatients.posyandu', 'village', 'posyandu']);
+        $villageIds = auth()->user()->managedVillageIds();
+        $query = \App\Models\Patient::with(['vaccinePatients.vaccine', 'vaccinePatients.posyandu', 'village', 'posyandu'])
+            ->whereIn('village_id', $villageIds);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -893,6 +956,7 @@ class AdminController extends Controller
 
         // Fetch patient to get their village_id and posyandu_id
         $patient = \App\Models\Patient::findOrFail($request->patient_id);
+        abort_unless(in_array($patient->village_id, auth()->user()->managedVillageIds()), 403);
 
         \App\Models\VaccinePatient::updateOrCreate(
             [
@@ -936,6 +1000,7 @@ class AdminController extends Controller
 
         // Send "Approved" Notification
         $patient = \App\Models\Patient::with('vaccinePatients', 'village')->find($request->patient_id);
+        abort_unless(in_array($patient->village_id, auth()->user()->managedVillageIds()), 403);
         $vaccine = \App\Models\Vaccine::find($request->vaccine_id);
 
         if ($patient->phone) {
@@ -1048,6 +1113,7 @@ class AdminController extends Controller
         ]);
 
         $record = \App\Models\VaccinePatient::findOrFail($request->id);
+        abort_unless(in_array($record->village_id, auth()->user()->managedVillageIds()), 403);
 
         $kipiData = $request->kipi;
         if (($key = array_search('Lainnya', $kipiData)) !== false) {
@@ -1076,6 +1142,8 @@ class AdminController extends Controller
             ->where('status', 'selesai')
             ->firstOrFail();
 
+        abort_unless(in_array($record->village_id, auth()->user()->managedVillageIds()), 403);
+
         $data = [
             'record' => $record,
             'patient' => $record->patient,
@@ -1084,13 +1152,14 @@ class AdminController extends Controller
             'posyandu' => $record->posyandu,
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
+        $pdf = Pdf::loadView('pdf.certificate', $data);
         return $pdf->download('Sertifikat_Vaksin_' . $record->patient->name . '.pdf');
     }
 
     public function rollbackHistory(Request $request, $id)
     {
         $record = \App\Models\VaccinePatient::findOrFail($id);
+        abort_unless(in_array($record->village_id, auth()->user()->managedVillageIds()), 403);
         $patient = $record->patient;
 
         $record->delete();
@@ -1103,6 +1172,7 @@ class AdminController extends Controller
     public function approveRequest($id)
     {
         $record = \App\Models\VaccinePatient::findOrFail($id);
+        abort_unless(in_array($record->village_id, auth()->user()->managedVillageIds()), 403);
         $record->update([
             'status' => 'selesai',
             'vaccinated_at' => now() // Set to now upon approval
@@ -1118,6 +1188,7 @@ class AdminController extends Controller
     public function rejectRequest($id)
     {
         $record = \App\Models\VaccinePatient::findOrFail($id);
+        abort_unless(in_array($record->village_id, auth()->user()->managedVillageIds()), 403);
         $record->delete(); // Or set status to 'rejected' if column exists? Usually delete or 'rejected'.
         // Request table status is enum('pendding', 'selesai'...). If no rejected status, delete.
         // Schema check? Assuming delete for now as per dashboard view using DELETE method.
@@ -1177,12 +1248,14 @@ class AdminController extends Controller
     // Admin Users Management
     public function adminUsers()
     {
+        abort_if(!auth()->user()->isSuperAdmin(), 403);
         $admins = User::where('role', 'admin')->get();
         return view('dashboard.admin.admins.index', compact('admins'));
     }
 
     public function storeAdminUser(Request $request)
     {
+        abort_if(!auth()->user()->isSuperAdmin(), 403);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -1201,6 +1274,7 @@ class AdminController extends Controller
 
     public function updateAdminUser(Request $request, User $admin)
     {
+        abort_if(!auth()->user()->isSuperAdmin(), 403);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $admin->id,
@@ -1221,6 +1295,7 @@ class AdminController extends Controller
 
     public function destroyAdminUser(User $admin)
     {
+        abort_if(!auth()->user()->isSuperAdmin(), 403);
         if ($admin->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun sendiri');
         }
@@ -1283,7 +1358,10 @@ class AdminController extends Controller
         }
 
         // Get Unique KIPI values for filter
-        $allKipi = \App\Models\VaccinePatient::whereNotNull('kipi')->pluck('kipi');
+        $villageIds = auth()->user()->managedVillageIds();
+        $allKipi = \App\Models\VaccinePatient::whereIn('village_id', $villageIds)
+            ->whereNotNull('kipi')
+            ->pluck('kipi');
         $kipiList = [];
         foreach ($allKipi as $kArray) {
             if (is_array($kArray)) {
@@ -1304,7 +1382,7 @@ class AdminController extends Controller
         }
         sort($kipiList);
 
-        $villages = \App\Models\Village::all();
+        $villages = \App\Models\Village::whereIn('id', auth()->user()->managedVillageIds())->get();
 
         return view('dashboard.admin.kipi.index', compact('kipiList', 'villages'));
     }
@@ -1312,11 +1390,13 @@ class AdminController extends Controller
     public function getDashboardChartData(Request $request)
     {
         $year = $request->input('year', date('Y'));
+        $villageIds = auth()->user()->managedVillageIds();
 
         // 1. Monthly Trend (Line Chart)
         $monthlyTrend = DB::table('patients')
             ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
             ->whereYear('created_at', $year)
+            ->whereIn('village_id', $villageIds)
             ->whereNull('deleted_at') // Exclude soft deleted records
             ->groupBy('month')
             ->orderBy('month')
@@ -1335,8 +1415,7 @@ class AdminController extends Controller
         $villageData = DB::table('patients')
             ->join('villages', 'patients.village_id', '=', 'villages.id')
             ->select('villages.name', DB::raw('count(patients.id) as total'))
-            //->whereYear('patients.created_at', $year) // Optional: restrict by year or show all-time? User asked for "Banyak pesertanya". Let's show All Time for Village but maybe offer filter? 
-            // The previous requirement was "per month/year". Let's stick to the current YEAR filter for consistency with the dashboard view.
+            ->whereIn('patients.village_id', $villageIds)
             ->whereYear('patients.created_at', $year)
             ->whereNull('patients.deleted_at') // Exclude soft deleted records
             ->groupBy('villages.name')
@@ -1370,7 +1449,7 @@ class AdminController extends Controller
         $vaccines = Vaccine::orderBy('minimum_age')->get();
 
         // Get Villages
-        $villages = Village::query();
+        $villages = Village::whereIn('id', auth()->user()->managedVillageIds());
         if ($search) {
             $villages->where('name', 'like', "%{$search}%");
         }

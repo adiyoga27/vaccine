@@ -25,13 +25,13 @@ class NotificationController extends Controller
              'pending' => NotificationLog::where('status', 'pending')->count(),
              'failed' => NotificationLog::where('status', 'failed')->count(),
         ];
-        return view('dashboard.admin.notifications.config', compact('stats', 'session'));
+        return view('dashboard.superadmin.notifications.config', compact('stats', 'session'));
     }
 
     public function templates()
     {
         $templates = NotificationTemplate::all();
-        return view('dashboard.admin.notifications.templates', compact('templates'));
+        return view('dashboard.superadmin.notifications.templates', compact('templates'));
     }
 
     public function updateTemplate(Request $request, $id)
@@ -60,7 +60,7 @@ class NotificationController extends Controller
 
         $logs = $query->paginate(20)->withQueryString();
         
-        return view('dashboard.admin.notifications.history', compact('logs'));
+        return view('dashboard.superadmin.notifications.history', compact('logs'));
     }
 
     public function scan()
