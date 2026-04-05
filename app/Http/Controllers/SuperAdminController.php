@@ -319,4 +319,37 @@ class SuperAdminController extends Controller
         $filename = 'laporan_capaian_vaksinasi_superadmin_' . date('Y-m-d_His') . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SuperadminImmunizationExport($request), $filename);
     }
+
+    // ==============================
+    // Posyandu CRUD
+    // ==============================
+
+    public function storePosyandu(Request $request)
+    {
+        $request->validate([
+            'village_id' => 'required|exists:villages,id',
+            'name' => 'required|string|max:255',
+            'address' => 'nullable|string'
+        ]);
+
+        \App\Models\Posyandu::create($request->only(['village_id', 'name', 'address']));
+        return back()->with('success', 'Posyandu berhasil ditambahkan');
+    }
+
+    public function updatePosyandu(Request $request, \App\Models\Posyandu $posyandu)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'nullable|string'
+        ]);
+
+        $posyandu->update($request->only(['name', 'address']));
+        return back()->with('success', 'Posyandu berhasil diperbarui');
+    }
+
+    public function destroyPosyandu(\App\Models\Posyandu $posyandu)
+    {
+        $posyandu->delete();
+        return back()->with('success', 'Posyandu berhasil dihapus');
+    }
 }

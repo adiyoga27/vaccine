@@ -45,14 +45,16 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex justify-end gap-2">
+                                    <button onclick='openPosyanduModal(@json($village))'
+                                        class="text-green-600 hover:text-green-900 border border-green-200 px-3 py-1 rounded-md hover:bg-green-50 text-xs">Posyandu</button>
                                     <button onclick="openEditModal({{ $village->id }}, '{{ $village->name }}')"
-                                        class="text-indigo-600 hover:text-indigo-900 border border-indigo-200 px-3 py-1 rounded-md hover:bg-indigo-50">Edit</button>
+                                        class="text-indigo-600 hover:text-indigo-900 border border-indigo-200 px-3 py-1 rounded-md hover:bg-indigo-50 text-xs">Edit</button>
                                     <form action="{{ route('superadmin.villages.destroy', $village->id) }}" method="POST"
                                         onsubmit="return confirm('Yakin ingin menghapus?');" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="text-red-600 hover:text-red-900 border border-red-200 px-3 py-1 rounded-md hover:bg-red-50">Hapus</button>
+                                            class="text-red-600 hover:text-red-900 border border-red-200 px-3 py-1 rounded-md hover:bg-red-50 text-xs">Hapus</button>
                                     </form>
                                 </div>
                             </td>
@@ -119,6 +121,60 @@
                         class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Posyandu Management Modal -->
+    <div id="posyanduModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900" id="posyanduModalTitle">Kelola Posyandu</h3>
+                    <p class="text-sm text-gray-500" id="posyanduModalSubtitle">Daftar posyandu</p>
+                </div>
+                <button onclick="document.getElementById('posyanduModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Add New Posyandu Form -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-100">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Tambah Posyandu Baru</h4>
+                <form action="{{ route('superadmin.posyandus.store') }}" method="POST" class="flex gap-2">
+                    @csrf
+                    <input type="hidden" name="village_id" id="posyandu_village_id">
+                    <input type="text" name="name" placeholder="Nama Posyandu" required
+                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                    <input type="text" name="address" placeholder="Alamat (Opsional)"
+                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 whitespace-nowrap">
+                        + Tambah
+                    </button>
+                </form>
+            </div>
+
+            <!-- Posyandu List -->
+            <div class="overflow-y-auto max-h-64">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Posyandu</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="posyanduListBody">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+                <p id="noPosyanduMsg" class="text-center text-gray-500 py-4 hidden">Belum ada data posyandu.</p>
+            </div>
         </div>
     </div>
 
@@ -196,6 +252,36 @@
             document.getElementById('editForm').action = '/superadmin/villages/' + id;
             document.getElementById('edit_name').value = name;
             document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function openPosyanduModal(village) {
+            document.getElementById('posyanduModalTitle').textContent = 'Kelola Posyandu: ' + village.name;
+            document.getElementById('posyandu_village_id').value = village.id;
+            document.getElementById('posyanduModal').classList.remove('hidden');
+
+            const tbody = document.getElementById('posyanduListBody');
+            tbody.innerHTML = '';
+
+            if (village.posyandus && village.posyandus.length > 0) {
+                document.getElementById('noPosyanduMsg').classList.add('hidden');
+                village.posyandus.forEach(posyandu => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                                    <td class="px-4 py-3 text-sm text-gray-900">${posyandu.name}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500">${posyandu.address || '-'}</td>
+                                    <td class="px-4 py-3 text-right text-sm font-medium">
+                                        <form action="/superadmin/posyandus/${posyandu.id}" method="POST" onsubmit="return confirm('Hapus posyandu ini?');" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                        </form>
+                                    </td>
+                                `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                document.getElementById('noPosyanduMsg').classList.remove('hidden');
+            }
         }
 
         function openPatientsModal(villageId, villageName) {
