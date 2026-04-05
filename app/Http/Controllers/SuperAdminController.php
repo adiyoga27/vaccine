@@ -253,4 +253,70 @@ class SuperAdminController extends Controller
         $vaccine->delete();
         return back()->with('success', 'Jenis vaksin berhasil dihapus');
     }
+
+    // ==============================
+    // Reports
+    // ==============================
+
+    public function immunizationReport(Request $request)
+    {
+        $month = (int) $request->input('month', date('n'));
+        $year = (int) $request->input('year', date('Y'));
+        $search = $request->input('search');
+        $office_id = $request->input('office_id');
+
+        // Get All Vaccines for columns
+        $vaccines = Vaccine::orderBy('minimum_age')->get();
+
+        // Get Offices for filter
+        $offices = Office::orderBy('name')->get();
+
+        // Get Villages
+        $villages = Village::query();
+        if ($search) {
+            $villages->where('name', 'like', "%{$search}%");
+        }
+        if ($office_id) {
+            $villages->whereHas('offices', function($q) use ($office_id) {
+                $q->where('offices.id', $office_id);
+            });
+        }
+        $villages = $villages->get();
+
+        // Aggregate Data
+        $data = [];
+
+        foreach ($villages as $village) {
+            // Get completed vaccinations for this village in the selected month/year
+            $records = \App\Models\VaccinePatient::where('village_id', $village->id)
+                ->where('status', 'selesai')
+                ->whereMonth('vaccinated_at', $month)
+                ->whereYear('vaccinated_at', $year)
+                ->with('patient')
+                ->get();
+
+            $villageData = [];
+            foreach ($vaccines as $vaccine) {
+                // Filter records for this vaccine
+                $vaccineRecords = $records->where('vaccine_id', $vaccine->id);
+
+                $male = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'male')->count();
+                $female = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'female')->count();
+
+                $villageData[$vaccine->id] = [
+                    'L' => $male,
+                    'P' => $female
+                ];
+            }
+            $data[$village->id] = $villageData;
+        }
+
+        return view('dashboard.superadmin.reports.immunization', compact('villages', 'vaccines', 'data', 'month', 'year', 'offices', 'office_id'));
+    }
+
+    public function exportImmunization(Request $request)
+    {
+        $filename = 'laporan_capaian_vaksinasi_superadmin_' . date('Y-m-d_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SuperadminImmunizationExport($request), $filename);
+    }
 }

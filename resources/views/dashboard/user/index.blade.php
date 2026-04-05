@@ -87,8 +87,8 @@
                                 <h3 class="text-lg font-bold text-gray-900">{{ $patient->name ?? 'Belum ada data' }}
                                 </h3>
                                 <p class="text-sm text-gray-500">
-                                    {{ $patient->gender == 'male' ? 'Laki-laki' : 'Perempuan' }} •
-                                    {{ \Carbon\Carbon::parse($patient->date_birth)->age }} Tahun</p>
+                                    {{ $patient ? ($patient->gender == 'male' ? 'Laki-laki' : 'Perempuan') : 'Belum ditentukan' }} •
+                                    {{ $patient && $patient->date_birth ? \Carbon\Carbon::parse($patient->date_birth)->age . ' Tahun' : '-' }}</p>
                                 <p class="text-xs text-blue-600 font-bold mt-1">Usia Saat Ini: {{ $patientAgeMonths }}
                                     Bulan</p>
                             </div>
@@ -96,16 +96,15 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between border-b pb-2">
                                 <span class="text-gray-500">Ibu Kandung</span>
-                                <span class="font-medium">{{ $patient->mother_name }}</span>
+                                <span class="font-medium">{{ $patient->mother_name ?? '-' }}</span>
                             </div>
                             <div class="flex justify-between border-b pb-2">
                                 <span class="text-gray-500">Tanggal Lahir</span>
-                                <span
-                                    class="font-medium">{{ \Carbon\Carbon::parse($patient->date_birth)->format('d F Y') }}</span>
+                                <span class="font-medium">{{ $patient && $patient->date_birth ? \Carbon\Carbon::parse($patient->date_birth)->format('d F Y') : '-' }}</span>
                             </div>
                             <div class="flex justify-between border-b pb-2">
                                 <span class="text-gray-500">Dusun</span>
-                                <span class="font-medium text-right">{{ $patient->address }}</span>
+                                <span class="font-medium text-right">{{ $patient->address ?? '-' }}</span>
                             </div>
                         </div>
 

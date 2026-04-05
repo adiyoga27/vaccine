@@ -319,6 +319,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('superadmin.notifications.scan');
     Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('superadmin.notifications.status');
     Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('superadmin.notifications.logout');
+    // Reports
+    Route::get('/reports/immunization', [\App\Http\Controllers\SuperAdminController::class, 'immunizationReport'])->name('superadmin.reports.immunization');
+    Route::get('/reports/immunization/export', [\App\Http\Controllers\SuperAdminController::class, 'exportImmunization'])->name('superadmin.reports.immunization.export');
 });
 
 // Admin Dashboard
