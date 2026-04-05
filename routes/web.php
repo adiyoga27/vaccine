@@ -303,6 +303,11 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::put('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'updateVillage'])->name('superadmin.villages.update');
     Route::delete('/villages/{village}', [\App\Http\Controllers\SuperAdminController::class, 'destroyVillage'])->name('superadmin.villages.destroy');
 
+    // Posyandus
+    Route::post('/posyandus', [\App\Http\Controllers\SuperAdminController::class, 'storePosyandu'])->name('superadmin.posyandus.store');
+    Route::put('/posyandus/{posyandu}', [\App\Http\Controllers\SuperAdminController::class, 'updatePosyandu'])->name('superadmin.posyandus.update');
+    Route::delete('/posyandus/{posyandu}', [\App\Http\Controllers\SuperAdminController::class, 'destroyPosyandu'])->name('superadmin.posyandus.destroy');
+
     // Vaccine CRUD
     Route::get('/vaccines', [\App\Http\Controllers\SuperAdminController::class, 'vaccines'])->name('superadmin.vaccines');
     Route::post('/vaccines', [\App\Http\Controllers\SuperAdminController::class, 'storeVaccine'])->name('superadmin.vaccines.store');

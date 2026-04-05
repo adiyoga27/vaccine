@@ -118,7 +118,9 @@
                 <div class="flex space-x-4">
                     @if (Route::has('login'))
                         @auth
-                            @if(Auth::user()->role === 'admin')
+                            @if(Auth::user()->role === 'superadmin')
+                                <a href="{{ route('superadmin.dashboard') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
+                            @elseif(Auth::user()->role === 'admin')
                                 <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
                             @else
                                 <a href="{{ route('user.dashboard') }}" class="text-gray-700 hover:text-amber-600 font-medium px-3 py-2 rounded-md transition">Dashboard</a>
