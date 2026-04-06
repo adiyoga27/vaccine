@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(auth()->user()->isSuperAdmin() ? 'layouts.superadmin' : 'layouts.admin')
 
 @section('title', 'Edit Data Peserta')
 
