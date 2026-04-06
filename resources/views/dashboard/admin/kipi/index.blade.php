@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(auth()->user()->isSuperAdmin() ? 'layouts.superadmin' : 'layouts.admin')
 
 @section('content')
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

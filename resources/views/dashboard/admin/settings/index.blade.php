@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(auth()->user()->isSuperAdmin() ? 'layouts.superadmin' : 'layouts.admin')
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
