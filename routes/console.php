@@ -20,3 +20,12 @@ Artisan::command('inspire', function () {
 })
 ->everyTenMinutes()
 ->timezone('Asia/Makassar');
+
+// Process background queue using the existing schedule:run cron job without proc_open
+\Illuminate\Support\Facades\Schedule::call(function () {
+    \Illuminate\Support\Facades\Artisan::call('queue:work', [
+        '--stop-when-empty' => true,
+    ]);
+})
+->everyMinute()
+->withoutOverlapping();
