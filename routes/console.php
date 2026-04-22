@@ -27,5 +27,6 @@ Artisan::command('inspire', function () {
         '--stop-when-empty' => true,
     ]);
 })
+->name('process-queue-worker')
 ->everyMinute()
 ->withoutOverlapping();
