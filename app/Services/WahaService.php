@@ -71,4 +71,14 @@ class WahaService
 
         return $response;
     }
+
+    public function isConnected(): bool
+    {
+        try {
+            $session = $this->getSession();
+            return isset($session['status']) && $session['status'] === 'WORKING';
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

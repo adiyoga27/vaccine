@@ -35,6 +35,11 @@ class SendDailyReminders extends Command
     {
         $this->info('Scanning for daily vaccination reminders...');
 
+        if (!$this->waha->isConnected()) {
+            $this->error('WhatsApp is not connected (WORKING). Skipping daily reminders.');
+            return;
+        }
+
         // Logic to find patients who have a vaccine "Scheduled" for TODAY
         // "Scheduled" means VaccinePatient status is 'pengajuan' and schedule_at is today
 

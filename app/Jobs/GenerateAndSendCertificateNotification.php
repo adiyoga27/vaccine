@@ -45,6 +45,10 @@ class GenerateAndSendCertificateNotification implements ShouldQueue
                     'certificate_link' => $link
                 ]);
 
+                if (!$waha->isConnected()) {
+                    return;
+                }
+
                 $response = $waha->sendMessage($patient->phone, $message);
                 $body = $response->json();
 

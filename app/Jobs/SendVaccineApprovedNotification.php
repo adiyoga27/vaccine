@@ -54,6 +54,10 @@ class SendVaccineApprovedNotification implements ShouldQueue
                     'posyandu_name' => $posyanduName,
                 ]);
 
+                if (!$waha->isConnected()) {
+                    return;
+                }
+
                 $response = $waha->sendMessage($patient->phone, $msg);
                 $body = $response->json();
 

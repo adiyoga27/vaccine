@@ -998,6 +998,10 @@ class AdminController extends Controller
             ]
         );
 
+        // Authorization Check
+        $patient = \App\Models\Patient::findOrFail($request->patient_id);
+        abort_unless(in_array($patient->village_id, auth()->user()->managedVillageIds()), 403);
+
         // Send "Approved" Notification via Queue
         dispatch(new \App\Jobs\SendVaccineApprovedNotification(
             $request->patient_id, 
@@ -1006,9 +1010,8 @@ class AdminController extends Controller
         ));
 
         // Check Completion (only required vaccines)
-        $patient = \App\Models\Patient::with('vaccinePatients')->find($request->patient_id);
         $requiredVaccineIds = \App\Models\Vaccine::where('is_required', true)->pluck('id');
-        $completedRequiredCount = $patient->vaccinePatients
+        $completedRequiredCount = $patient->vaccinePatients()
             ->where('status', 'selesai')
             ->whereIn('vaccine_id', $requiredVaccineIds->toArray())
             ->count();

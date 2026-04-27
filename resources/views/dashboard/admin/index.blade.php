@@ -7,6 +7,20 @@
         <p class="text-gray-500">Selamat datang kembali di Dashboard Inovasi Sehat.</p>
     </div>
 
+    @if(!$waStatus)
+    <div class="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex items-center shadow-sm">
+        <div class="flex-shrink-0 bg-red-100 p-2 rounded-full text-red-600 mr-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+        <div>
+            <h4 class="font-bold text-red-800">WhatsApp Tidak Terhubung!</h4>
+            <p class="text-sm text-red-700">Akun WhatsApp belum di-scan atau koneksi terputus. <strong>Semua notifikasi otomatis tidak akan terkirim.</strong> Silakan hubungi Superadmin untuk melakukan scan ulang.</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
