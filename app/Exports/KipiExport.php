@@ -11,15 +11,18 @@ use Illuminate\Http\Request;
 class KipiExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $request;
+    protected $villageIds;
 
-    public function __construct(Request $request)
+    public function __construct(Request $request, array $villageIds = [])
     {
         $this->request = $request;
+        $this->villageIds = $villageIds;
     }
 
     public function collection()
     {
         $query = VaccinePatient::with(['patient', 'vaccine', 'village', 'posyandu'])
+            ->whereIn('village_id', $this->villageIds)
             ->whereNotNull('kipi')
             ->where('kipi', '!=', '[]')
             ->where('kipi', '!=', 'null');

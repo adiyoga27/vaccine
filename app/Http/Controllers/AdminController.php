@@ -1230,8 +1230,11 @@ class AdminController extends Controller
 
     public function kipi(Request $request)
     {
+        $villageIds = auth()->user()->managedVillageIds();
+
         if ($request->ajax()) {
             $query = \App\Models\VaccinePatient::with(['patient', 'vaccine', 'village', 'posyandu'])
+                ->whereIn('village_id', $villageIds)
                 ->whereNotNull('kipi')
                 ->where('kipi', '!=', '[]')
                 ->where('kipi', '!=', 'null'); // Safety check
@@ -1278,7 +1281,6 @@ class AdminController extends Controller
         }
 
         // Get Unique KIPI values for filter
-        $villageIds = auth()->user()->managedVillageIds();
         $allKipi = \App\Models\VaccinePatient::whereIn('village_id', $villageIds)
             ->whereNotNull('kipi')
             ->pluck('kipi');
@@ -1302,7 +1304,7 @@ class AdminController extends Controller
         }
         sort($kipiList);
 
-        $villages = \App\Models\Village::whereIn('id', auth()->user()->managedVillageIds())->get();
+        $villages = \App\Models\Village::whereIn('id', $villageIds)->get();
 
         return view('dashboard.admin.kipi.index', compact('kipiList', 'villages'));
     }
@@ -1355,8 +1357,9 @@ class AdminController extends Controller
 
     public function exportKipiExcel(Request $request)
     {
+        $villageIds = auth()->user()->managedVillageIds();
         $filename = 'riwayat_kipi_' . date('Y-m-d_His') . '.xlsx';
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KipiExport($request), $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KipiExport($request, $villageIds), $filename);
     }
 
     public function immunizationReport(Request $request)
