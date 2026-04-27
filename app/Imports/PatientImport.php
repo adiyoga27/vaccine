@@ -8,10 +8,11 @@ use App\Models\Village;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class PatientImport implements ToModel, WithHeadingRow, WithValidation
+class PatientImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmptyRows
 {
     protected $villageIds;
 
