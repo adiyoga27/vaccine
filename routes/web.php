@@ -348,7 +348,10 @@ Route::middleware(['auth', 'admin_or_superadmin'])->prefix('admin')->group(funct
             ->latest()
             ->get();
 
-        return view('dashboard.admin.index', compact('stats', 'requests'));
+        $waha = app(\App\Services\WahaService::class);
+        $waStatus = $waha->isConnected();
+
+        return view('dashboard.admin.index', compact('stats', 'requests', 'waStatus'));
     })->name('admin.dashboard');
 
     Route::get('/dashboard/chart-data', [\App\Http\Controllers\AdminController::class, 'getDashboardChartData'])->name('admin.chart.data');

@@ -1020,24 +1020,26 @@ class AdminController extends Controller
 
                     // Send via Waha
                     $waha = app(\App\Services\WahaService::class);
-                    $response = $waha->sendMessage($patient->phone, $msg);
-                    $body = $response->json();
+                    if ($waha->isConnected()) {
+                        $response = $waha->sendMessage($patient->phone, $msg);
+                        $body = $response->json();
 
-                    if ($response->successful() && isset($body['id']['fromMe'])) {
-                        \App\Models\NotificationLog::create([
-                            'to' => $patient->phone,
-                            'message' => $msg,
-                            'status' => 'sent',
-                            'response' => $response->body(),
-                            'sent_at' => now(),
-                        ]);
-                    } else {
-                        \App\Models\NotificationLog::create([
-                            'to' => $patient->phone,
-                            'message' => $msg,
-                            'status' => 'failed',
-                            'response' => $response->body()
-                        ]);
+                        if ($response->successful() && isset($body['id']['fromMe'])) {
+                            \App\Models\NotificationLog::create([
+                                'to' => $patient->phone,
+                                'message' => $msg,
+                                'status' => 'sent',
+                                'response' => $response->body(),
+                                'sent_at' => now(),
+                            ]);
+                        } else {
+                            \App\Models\NotificationLog::create([
+                                'to' => $patient->phone,
+                                'message' => $msg,
+                                'status' => 'failed',
+                                'response' => $response->body()
+                            ]);
+                        }
                     }
                 } catch (\Exception $e) {
                     // Log silent error
@@ -1071,24 +1073,26 @@ class AdminController extends Controller
 
                     // Send via Waha (Instantiate service manually or resolve from container since we are in controller method and didnt inject in constructor yet)
                     $waha = app(\App\Services\WahaService::class);
-                    $response = $waha->sendMessage($patient->phone, $message);
-                    $body = $response->json();
+                    if ($waha->isConnected()) {
+                        $response = $waha->sendMessage($patient->phone, $message);
+                        $body = $response->json();
 
-                    if ($response->successful() && isset($body['id']['fromMe'])) {
-                        \App\Models\NotificationLog::create([
-                            'to' => $patient->phone,
-                            'message' => $message,
-                            'status' => 'sent',
-                            'response' => $response->body(),
-                            'sent_at' => now(),
-                        ]);
-                    } else {
-                        \App\Models\NotificationLog::create([
-                            'to' => $patient->phone,
-                            'message' => $message,
-                            'status' => 'failed',
-                            'response' => $response->body()
-                        ]);
+                        if ($response->successful() && isset($body['id']['fromMe'])) {
+                            \App\Models\NotificationLog::create([
+                                'to' => $patient->phone,
+                                'message' => $message,
+                                'status' => 'sent',
+                                'response' => $response->body(),
+                                'sent_at' => now(),
+                            ]);
+                        } else {
+                            \App\Models\NotificationLog::create([
+                                'to' => $patient->phone,
+                                'message' => $message,
+                                'status' => 'failed',
+                                'response' => $response->body()
+                            ]);
+                        }
                     }
                 } catch (\Exception $e) {
                     \App\Models\NotificationLog::create([
