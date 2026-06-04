@@ -20,16 +20,29 @@
             <p class="mt-2 text-sm text-gray-500">Memuat status...</p>
         </div>
 
+        <!-- Starting / Transisi -->
+        <div x-show="!loading && status === 'STARTING'" class="text-center py-6">
+            <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm text-gray-600 mt-3">Memulai sesi WhatsApp...</p>
+            <p class="text-xs text-gray-400 mt-1">Mohon tunggu beberapa saat</p>
+        </div>
+
         <!-- Not Connected / QR -->
-        <div x-show="!loading && status !== 'WORKING' && status !== 'OFFLINE' && status !== 'FAILED'" class="text-center">
+        <div x-show="!loading && status !== 'WORKING' && status !== 'OFFLINE' && status !== 'FAILED' && status !== 'STARTING'" class="text-center">
             <div x-show="qrCode" class="mb-4">
                 <img :src="qrCode" alt="Scan QR" class="mx-auto border p-2 rounded-lg w-48 h-48 object-contain">
                 <p class="text-xs text-gray-500 mt-2">Scan QR Code dengan WhatsApp</p>
             </div>
             <div x-show="!qrCode" class="py-4">
-                <p class="text-sm text-yellow-600 mb-3" x-text="status === 'STOPPED' ? 'Sesi sedang berhenti.' : 'Menunggu QR Code...'"></p>
+                <p class="text-sm text-yellow-600 mb-3" x-text="status === 'STOPPED' ? 'Sesi sedang berhenti.' : status === 'SCAN_QR_CODE' ? 'QR Code belum tersedia...' : 'Menunggu QR Code...'"></p>
                 <div class="space-y-2">
-                    <button @click="startSession" :disabled="actionLoading" class="w-full bg-blue-600 text-white hover:bg-blue-700 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <button x-show="status === 'SCAN_QR_CODE'" @click="fetchQR" class="w-full bg-blue-600 text-white hover:bg-blue-700 py-2 rounded-lg text-sm font-medium transition">
+                        Muat QR
+                    </button>
+                    <button x-show="status !== 'SCAN_QR_CODE'" @click="startSession" :disabled="actionLoading" class="w-full bg-blue-600 text-white hover:bg-blue-700 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
                         <span x-show="!actionLoading">Mulai Sesi</span>
                         <span x-show="actionLoading">Memproses...</span>
                     </button>
@@ -141,6 +154,8 @@
             loading: true,
             actionLoading: false,
             pollInterval: null,
+            qrPollInterval: null,
+            fastPollInterval: null,
 
             init() {
                 this.fetchStatus();
@@ -149,22 +164,62 @@
                 }, 10000);
             },
 
+            startFastPoll() {
+                this.stopFastPoll();
+                this.fastPollInterval = setInterval(() => {
+                    this.fetchStatus(false);
+                }, 2000);
+            },
+
+            stopFastPoll() {
+                if (this.fastPollInterval) {
+                    clearInterval(this.fastPollInterval);
+                    this.fastPollInterval = null;
+                }
+            },
+
+            startQRPoll() {
+                this.stopQRPoll();
+                this.qrPollInterval = setInterval(() => {
+                    if (this.status === 'SCAN_QR_CODE' && !this.qrCode) {
+                        this.fetchQR();
+                    } else {
+                        this.stopQRPoll();
+                    }
+                }, 2000);
+            },
+
+            stopQRPoll() {
+                if (this.qrPollInterval) {
+                    clearInterval(this.qrPollInterval);
+                    this.qrPollInterval = null;
+                }
+            },
+
             async fetchStatus(showLoading = true) {
                 if (showLoading) this.loading = true;
                 try {
                     const res = await fetch('{{ route("superadmin.notifications.status") }}');
                     const data = await res.json();
-                    
+
                     if (data.status) {
+                        const prevStatus = this.status;
                         this.status = data.status;
                         this.me = data.me;
                         if (this.status === 'SCAN_QR_CODE') {
                             await this.fetchQR();
+                            if (!this.qrCode) this.startQRPoll();
                         } else {
+                            this.stopQRPoll();
                             this.qrCode = null;
+                        }
+                        if (this.status !== 'STARTING' && this.status !== 'SCAN_QR_CODE') {
+                            this.stopFastPoll();
                         }
                     } else {
                         this.status = 'STOPPED';
+                        this.stopFastPoll();
+                        this.stopQRPoll();
                     }
                 } catch (e) {
                     console.error(e);
@@ -177,8 +232,9 @@
                 try {
                     const res = await fetch('{{ route("superadmin.notifications.scan") }}');
                     const data = await res.json();
-                    if(data.qr) {
+                    if (data.qr) {
                         this.qrCode = data.qr;
+                        this.stopQRPoll();
                     }
                 } catch (e) {
                     console.error(e);
@@ -187,9 +243,14 @@
 
             async startSession() {
                 this.actionLoading = true;
+                this.status = 'STARTING';
+                this.qrCode = null;
+                this.stopQRPoll();
                 try {
                     await fetch('{{ route("superadmin.notifications.start") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await new Promise(r => setTimeout(r, 2000));
                     await this.fetchStatus();
+                    this.startFastPoll();
                 } catch (e) {
                     console.error(e);
                 } finally {
@@ -199,8 +260,11 @@
 
             async stopSession() {
                 this.actionLoading = true;
+                this.stopFastPoll();
+                this.stopQRPoll();
                 try {
                     await fetch('{{ route("superadmin.notifications.stop") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await new Promise(r => setTimeout(r, 1500));
                     await this.fetchStatus();
                 } catch (e) {
                     console.error(e);
@@ -211,9 +275,14 @@
 
             async restartSession() {
                 this.actionLoading = true;
+                this.status = 'STARTING';
+                this.qrCode = null;
+                this.stopQRPoll();
                 try {
                     await fetch('{{ route("superadmin.notifications.restart") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await new Promise(r => setTimeout(r, 2000));
                     await this.fetchStatus();
+                    this.startFastPoll();
                 } catch (e) {
                     console.error(e);
                 } finally {
@@ -223,8 +292,11 @@
 
             async logoutSession() {
                 this.actionLoading = true;
+                this.stopFastPoll();
+                this.stopQRPoll();
                 try {
                     await fetch('{{ route("superadmin.notifications.logout") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await new Promise(r => setTimeout(r, 1500));
                     await this.fetchStatus();
                 } catch (e) {
                     console.error(e);
