@@ -7,9 +7,16 @@ use Illuminate\Support\Facades\Log;
 
 class WahaService
 {
-    protected $baseUrl = 'https://waha.galkasoft.id';
-    protected $apiKey = 'Galkasoft2025Waha';
-    protected $session = 'adiyoga';
+    protected $baseUrl;
+    protected $apiKey;
+    protected $session;
+
+    public function __construct()
+    {
+        $this->baseUrl = config('services.waha.api_url');
+        $this->apiKey = config('services.waha.api_key');
+        $this->session = config('services.waha.session');
+    }
 
     public function getSession()
     {

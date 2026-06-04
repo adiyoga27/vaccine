@@ -88,8 +88,8 @@
         <div class="bg-blue-50 border border-blue-100 rounded-xl p-6">
             <h3 class="font-bold text-blue-800 mb-2">Informasi API</h3>
             <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
-                <li>Sesi: <strong>adiyoga</strong></li>
-                <li>URL: <strong>https://waha.galkasoft.id</strong></li>
+                <li>Sesi: <strong>{{ config('services.waha.session') }}</strong></li>
+                <li>URL: <strong>{{ config('services.waha.api_url') }}</strong></li>
                 <li>Gunakan halaman 'Template' untuk mengatur pesan otomatis.</li>
             </ul>
         </div>
