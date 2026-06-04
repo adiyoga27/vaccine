@@ -27,8 +27,14 @@
                 <p class="text-xs text-gray-500 mt-2">Scan QR Code dengan WhatsApp</p>
             </div>
             <div x-show="!qrCode" class="py-4">
-                <p class="text-sm text-red-500">Menunggu QR Code...</p>
-                <button @click="fetchStatus" class="mt-2 text-blue-600 hover:underline text-xs">Refresh</button>
+                <p class="text-sm text-yellow-600 mb-3" x-text="status === 'STOPPED' ? 'Sesi sedang berhenti.' : 'Menunggu QR Code...'"></p>
+                <div class="space-y-2">
+                    <button @click="startSession" :disabled="actionLoading" class="w-full bg-blue-600 text-white hover:bg-blue-700 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                        <span x-show="!actionLoading">Mulai Sesi</span>
+                        <span x-show="actionLoading">Memproses...</span>
+                    </button>
+                    <button @click="fetchStatus" class="w-full text-blue-600 hover:underline text-xs">Refresh</button>
+                </div>
             </div>
         </div>
 
@@ -59,12 +65,20 @@
                 Terhubung
             </div>
 
-            <form action="{{ route('superadmin.notifications.logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg text-sm font-medium transition">
-                    Logout
+            <div class="space-y-2">
+                <button @click="restartSession" :disabled="actionLoading" class="w-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!actionLoading">Restart</span>
+                    <span x-show="actionLoading">Memproses...</span>
                 </button>
-            </form>
+                <button @click="stopSession" :disabled="actionLoading" class="w-full bg-orange-50 text-orange-600 hover:bg-orange-100 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!actionLoading">Stop</span>
+                    <span x-show="actionLoading">Memproses...</span>
+                </button>
+                <button @click="logoutSession" :disabled="actionLoading" class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!actionLoading">Logout</span>
+                    <span x-show="actionLoading">Memproses...</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -103,13 +117,14 @@
             qrCode: null,
             me: null,
             loading: true,
+            actionLoading: false,
             pollInterval: null,
 
             init() {
                 this.fetchStatus();
                 this.pollInterval = setInterval(() => {
                     this.fetchStatus(false);
-                }, 10000); // Poll every 10s
+                }, 10000);
             },
 
             async fetchStatus(showLoading = true) {
@@ -145,6 +160,54 @@
                     }
                 } catch (e) {
                     console.error(e);
+                }
+            },
+
+            async startSession() {
+                this.actionLoading = true;
+                try {
+                    await fetch('{{ route("superadmin.notifications.start") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await this.fetchStatus();
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.actionLoading = false;
+                }
+            },
+
+            async stopSession() {
+                this.actionLoading = true;
+                try {
+                    await fetch('{{ route("superadmin.notifications.stop") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await this.fetchStatus();
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.actionLoading = false;
+                }
+            },
+
+            async restartSession() {
+                this.actionLoading = true;
+                try {
+                    await fetch('{{ route("superadmin.notifications.restart") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await this.fetchStatus();
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.actionLoading = false;
+                }
+            },
+
+            async logoutSession() {
+                this.actionLoading = true;
+                try {
+                    await fetch('{{ route("superadmin.notifications.logout") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    await this.fetchStatus();
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.actionLoading = false;
                 }
             }
         }))

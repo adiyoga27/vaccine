@@ -324,6 +324,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::get('/notifications/scan', [\App\Http\Controllers\NotificationController::class, 'scan'])->name('superadmin.notifications.scan');
     Route::get('/notifications/status', [\App\Http\Controllers\NotificationController::class, 'status'])->name('superadmin.notifications.status');
     Route::post('/notifications/logout', [\App\Http\Controllers\NotificationController::class, 'logout'])->name('superadmin.notifications.logout');
+    Route::post('/notifications/start', [\App\Http\Controllers\NotificationController::class, 'start'])->name('superadmin.notifications.start');
+    Route::post('/notifications/stop', [\App\Http\Controllers\NotificationController::class, 'stop'])->name('superadmin.notifications.stop');
+    Route::post('/notifications/restart', [\App\Http\Controllers\NotificationController::class, 'restart'])->name('superadmin.notifications.restart');
     // Reports
     Route::get('/reports/immunization', [\App\Http\Controllers\SuperAdminController::class, 'immunizationReport'])->name('superadmin.reports.immunization');
     Route::get('/reports/immunization/export', [\App\Http\Controllers\SuperAdminController::class, 'exportImmunization'])->name('superadmin.reports.immunization.export');

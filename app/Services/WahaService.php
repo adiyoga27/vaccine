@@ -50,6 +50,48 @@ class WahaService
         return null;
     }
 
+    public function start()
+    {
+        try {
+            $response = Http::timeout(5)->withHeaders([
+                'X-Api-Key' => $this->apiKey
+            ])->post("{$this->baseUrl}/api/sessions/{$this->session}/start");
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error("WAHA start error: " . $e->getMessage());
+            return ['status' => 'ERROR'];
+        }
+    }
+
+    public function stop()
+    {
+        try {
+            $response = Http::timeout(5)->withHeaders([
+                'X-Api-Key' => $this->apiKey
+            ])->post("{$this->baseUrl}/api/sessions/{$this->session}/stop");
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error("WAHA stop error: " . $e->getMessage());
+            return ['status' => 'ERROR'];
+        }
+    }
+
+    public function restart()
+    {
+        try {
+            $response = Http::timeout(5)->withHeaders([
+                'X-Api-Key' => $this->apiKey
+            ])->post("{$this->baseUrl}/api/sessions/{$this->session}/restart");
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error("WAHA restart error: " . $e->getMessage());
+            return ['status' => 'ERROR'];
+        }
+    }
+
     public function logout()
     {
         try {

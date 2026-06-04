@@ -63,6 +63,24 @@ class NotificationController extends Controller
         return view('dashboard.superadmin.notifications.history', compact('logs'));
     }
 
+    public function start()
+    {
+        $result = $this->waha->start();
+        return response()->json($result);
+    }
+
+    public function stop()
+    {
+        $result = $this->waha->stop();
+        return response()->json($result);
+    }
+
+    public function restart()
+    {
+        $result = $this->waha->restart();
+        return response()->json($result);
+    }
+
     public function scan()
     {
         $qr = $this->waha->getQR();
