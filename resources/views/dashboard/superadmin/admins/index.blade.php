@@ -21,6 +21,7 @@
                     <th class="px-6 py-3">Nama</th>
                     <th class="px-6 py-3">Email</th>
                     <th class="px-6 py-3">Kantor</th>
+                    <th class="px-6 py-3">Notifikasi</th>
                     <th class="px-6 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
@@ -51,6 +52,18 @@
                             </select>
                         </form>
                     </td>
+                    <td class="px-6 py-4">
+                        <form action="{{ route('superadmin.admins.notifications', $admin->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="hidden" name="can_manage_notifications" value="0">
+                                <input type="checkbox" name="can_manage_notifications" value="1" onchange="this.form.submit()" class="sr-only peer" {{ $admin->can_manage_notifications ? 'checked' : '' }}>
+                                <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                <span class="ms-2 text-xs {{ $admin->can_manage_notifications ? 'text-purple-600 font-semibold' : 'text-gray-400' }}">{{ $admin->can_manage_notifications ? 'Aktif' : 'Nonaktif' }}</span>
+                            </label>
+                        </form>
+                    </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex justify-end gap-2">
                             <button onclick="openEditModal({{ $admin->id }}, '{{ addslashes($admin->name) }}', '{{ addslashes($admin->email) }}', '{{ $admin->office_id }}')" class="text-gray-400 hover:text-blue-600 transition p-1.5">
@@ -68,7 +81,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                         Belum ada data administrator.
                     </td>
                 </tr>
@@ -186,7 +199,7 @@
                 url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
             },
             columnDefs: [
-                { orderable: false, targets: [3, 4] }
+                { orderable: false, targets: [3, 4, 5] }
             ]
         });
     });

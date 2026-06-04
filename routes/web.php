@@ -295,6 +295,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::post('/admins', [\App\Http\Controllers\SuperAdminController::class, 'storeAdmin'])->name('superadmin.admins.store');
     Route::put('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'updateAdmin'])->name('superadmin.admins.update');
     Route::put('/admins/{admin}/office', [\App\Http\Controllers\SuperAdminController::class, 'updateAdminOffice'])->name('superadmin.admins.office');
+    Route::put('/admins/{admin}/notifications', [\App\Http\Controllers\SuperAdminController::class, 'toggleNotificationPermission'])->name('superadmin.admins.notifications');
     Route::delete('/admins/{admin}', [\App\Http\Controllers\SuperAdminController::class, 'destroyAdmin'])->name('superadmin.admins.destroy');
 
     // Village CRUD
@@ -314,7 +315,13 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::put('/vaccines/{vaccine}', [\App\Http\Controllers\SuperAdminController::class, 'updateVaccine'])->name('superadmin.vaccines.update');
     Route::delete('/vaccines/{vaccine}', [\App\Http\Controllers\SuperAdminController::class, 'destroyVaccine'])->name('superadmin.vaccines.destroy');
 
-    // Notifications
+    // Reports
+    Route::get('/reports/immunization', [\App\Http\Controllers\SuperAdminController::class, 'immunizationReport'])->name('superadmin.reports.immunization');
+    Route::get('/reports/immunization/export', [\App\Http\Controllers\SuperAdminController::class, 'exportImmunization'])->name('superadmin.reports.immunization.export');
+});
+
+// Notifications — accessible by superadmin or users with can_manage_notifications permission
+Route::middleware(['auth', 'can:manage-notifications'])->prefix('superadmin')->group(function () {
     Route::get('/notifications/config', [\App\Http\Controllers\NotificationController::class, 'configuration'])->name('superadmin.notifications.config');
     Route::get('/notifications/templates', [\App\Http\Controllers\NotificationController::class, 'templates'])->name('superadmin.notifications.templates');
     Route::put('/notifications/templates/{id}', [\App\Http\Controllers\NotificationController::class, 'updateTemplate'])->name('superadmin.notifications.templates.update');
@@ -327,9 +334,6 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::post('/notifications/start', [\App\Http\Controllers\NotificationController::class, 'start'])->name('superadmin.notifications.start');
     Route::post('/notifications/stop', [\App\Http\Controllers\NotificationController::class, 'stop'])->name('superadmin.notifications.stop');
     Route::post('/notifications/restart', [\App\Http\Controllers\NotificationController::class, 'restart'])->name('superadmin.notifications.restart');
-    // Reports
-    Route::get('/reports/immunization', [\App\Http\Controllers\SuperAdminController::class, 'immunizationReport'])->name('superadmin.reports.immunization');
-    Route::get('/reports/immunization/export', [\App\Http\Controllers\SuperAdminController::class, 'exportImmunization'])->name('superadmin.reports.immunization.export');
 });
 
 // Admin Dashboard

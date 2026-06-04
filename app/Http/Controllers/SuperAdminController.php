@@ -154,6 +154,16 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Administrator berhasil diperbarui');
     }
 
+    public function toggleNotificationPermission(Request $request, User $admin)
+    {
+        if ($admin->role !== 'admin') {
+            return back()->with('error', 'User ini bukan admin');
+        }
+
+        $admin->update(['can_manage_notifications' => $request->boolean('can_manage_notifications')]);
+        return back()->with('success', 'Izin notifikasi untuk "' . $admin->name . '" berhasil diperbarui');
+    }
+
     public function destroyAdmin(User $admin)
     {
         if ($admin->role !== 'admin') {

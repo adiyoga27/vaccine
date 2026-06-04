@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'office_id',
+        'can_manage_notifications',
     ];
 
     protected $hidden = [
@@ -36,6 +37,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_manage_notifications' => 'boolean',
         ];
     }
 
@@ -57,6 +59,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function canManageNotifications(): bool
+    {
+        return $this->isSuperAdmin() || $this->can_manage_notifications;
     }
 
     /**
