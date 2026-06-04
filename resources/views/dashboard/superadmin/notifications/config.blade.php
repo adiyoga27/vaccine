@@ -21,7 +21,7 @@
         </div>
 
         <!-- Not Connected / QR -->
-        <div x-show="!loading && status !== 'WORKING' && status !== 'OFFLINE'" class="text-center">
+        <div x-show="!loading && status !== 'WORKING' && status !== 'OFFLINE' && status !== 'FAILED'" class="text-center">
             <div x-show="qrCode" class="mb-4">
                 <img :src="qrCode" alt="Scan QR" class="mx-auto border p-2 rounded-lg w-48 h-48 object-contain">
                 <p class="text-xs text-gray-500 mt-2">Scan QR Code dengan WhatsApp</p>
@@ -35,6 +35,28 @@
                     </button>
                     <button @click="fetchStatus" class="w-full text-blue-600 hover:underline text-xs">Refresh</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Failed State -->
+        <div x-show="!loading && status === 'FAILED'" class="text-center py-6">
+            <div class="w-16 h-16 rounded-full bg-red-100 mx-auto flex items-center justify-center text-red-600 mb-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h4 class="font-bold text-gray-900">Sesi Gagal</h4>
+            <p class="text-xs text-gray-600 mb-4 px-2">Sesi WhatsApp mengalami kegagalan. Silakan restart atau stop sesi.</p>
+            <div class="space-y-2">
+                <button @click="restartSession" :disabled="actionLoading" class="w-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!actionLoading">Restart</span>
+                    <span x-show="actionLoading">Memproses...</span>
+                </button>
+                <button @click="stopSession" :disabled="actionLoading" class="w-full bg-orange-50 text-orange-600 hover:bg-orange-100 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50">
+                    <span x-show="!actionLoading">Stop</span>
+                    <span x-show="actionLoading">Memproses...</span>
+                </button>
+                <button @click="fetchStatus" class="w-full text-blue-600 hover:underline text-xs">Refresh</button>
             </div>
         </div>
 
