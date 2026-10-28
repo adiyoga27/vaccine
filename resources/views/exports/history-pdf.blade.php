@@ -28,7 +28,7 @@
             color: white;
             font-weight: bold;
         }
-        tr:nth-child(even) {
+        tr.even {
             background-color: #f7fafc;
         }
         .footer {
@@ -77,7 +77,7 @@
             @php $index = 0; @endphp
             @foreach($data as $row)
                 @php $index++; @endphp
-                <tr>
+                <tr @if($index % 2 === 0) class="even" @endif>
                     <td>{{ $index }}</td>
                     <td>{{ $row->patient->name ?? '-' }}</td>
                     <td>{{ $row->mother_name ?? $row->patient->mother_name ?? '-' }}</td>
@@ -108,7 +108,7 @@
                             @php
                                 $kipi = $row->kipi ?? null;
                                 if ($kipi) {
-                                    $kipiData = json_decode($kipi, true);
+                                    $kipiData = is_array($kipi) ? $kipi : json_decode($kipi, true);
                                     echo is_array($kipiData) ? implode(', ', $kipiData) : '-';
                                 } else {
                                     echo '-';

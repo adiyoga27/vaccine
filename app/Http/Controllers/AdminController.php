@@ -300,8 +300,11 @@ class AdminController extends Controller
 
     public function exportUsersPdf()
     {
+        ini_set('memory_limit', '768M');
+        set_time_limit(300);
+
         $villageIds = auth()->user()->managedVillageIds();
-        $users = User::with(['patient.vaccinePatients.vaccine', 'patient.village'])
+        $users = User::with(['patient.vaccinePatients', 'patient.village'])
             ->where('role', 'user')
             ->whereHas('patient', function ($q) use ($villageIds) {
                 $q->whereIn('village_id', $villageIds);
@@ -748,6 +751,10 @@ class AdminController extends Controller
 
     public function exportHistoryPdf(Request $request, $status)
     {
+        // Render PDF tabel besar butuh memori/waktu lebih dari default
+        ini_set('memory_limit', '768M');
+        set_time_limit(300);
+
         $data = $this->getVaccinationData($request);
 
         $collection = match ($status) {
@@ -833,12 +840,14 @@ class AdminController extends Controller
 
         foreach ($patients as $patient) {
             $doneVaccineIds = $patient->vaccinePatients->where('status', 'selesai')->pluck('vaccine_id')->toArray();
+            $recordsByVaccine = $patient->vaccinePatients->groupBy('vaccine_id');
 
             foreach ($vaccines as $vaccine) {
+                $vaccineRecords = $recordsByVaccine->get($vaccine->id, collect());
+
                 // ========== SCHEDULE STATUS ==========
                 if (!$status || $internalStatus === 'schedule') {
-                    $scheduledRecord = $patient->vaccinePatients
-                        ->where('vaccine_id', $vaccine->id)
+                    $scheduledRecord = $vaccineRecords
                         ->where('status', '!=', 'selesai')
                         ->filter(fn($r) => $r->schedule_at !== null)
                         ->first();
@@ -862,7 +871,7 @@ class AdminController extends Controller
                 // ========== DONE STATUS ==========
                 if (in_array($vaccine->id, $doneVaccineIds)) {
                     if (!$status || $internalStatus === 'done') {
-                        $record = $patient->vaccinePatients->where('vaccine_id', $vaccine->id)->first();
+                        $record = $vaccineRecords->first();
 
                         // Filter Done Date
                         if ($request->filled('start_date') && $record->vaccinated_at < $request->start_date)
@@ -891,8 +900,7 @@ class AdminController extends Controller
                 // ========== ACTIVE / UPCOMING / OVERDUE ==========
                 if (!$status || in_array($internalStatus, ['active', 'upcoming', 'overdue'])) {
                     // Check if already scheduled (skip for active/upcoming/overdue)
-                    $isScheduled = $patient->vaccinePatients
-                        ->where('vaccine_id', $vaccine->id)
+                    $isScheduled = $vaccineRecords
                         ->where('status', '!=', 'selesai')
                         ->filter(fn($r) => $r->schedule_at !== null)
                         ->isNotEmpty();
@@ -1382,32 +1390,7 @@ class AdminController extends Controller
         // We want to count VaccinePatient where status = 'selesai'
         // Group by village_id, vaccine_id, patient.gender
 
-        $data = [];
-
-        foreach ($villages as $village) {
-            // Get completed vaccinations for this village in the selected month/year
-            $records = \App\Models\VaccinePatient::where('village_id', $village->id)
-                ->where('status', 'selesai')
-                ->whereMonth('vaccinated_at', $month)
-                ->whereYear('vaccinated_at', $year)
-                ->with('patient') // Need patient for gender
-                ->get();
-
-            $villageData = [];
-            foreach ($vaccines as $vaccine) {
-                // Filter records for this vaccine
-                $vaccineRecords = $records->where('vaccine_id', $vaccine->id);
-
-                $male = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'male')->count();
-                $female = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'female')->count();
-
-                $villageData[$vaccine->id] = [
-                    'L' => $male,
-                    'P' => $female
-                ];
-            }
-            $data[$village->id] = $villageData;
-        }
+        $data = app(\App\Services\ImmunizationReportService::class)->counts($villages, $vaccines, $month, $year);
 
         return view('dashboard.admin.reports.immunization', compact('villages', 'vaccines', 'data', 'month', 'year'));
     }

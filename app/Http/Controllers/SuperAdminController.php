@@ -294,32 +294,7 @@ class SuperAdminController extends Controller
         $villages = $villages->get();
 
         // Aggregate Data
-        $data = [];
-
-        foreach ($villages as $village) {
-            // Get completed vaccinations for this village in the selected month/year
-            $records = \App\Models\VaccinePatient::where('village_id', $village->id)
-                ->where('status', 'selesai')
-                ->whereMonth('vaccinated_at', $month)
-                ->whereYear('vaccinated_at', $year)
-                ->with('patient')
-                ->get();
-
-            $villageData = [];
-            foreach ($vaccines as $vaccine) {
-                // Filter records for this vaccine
-                $vaccineRecords = $records->where('vaccine_id', $vaccine->id);
-
-                $male = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'male')->count();
-                $female = $vaccineRecords->filter(fn($r) => $r->patient && $r->patient->gender == 'female')->count();
-
-                $villageData[$vaccine->id] = [
-                    'L' => $male,
-                    'P' => $female
-                ];
-            }
-            $data[$village->id] = $villageData;
-        }
+        $data = app(\App\Services\ImmunizationReportService::class)->counts($villages, $vaccines, $month, $year);
 
         return view('dashboard.superadmin.reports.immunization', compact('villages', 'vaccines', 'data', 'month', 'year', 'offices', 'office_id'));
     }
