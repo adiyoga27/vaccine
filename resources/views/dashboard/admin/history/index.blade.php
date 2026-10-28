@@ -134,11 +134,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-green-50 flex justify-between items-center">
                 <h3 class="font-bold text-green-800">Sedang Berlangsung (Wajib Vaksin Sekarang)</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.history.export-excel', 'jadwal') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-excel', array_merge(['status' => 'jadwal'], request()->query())) }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Excel
                     </a>
-                    <a href="{{ route('admin.history.export-pdf', 'jadwal') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-pdf', array_merge(['status' => 'jadwal'], request()->query())) }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         PDF
                     </a>
@@ -168,11 +168,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 flex justify-between items-center">
                 <h3 class="font-bold text-blue-800">Akan Datang</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.history.export-excel', 'akan') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-excel', array_merge(['status' => 'akan'], request()->query())) }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Excel
                     </a>
-                    <a href="{{ route('admin.history.export-pdf', 'akan') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-pdf', array_merge(['status' => 'akan'], request()->query())) }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         PDF
                     </a>
@@ -202,11 +202,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-emerald-50 flex justify-between items-center">
                 <h3 class="font-bold text-emerald-800">Selesai Vaksinasi</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.history.export-excel', 'sudah') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-excel', array_merge(['status' => 'sudah'], request()->query())) }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Excel
                     </a>
-                    <a href="{{ route('admin.history.export-pdf', 'sudah') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-pdf', array_merge(['status' => 'sudah'], request()->query())) }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         PDF
                     </a>
@@ -237,11 +237,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-red-50 flex justify-between items-center">
                 <h3 class="font-bold text-red-800">Terlewat (Overdue)</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.history.export-excel', 'terlewat') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-excel', array_merge(['status' => 'terlewat'], request()->query())) }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Excel
                     </a>
-                    <a href="{{ route('admin.history.export-pdf', 'terlewat') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-pdf', array_merge(['status' => 'terlewat'], request()->query())) }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         PDF
                     </a>
@@ -272,11 +272,11 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-indigo-50 flex justify-between items-center">
                 <h3 class="font-bold text-indigo-800">Jadwal Vaksinasi (Scheduled)</h3>
                 <div class="flex gap-2">
-                    <a href="{{ route('admin.history.export-excel', 'schedule') }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-excel', array_merge(['status' => 'schedule'], request()->query())) }}" class="px-3 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Excel
                     </a>
-                    <a href="{{ route('admin.history.export-pdf', 'schedule') }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
+                    <a href="{{ route('admin.history.export-pdf', array_merge(['status' => 'schedule'], request()->query())) }}" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         PDF
                     </a>
